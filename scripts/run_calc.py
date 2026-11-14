@@ -42,6 +42,12 @@ def snapshot_sha256(snapshot_dir: Path, user: str | None = None, user_root: Path
     return digest.hexdigest()
 
 
+def calc_digest(calc: dict) -> str:
+    """SHA-256 of a calc without its `created` time: the C-<hash> file name, checked again by write_finding."""
+    body = {k: v for k, v in calc.items() if k != "created"}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
 def _check_params(function: str, params) -> None:
     if function not in PARAMS:
         raise ValueError(f"unknown function {function!r}; use one of: {', '.join(PARAMS)}")
@@ -72,7 +78,7 @@ def run(function: str, params: dict, user: str | None = None, snapshot_dir: Path
     finally:
         con.close()
     calc["snapshot_sha256"] = snapshot_sha256(snapshot_dir, user, user_root)
-    digest = hashlib.sha256(json.dumps(calc, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+    digest = calc_digest(calc)
     calc["created"] = now or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

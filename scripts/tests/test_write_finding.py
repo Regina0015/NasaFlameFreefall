@@ -1,0 +1,182 @@
+import contextlib
+import io
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from scripts.findings import bump_version, load, next_id, save
+from scripts.functions import o2_range
+from scripts.query import open_snapshot
+from scripts.run_calc import run
+from scripts.tests.helpers import make_fixture_snapshot
+from scripts.write_finding import LUNAR_WARNING, build_finding, load_calc, main
+
+
+def _fixture_calc() -> dict:
+    with tempfile.TemporaryDirectory() as d:
+        snap = make_fixture_snapshot(Path(d) / "snapshot")
+        con = open_snapshot(snap, user_root=Path(d) / "user")
+        calc = o2_range(con, ["PSI-25", "PSI-69"], 30)
+        con.close()
+    return calc
+
+
+CALC = _fixture_calc()
+TIERS = {"PSI-25": 1, "PSI-69": 1}
+NOW = "2026-11-14T12:00:00Z"
+NO_OFFER = {"chart": {"available": False, "idea": None}, "graph": {"available": False, "idea": None}, "footnote": None}
+TEXT = {
+    "question": "Did any BASS-II or FLEX test reach the lunar habitat oxygen level (30% or more)?",
+    "status": "has_data",
+    "claim": "None of the 2 BASS-II solid-fuel tests reached 30% oxygen (maximum 22.2%); FLEX droplet tests reached up to 34%.",
+    "summary_student": "Solid materials like plastics and fabrics were never burned in space at the oxygen level planned "
+                       "for a Moon base. Only liquid fuel droplets were tested that high.",
+    "summary_professional": "BASS-II initial O2: 21–22.2% vol (n = 2). FLEX initial O2: 34% mole fraction (n = 1). "
+                            "No solid-fuel test in these two investigations at ≥30% O2.",
+    "assumptions": ["Uses the initial O2 of each test.", "Mole fraction and volume fraction are treated as equal (ideal gas)."],
+    "limitations": ["Covers only BASS-II and FLEX, not every solid-fuel investigation in PSI.",
+                    "No test at 30% means no data, not that these materials are safe or unsafe at 30%."],
+    "warnings": [LUNAR_WARNING],
+    "environments": ["lunar_base", "pressurized_rover"],
+    "pillar": "prevention",
+    "visual_offer": {"chart": {"available": True, "idea": "Range bars of the O2 levels tested by BASS-II and FLEX, with a dashed line at the 30% lunar target."},
+                     "graph": {"available": False, "idea": None},
+                     "footnote": "Want a visual? I can draw a chart comparing the oxygen levels tested by BASS-II and FLEX against the 30% lunar habitat target."},
+}
+
+
+class BuildFindingTest(unittest.TestCase):
+    def test_valid_finding_saved_as_F001(self):
+        f, problems = build_finding(CALC, TEXT, TIERS, "claude-opus-5-5", NOW, "F-001")
+        self.assertEqual(problems, [])
+        self.assertEqual((f["id"], f["version"], f["tier"], f["chart"]), ("F-001", 1, 1, None))
+        self.assertEqual(f["generated_by"], {"agent": "calculator", "model": "claude-opus-5-5", "date": NOW})
+        self.assertEqual((f["values"], f["method"], f["evidence"], f["n_tests"]),
+                         (CALC["values"], CALC["method"], CALC["evidence"], CALC["n_tests"]))
+
+    def test_typed_number_is_rejected(self):
+        t = dict(TEXT, claim="BASS-II peaked near 22% O2.")
+        f, problems = build_finding(CALC, t, TIERS, "m", NOW, "F-001")
+        self.assertIsNone(f)
+        self.assertIn('number "22" in claim is not in the computed values', problems)
+
+    def test_numbers_checked_in_lists_and_offer(self):
+        t = dict(TEXT, assumptions=["A 25% margin is assumed."],
+                 visual_offer=dict(TEXT["visual_offer"], footnote="I can chart all 99 tests.",
+                                   graph={"available": True, "idea": "Graph of 7 links."}))
+        _, problems = build_finding(CALC, t, TIERS, "m", NOW, "F-001")
+        self.assertIn('number "25" in assumptions[0] is not in the computed values', problems)
+        self.assertIn('number "99" in visual_offer.footnote is not in the computed values', problems)
+        self.assertIn('number "7" in visual_offer.graph.idea is not in the computed values', problems)
+
+    def test_numbers_from_question_and_params_are_allowed(self):
+        t = dict(TEXT, question="Did any test reach 40% oxygen?", claim="No BASS-II test reached 40% or 30% oxygen.")
+        self.assertEqual(build_finding(CALC, t, TIERS, "m", NOW, "F-001")[1], [])
+
+    def test_lunar_warning_added(self):
+        f, _ = build_finding(CALC, dict(TEXT, environments=["lunar_base"], warnings=[]), TIERS, "m", NOW, "F-001")
+        self.assertIn("PSI has no partial-gravity combustion data.", f["warnings"][0])
+        f, _ = build_finding(CALC, dict(TEXT, environments=["mars_base"]), TIERS, "m", NOW, "F-001")
+        self.assertEqual(f["warnings"].count(LUNAR_WARNING), 1)
+        f, _ = build_finding(CALC, dict(TEXT, environments=["space_station"], warnings=[]), TIERS, "m", NOW, "F-001")
+        self.assertEqual(f["warnings"], [])
+
+    def test_reworded_lunar_warning_is_replaced_not_duplicated(self):
+        reworded = "PSI has no partial-gravity combustion data. Lunar conclusions are bounded by microgravity results."
+        f, _ = build_finding(CALC, dict(TEXT, warnings=["Check units.", reworded]), TIERS, "m", NOW, "F-001")
+        self.assertEqual(f["warnings"], ["Check units.", LUNAR_WARNING])
+
+    def test_no_data_finding_is_valid(self):
+        empty = {**CALC, "values": {}, "evidence": [], "n_tests": 0}
+        t = dict(TEXT, status="no_data", claim="No PSI test answers this question.", summary_student="NASA has no test for this yet.",
+                 summary_professional="No matching tests in the snapshot.", environments=[], visual_offer=NO_OFFER)
+        f, problems = build_finding(empty, t, TIERS, "m", NOW, "F-002")
+        self.assertEqual(problems, [])
+        self.assertEqual((f["status"], f["n_tests"], f["tier"]), ("no_data", 0, None))
+
+    def test_status_must_match_n_tests(self):
+        self.assertIsNone(build_finding(CALC, dict(TEXT, status="no_data"), TIERS, "m", NOW, "F-001")[0])
+        no_evidence = {**CALC, "evidence": []}
+        self.assertIsNone(build_finding(no_evidence, TEXT, TIERS, "m", NOW, "F-001")[0])
+
+    def test_text_fields_are_exact(self):
+        _, problems = build_finding(CALC, dict(TEXT, values={"x": {"value": 1, "unit": "u"}}), TIERS, "m", NOW, "F-001")
+        self.assertIn("unexpected field(s) in text: values", problems)
+        short = {k: v for k, v in TEXT.items() if k != "limitations"}
+        self.assertIn("missing field(s) in text: limitations", build_finding(CALC, short, TIERS, "m", NOW, "F-001")[1])
+
+    def test_schema_errors_are_reported(self):
+        f, problems = build_finding(CALC, dict(TEXT, pillar="fire"), TIERS, "m", NOW, "F-001")
+        self.assertIsNone(f)
+        self.assertTrue(any("pillar" in p for p in problems), problems)
+
+
+class FindingFilesTest(unittest.TestCase):
+    def test_ids_and_version_history(self):
+        with tempfile.TemporaryDirectory() as d:
+            folder = Path(d)
+            self.assertEqual(next_id(folder), "F-001")
+            f, _ = build_finding(CALC, TEXT, TIERS, "m", NOW, "F-001")
+            self.assertEqual(save(f, folder), folder / "F-001.json")
+            self.assertEqual(next_id(folder), "F-002")
+            self.assertEqual(load("F-001", folder), f)
+            bumped = bump_version(f, "2026-11-15T09:00:00Z", folder)
+            self.assertTrue((folder / "history" / "F-001.v1.json").exists())
+            self.assertEqual((bumped["version"], bumped["generated_by"]["date"], f["version"]), (2, "2026-11-15T09:00:00Z", 1))
+            self.assertEqual(next_id(folder), "F-002")
+
+    def test_bad_ids_are_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            for bad in ["../F-001", "F-1", "F-001.json", "f-001"]:
+                with self.assertRaises(ValueError, msg=bad):
+                    load(bad, Path(d))
+
+
+class LoadCalcAndCliTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.snap = make_fixture_snapshot(self.root / "snapshot")
+        self.calcs = self.root / "calcs"
+        self.calc_path = run("o2_range", {"investigations": ["PSI-25", "PSI-69"], "threshold_pct": 30},
+                             snapshot_dir=self.snap, user_root=self.root / "user", out_dir=self.calcs)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_load_calc_accepts_run_calc_output(self):
+        self.assertEqual(load_calc(self.calc_path, self.calcs)["n_tests"], 3)
+
+    def test_load_calc_rejects_edited_or_outside_files(self):
+        calc = json.loads(self.calc_path.read_text(encoding="utf-8"))
+        calc["values"]["psi25_o2_max"]["value"] = 40.0
+        self.calc_path.write_text(json.dumps(calc), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "does not match its content"):
+            load_calc(self.calc_path, self.calcs)
+        outside = self.root / "C-000000000000.json"
+        outside.write_text("{}", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "must be a calc file in"):
+            load_calc(outside, self.calcs)
+
+    def test_cli_saves_finding_and_reports_problems(self):
+        text_path = self.root / "text.json"
+        text_path.write_text(json.dumps(TEXT), encoding="utf-8")
+        findings = self.root / "findings"
+        args = ["--calc", str(self.calc_path), "--text", str(text_path), "--model", "claude-opus-5-5"]
+        dirs = dict(findings_dir=findings, calcs_dir=self.calcs, snapshot_dir=self.snap)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(main(args, **dirs), 0)
+        self.assertIn("F-001.json", out.getvalue())
+        self.assertEqual(load("F-001", findings)["tier"], 1)
+        text_path.write_text(json.dumps(dict(TEXT, claim="About 23% at most.")), encoding="utf-8")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(main(args, **dirs), 1)
+        self.assertIn('number "23" in claim', out.getvalue())
+        self.assertFalse((findings / "F-002.json").exists())
+
+
+if __name__ == "__main__":
+    unittest.main()
