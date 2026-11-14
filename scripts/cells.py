@@ -11,7 +11,7 @@ from pathlib import Path
 
 EMPTY_MARKERS = {"", "n/a", "na", "none", "-", "--", "null", "nan"}
 _NUMBER = re.compile(r"^[-+]?(?:\d+\.?\d*|\.\d+)")
-_RANGE = re.compile(r"^\s*(\d+\.?\d*|\.\d+)\s*[-–]\s*(\d+\.?\d*|\.\d+)\s*([^\d\s].*)?$")
+_RANGE = re.compile(r"^\s*(\d+\.?\d*|\.\d+)\s*(?:[-–]|to)\s*(\d+\.?\d*|\.\d+)\s*([^\d\s].*)?$")
 
 
 def normalize_header(header: str) -> str:
@@ -72,7 +72,7 @@ def parse_number(cell: str) -> tuple[float | None, list[str]]:
 
 
 def parse_list(cell: str) -> tuple[list[float], list[str]]:
-    """Read a list ("a; b; or c") or a range ("a - b") of numbers."""
+    """Read a list ("a; b; or c") or a range ("a - b", "a to b") of numbers."""
     text = (cell or "").strip()
     if text.lower() in EMPTY_MARKERS:
         return [], []

@@ -34,6 +34,11 @@ class ParseListTest(unittest.TestCase):
         self.assertIn("range", p[0])
         self.assertEqual(parse_list("0.5; 1.0; 1.5; 2.0; or 3.0 ")[0], [0.5, 1.0, 1.5, 2.0, 3.0])
 
+    def test_to_range(self):
+        vals, p = parse_list("22.0 to 21.9")
+        self.assertEqual(vals, [22.0, 21.9])
+        self.assertIn("range", p[0])
+
     def test_single_value_list(self):
         self.assertEqual(parse_list("25"), ([25.0], []))
         self.assertEqual(parse_list(""), ([], []))

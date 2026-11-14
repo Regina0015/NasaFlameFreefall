@@ -6,6 +6,7 @@ builder fills those), or None to skip the row. Mappers never guess a value: what
 they cannot read stays empty and is described in `problems`.
 """
 import json
+import re
 from typing import Callable
 
 from scripts import contract
@@ -145,3 +146,127 @@ MAPPERS: dict[str, Mapper] = {
     "PSI-25_Experimental table_BASS-II.csv": bass2,
     "PSI-69_Experimental table_FLEX.csv": flex,
 }
+
+
+def _skip(fuel: str | None, cells: dict[str, str], id_column: str) -> bool:
+    """Footnotes and blank lines: no fuel and no test identifier."""
+    return fuel is None and not (cells.get(id_column) or "").strip()
+
+
+def _one_value_range(row: _Row, field_min: str, field_max: str) -> None:
+    """Copy a single-value field into its max twin (min = max)."""
+    row.data[field_max] = row.data[field_min]
+    if field_min in row.sources:
+        row.sources[field_max] = row.sources[field_min]
+
+
+def saffire2(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    if not re.match(r"^\d+-\d+$", (cells.get("Sample Number") or "").strip()):
+        return None  # footnote rows ("Note 1 ...") and blank lines
+    row = _Row(investigation, source_row, cells)
+    if row.text("fuel", "Material") is None:
+        row.note("material cell empty (possibly a merged cell in the source)")
+    row.data["phase"] = "solid"
+    row.number_range("o2_pct_min", "o2_pct_max", "Percent O2 (Note 1)", 1.0, *O2_RANGE)
+    row.note("O2 derived from measured CO2 production (table Note 1)")
+    row.number("flow_cm_s", "Air Flow (cm/s)", 1.0, *FLOW_RANGE_CM_S)
+    row.note("pressure not in table")
+    row.keep_other("Samle Thickness", "Sample Length", "Sample Width (cm)", "Ignition Power (W)",
+                   "Ignition Time (s)", "Burn Time (s)", "Flow Direction", "?-g Burn Length",
+                   "?-g Spread Length", "1-g Burn Length", "1-g Spread Rate")
+    return row.done()
+
+
+def flex2(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    if row.text("fuel", "Sample (Fuel Type)") is None:
+        return None
+    row.data["phase"] = row.data["geometry"] = "droplet"
+    row.number_range("o2_pct_min", "o2_pct_max", "Oxygen Mole Fraction", 100.0, *O2_RANGE)
+    row.number_range("pressure_atm_min", "pressure_atm_max", "Ambient Pressure (atm)", 1.0, *PRESSURE_RANGE_ATM)
+    row.text("diluent", "Ambient Gas Mixture")
+    row.keep_other("Initial Droplet Diameter (mm)", "Ambient Temperature (C)", "Flow Velocity (cm/s)")
+    row.note("condition matrix row: lists tested values, not one test")
+    return row.done()
+
+
+def cfi(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    if _skip(row.text("fuel", "Fuel"), cells, "Flex Number"):
+        return None
+    row.data["phase"] = row.data["geometry"] = "droplet"
+    row.number("o2_pct_min", "Oxygen", 100.0, *O2_RANGE)
+    _one_value_range(row, "o2_pct_min", "o2_pct_max")
+    row.number("pressure_atm_min", "Pressure", 1.0, *PRESSURE_RANGE_ATM)
+    _one_value_range(row, "pressure_atm_min", "pressure_atm_max")
+    _gas_fractions(row, {"N2": "Nitrogen", "He": "Helium"})
+    row.keep_other("Flex Number", "CIR", "Fiber")
+    return row.done()
+
+
+def _cfig(investigation: str, source_row: int, cells: dict[str, str], o2_column: str,
+          outcome_column: str, other: tuple[str, ...], note: str | None) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    if _skip(row.text("fuel", "Fuel"), cells, "Test"):
+        return None
+    row.data["phase"], row.data["geometry"] = "gas", "burner"
+    row.number("o2_pct_min", o2_column, 100.0, *O2_RANGE)
+    _one_value_range(row, "o2_pct_min", "o2_pct_max")
+    row.number("pressure_atm_min", "approx p (bar)", ATM_PER_BAR, *PRESSURE_RANGE_ATM)
+    _one_value_range(row, "pressure_atm_min", "pressure_atm_max")
+    outcome = row.text("outcome", outcome_column)
+    row.data["outcome"] = outcome.lower() if outcome else None
+    row.keep_other(*other)
+    if note:
+        row.note(note)
+    return row.done()
+
+
+def cfig_normal(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    return _cfig(investigation, source_row, cells, "XO2 before test", "Self-ext or flow term",
+                 ("Flame Type", "Day", "Test", "Cool flame?", "XO2 after test", "Xf", "mHC (mg/s)", "TFP",
+                  "Tad (K)", "Zst", "Hot ignition", "burn time (sec)", "Peak burner T (C )", "Comments"), None)
+
+
+def cfig_inverse(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    return _cfig(investigation, source_row, cells, "XO2", "Self -ext or flow term",
+                 ("Flame Type", "Day", "Test", "Xf before test", "Xf after test", "HC burnrate (mg/s)",
+                  "O2 flow rate (mg/s)", "TFP", "Tad (K)", "Zst", "Hot ignition", "burn time (sec)",
+                  "Peak burner Temp (C)", "Peak burner temp (K)", "Color", "Comments"),
+                 "inverse flame: O2 is the burner stream, not the chamber")
+
+
+def bre(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    if _skip(row.text("fuel", "Fuel Bottle"), cells, "Date"):
+        return None
+    row.data["phase"], row.data["geometry"] = "gas", "burner"
+    row.number_range("o2_pct_min", "o2_pct_max", "Oxygen Conc (percent)", 1.0, *O2_RANGE)
+    row.note("pressure varied, not in table")
+    row.note("test-day row: conditions of several tests")
+    row.keep_other("Year", "Month", "Date", "Burner Size (mm)", "Flames Ignited", "Notes")
+    return row.done()
+
+
+def same_r(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    if _skip(row.text("fuel", "Sample Type"), cells, "SAME Test #"):
+        return None
+    row.data["phase"] = "smoke"
+    row.note("O2 not in table")
+    row.note("pressure not in table")
+    row.number("flow_cm_s", "Inlet velocity (cm/s)", 1.0, *FLOW_RANGE_CM_S)
+    row.keep_other("SAME Test #", "Description", "Date", "Rt/R0", "Duration (sec)",
+                   "Primary aging time (sec)", "Primary mixing time (sec)", "Net aging time (sec)")
+    return row.done()
+
+
+MAPPERS.update({
+    "PSI-99_Experimental table_SAFFIRE-2.csv": saffire2,
+    "PSI-68_Experimental table_Flex2.csv": flex2,
+    "PSI-39_Experimental table_CFI.csv": cfi,
+    "PSI-159_Experimental table_CFI-G_Normal Flames.csv": cfig_normal,
+    "PSI-159_Experimental table_CFI-G_Inverse Flames.csv": cfig_inverse,
+    "PSI-20_Experimental table_ACME BRE.csv": bre,
+    "PSI-101_Experimental table_SAME-R.csv": same_r,
+})
