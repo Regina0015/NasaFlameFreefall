@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "prueba.schema.json",
+  "title": "Prueba",
+  "description": "Una fila de una tabla experimental de PSI, pasada al esquema común. Ver _config/esquema-datos.md.",
+  "type": "object",
+  "required": ["id", "investigacion", "tabla", "fila", "originales", "problemas"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "description": "investigación/tabla/fila, por ejemplo PSI-69/0/12" },
+    "investigacion": { "type": "string", "pattern": "^PSI-[0-9]+$" },
+    "tabla": { "type": "string", "description": "Nombre del archivo CSV de origen" },
+    "fila": { "type": "integer", "minimum": 1, "description": "Fila en el CSV original; la primera fila de datos es 1" },
+    "combustible": { "type": ["string", "null"] },
+    "fase": { "enum": ["solido", "liquido", "gas", "humo", "polvo", null] },
+    "geometria": { "type": ["string", "null"] },
+    "o2_fraccion": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "presion_atm": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+    "flujo_cm_s": { "type": ["number", "null"], "minimum": 0 },
+    "diluyente": { "type": ["string", "null"] },
+    "gravedad": { "enum": ["micro", "1g", null] },
+    "resultado": { "type": ["string", "null"] },
+    "medidas": {
+      "type": "object",
+      "description": "Otras mediciones numéricas propias de la tabla",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["valor", "unidad"],
+        "properties": {
+          "valor": { "type": "number" },
+          "unidad": { "type": "string" }
+        }
+      }
+    },
+    "originales": {
+      "type": "object",
+      "description": "Texto de cada celda tal como venía en el CSV: columna → texto",
+      "additionalProperties": { "type": "string" }
+    },
+    "problemas": {
+      "type": "array",
+      "description": "Celdas que no se pudieron leer como un valor único",
+      "items": {
+        "type": "object",
+        "required": ["columna", "motivo"],
+        "properties": {
+          "columna": { "type": "string" },
+          "motivo": { "enum": ["vacia", "rango", "varios_valores", "texto", "aproximado", "nota_al_pie", "otro"] },
+          "detalle": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "H-000",
+  "pregunta": "¿Alguna prueba de BASS-II se hizo con 30% de oxígeno o más, como la atmósfera prevista para la base lunar?",
+  "afirmacion": "Ninguna de las 129 pruebas de BASS-II se hizo con 30% de oxígeno o más; el máximo fue 22.2%.",
+  "tipo": "cobertura",
+  "estado": "con_datos",
+  "valores": {
+    "o2_minimo": { "valor": 0.136, "unidad": "fraccion" },
+    "o2_maximo": { "valor": 0.222, "unidad": "fraccion" },
+    "pruebas_con_o2_mayor_o_igual_a_0.30": { "valor": 0, "unidad": "pruebas" }
+  },
+  "calculo": {
+    "script": "scripts/calculos.py",
+    "funcion": "cobertura_o2",
+    "parametros": { "investigacion": "PSI-25", "umbral": 0.30 },
+    "formula": "Contar las pruebas cuyo oxígeno inicial es mayor o igual al umbral; reportar mínimo y máximo."
+  },
+  "evidencia": [
+    {
+      "investigacion": "PSI-25",
+      "doi": "10.60555/4qc4-de67",
+      "tabla": "PSI-25_Experimental table_BASS-II.csv",
+      "columnas": ["Calibrated  initial O2 % by vol"],
+      "filas": "todas"
+    }
+  ],
+  "n_pruebas": 129,
+  "supuestos": [
+    "Se usa el oxígeno inicial calibrado de cada prueba."
+  ],
+  "limites": [
+    "Solo cubre BASS-II. No dice nada de otras investigaciones con sólidos.",
+    "Que no haya pruebas a 30% no indica cómo se comportarían esos materiales a 30%."
+  ],
+  "habitats": ["base_lunar", "rover"],
+  "pilar": "prevencion",
+  "generado_por": {
+    "agente": "ejemplo hecho a mano durante la exploración de datos; sin auditar",
+    "modelo": "ninguno",
+    "fecha": "2026-11-14T00:00:00Z"
+  }
+}
