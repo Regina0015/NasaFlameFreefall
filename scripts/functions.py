@@ -40,6 +40,16 @@ def _key(text: str, joiner: str) -> str:
     return key
 
 
+def investigation_key(investigation: str) -> str:
+    """Value-name prefix of an investigation: PSI-25 -> psi25."""
+    return _key(investigation, "")
+
+
+def phase_key(phase: str) -> str:
+    """Value-name prefix of a fuel phase."""
+    return _key(phase, "_")
+
+
 def _investigation_order(investigation: str):
     match = re.match(r"^(\D*)(\d+)", investigation)
     return (match.group(1), int(match.group(2)), investigation) if match else (investigation, 0, investigation)
@@ -93,7 +103,7 @@ def o2_range(con: duckdb.DuckDBPyConnection, investigations: list[str], threshol
     used: list = []
     n_tests = 0
     for investigation in ids:
-        key = _key(investigation, "")
+        key = investigation_key(investigation)
         if f"{key}_o2_min" in values:
             raise ValueError(f"two investigation ids give the same value name: {key}")
         low, high, n, n_above = con.execute(
@@ -144,7 +154,7 @@ def coverage_by_environment(con: duckdb.DuckDBPyConnection, environment: str, en
         [o2_min, o2_min, pressure_max_atm, o2_min]).fetchall()
     values: dict = {}
     for phase, n_o2, n_both, n_unknown in stats:
-        key = _key(phase, "_")
+        key = phase_key(phase)
         if f"{key}_o2_match" in values:
             raise ValueError(f"two phases give the same value name: {key}")
         values[f"{key}_o2_match"] = {"value": n_o2, "unit": "tests"}

@@ -6,44 +6,12 @@ import unittest
 from pathlib import Path
 
 from scripts.findings import bump_version, load, next_id, save
-from scripts.functions import o2_range
-from scripts.query import open_snapshot
 from scripts.run_calc import run
-from scripts.tests.helpers import make_fixture_snapshot
+from scripts.tests.helpers import FIXTURE_TEXT as TEXT, NO_OFFER, NOW, TIERS, fixture_o2_calc, make_fixture_snapshot
 from scripts.write_finding import LUNAR_WARNING, build_finding, load_calc, main
 
 
-def _fixture_calc() -> dict:
-    with tempfile.TemporaryDirectory() as d:
-        snap = make_fixture_snapshot(Path(d) / "snapshot")
-        con = open_snapshot(snap, user_root=Path(d) / "user")
-        calc = o2_range(con, ["PSI-25", "PSI-69"], 30)
-        con.close()
-    return calc
-
-
-CALC = _fixture_calc()
-TIERS = {"PSI-25": 1, "PSI-69": 1}
-NOW = "2026-11-14T12:00:00Z"
-NO_OFFER = {"chart": {"available": False, "idea": None}, "graph": {"available": False, "idea": None}, "footnote": None}
-TEXT = {
-    "question": "Did any BASS-II or FLEX test reach the lunar habitat oxygen level (30% or more)?",
-    "status": "has_data",
-    "claim": "None of the 2 BASS-II solid-fuel tests reached 30% oxygen (maximum 22.2%); FLEX droplet tests reached up to 34%.",
-    "summary_student": "Solid materials like plastics and fabrics were never burned in space at the oxygen level planned "
-                       "for a Moon base. Only liquid fuel droplets were tested that high.",
-    "summary_professional": "BASS-II initial O2: 21–22.2% vol (n = 2). FLEX initial O2: 34% mole fraction (n = 1). "
-                            "No solid-fuel test in these two investigations at ≥30% O2.",
-    "assumptions": ["Uses the initial O2 of each test.", "Mole fraction and volume fraction are treated as equal (ideal gas)."],
-    "limitations": ["Covers only BASS-II and FLEX, not every solid-fuel investigation in PSI.",
-                    "No test at 30% means no data, not that these materials are safe or unsafe at 30%."],
-    "warnings": [LUNAR_WARNING],
-    "environments": ["lunar_base", "pressurized_rover"],
-    "pillar": "prevention",
-    "visual_offer": {"chart": {"available": True, "idea": "Range bars of the O2 levels tested by BASS-II and FLEX, with a dashed line at the 30% lunar target."},
-                     "graph": {"available": False, "idea": None},
-                     "footnote": "Want a visual? I can draw a chart comparing the oxygen levels tested by BASS-II and FLEX against the 30% lunar habitat target."},
-}
+CALC = fixture_o2_calc()
 
 
 class BuildFindingTest(unittest.TestCase):
