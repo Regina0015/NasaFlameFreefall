@@ -13,7 +13,8 @@ La apuesta del equipo: **cada resultado se puede comprobar**. Nada llega al dash
 | `_config/` | Reglas compartidas por todas las etapas: modelos, grado de confianza, esquema de datos, audiencias, hábitats |
 | `schemas/` | Forma exacta de los archivos que se pasan entre etapas y al dashboard |
 | `scripts/` | Código Python que hace el trabajo determinista: descargar, limpiar, calcular, comprobar, publicar |
-| `dashboard/` | La aplicación web. Solo lee `dashboard/data/` |
+| `supabase/` | `schema.sql`: tablas de la base de datos (Supabase) |
+| `dashboard/` | La aplicación web en React + Vite, publicada en Vercel. Solo lee de Supabase; no calcula ni llama a modelos |
 | `docs/` | Texto del reto, inventario de datos de PSI y el artículo de ICM |
 
 ## Reglas de trabajo
@@ -24,5 +25,8 @@ La apuesta del equipo: **cada resultado se puede comprobar**. Nada llega al dash
 4. **Una etapa, un trabajo.** Cada etapa lee solo lo que su `CONTEXT.md` lista en Entradas y escribe solo en su `output/`.
 5. **Todo `output/` es editable por una persona.** La etapa siguiente usa lo que encuentre ahí.
 6. **El auditor no corrige, solo reporta.** Si algo falla, regresa a la etapa que lo produjo.
+7. **Las claves secretas viven solo en `.env`**, que no se sube al repo. La clave `service_role` de Supabase nunca va en `dashboard/`.
+
+Lenguajes: Python para agentes y scripts, JavaScript (React) para el dashboard, SQL para la base.
 
 Antes de trabajar en una etapa, lee su `CONTEXT.md`. No cargues las demás etapas.

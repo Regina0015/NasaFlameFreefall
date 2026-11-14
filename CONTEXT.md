@@ -9,7 +9,7 @@ El proceso corre en orden. Cada etapa deja archivos en su `output/` y la siguien
 | 03 | `stages/03_investigar` | **Agente 1: Investigador** | Resumen de cada investigación, relaciones entre ellas y preguntas por calcular |
 | 04 | `stages/04_calcular` | **Agente 2: Calculador** + scripts | Hallazgos con su evidencia, y el ranking por hábitat |
 | 05 | `stages/05_auditar` | **Agente 3: Auditor** + scripts | Una auditoría por hallazgo, con grado de confianza |
-| 06 | `stages/06_publicar` | Script (sin IA) | Los archivos que lee el dashboard |
+| 06 | `stages/06_publicar` | Script (sin IA) | Las tablas de Supabase que lee el dashboard |
 
 Entre etapas hay revisión humana: alguien del equipo abre el `output/`, lo lee y lo corrige si hace falta antes de seguir.
 

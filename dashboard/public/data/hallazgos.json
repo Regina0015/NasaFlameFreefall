@@ -1,0 +1,10 @@
+[
+  {
+    "id": "H-000",
+    "afirmacion": "Ninguna de las 129 pruebas de BASS-II se hizo con 30% de oxígeno o más; el máximo fue 22.2%.",
+    "tipo": "cobertura",
+    "estado": "con_datos",
+    "n_pruebas": 129,
+    "grado": null
+  }
+]

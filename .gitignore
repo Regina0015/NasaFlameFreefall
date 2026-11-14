@@ -1,6 +1,7 @@
 # Secretos y configuración local
 .env
 .env.*
+!.env.example
 *.key
 CLAUDE.local.md
 .claude/settings.local.json
@@ -17,6 +18,7 @@ dist/
 .vite/
 
 # Herramientas
+.vercel/
 graphify-out/
 .DS_Store
 Thumbs.db
