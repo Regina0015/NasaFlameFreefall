@@ -1,0 +1,2 @@
+# Raw NASA files must stay byte-exact so their SHA-256 in manifest.csv keeps matching
+stages/01_ingesta/output/psi/** -text
