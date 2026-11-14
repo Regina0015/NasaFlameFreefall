@@ -1,0 +1,390 @@
+"""Pruebas de scripts/auditar.py. No necesitan el modelo ni internet.
+
+Correr desde la raíz del repo:
+  python3 scripts/test_auditar.py -v
+
+(No usar "python3 -m unittest scripts/...": si ROS está cargado, su paquete "scripts" tapa esta carpeta.)
+"""
+
+import copy
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import auditar as A  # noqa: E402
+
+# CSV pequeño con los mismos vicios que el real de BASS-II: BOM, encabezado con doble espacio
+# y espacio al final, y una celda 'none' en otra columna.
+CSV_TEXT = (
+    "﻿Test #,Fuel Sample Material,Calibrated  initial O2 % by vol ,Final CO (ppm)\n"
+    "B1,PMMA film,22.2,6\n"
+    "B2,PMMA film,21,none\n"
+    "B3,SIBAL,13.6,12\n"
+    "B4,SIBAL,18.2,10\n"
+)
+TABLE = "PSI-25_Experimental table_BASS-II.csv"
+FICHE = {"doi": "10.60555/4qc4-de67", "investigationAcronym": "BASS-II",
+         "experimentalTable": [{"file_name": TABLE}]}
+
+
+def base_finding():
+    return {
+        "id": "F-001",
+        "version": 1,
+        "question": "Did any BASS-II test reach 30% oxygen or more?",
+        "status": "has_data",
+        "claim": "None of the 4 BASS-II tests reached 30% oxygen; the maximum was 22.2%.",
+        "summary_student": "These BASS-II tests never used as much oxygen as a Moon base plans to.",
+        "summary_professional": "BASS-II initial O2: 13.6–22.2% vol (n = 4). No test at ≥30% O2.",
+        "values": {
+            "bass2_o2_min": {"value": 13.6, "unit": "% vol"},
+            "bass2_o2_max": {"value": 22.2, "unit": "% vol"},
+        },
+        "method": {"script": "scripts/calculos.py", "function": "o2_range",
+                   "params": {"investigations": ["PSI-25"], "threshold_pct": 30},
+                   "formula": "Min and max of the initial O2, compared with the threshold."},
+        "evidence": [{"investigation": "PSI-25", "doi": "10.60555/4qc4-de67", "table": TABLE,
+                      "columns": ["Calibrated initial O2 % by vol"], "rows": "all"}],
+        "n_tests": 4,
+        "assumptions": ["Uses the initial O2 of each test."],
+        "limitations": ["Covers only BASS-II."],
+        "warnings": ["PSI has no partial-gravity combustion data."],
+        "environments": ["lunar_base"],
+        "tier": 1,
+        "pillar": "prevention",
+        "visual_offer": {"chart": {"available": False, "idea": None},
+                         "graph": {"available": False, "idea": None}, "footnote": None},
+        "chart": None,
+        "graph": None,
+        "generated_by": {"agent": "test", "model": "none", "date": "2026-11-14T00:00:00Z"},
+    }
+
+
+class FakeModel:
+    """Contesta siempre lo esperado, salvo las preguntas indicadas en 'wrong'."""
+    name = "fake-model"
+
+    def __init__(self, wrong=(), down=False):
+        self.wrong, self.down, self.calls = set(wrong), down, 0
+
+    def ask(self, system, user):
+        self.calls += 1
+        if self.down:
+            raise A.ModelUnavailable("connection refused")
+        q = user.rsplit("QUESTION: ", 1)[1]
+        expected = next(e for _, text, e in A.MODEL_QUESTIONS_PER_FIELD + [A.MODEL_QUESTION_ONCE] if text == q)
+        qid = next(i for i, text, _ in A.MODEL_QUESTIONS_PER_FIELD + [A.MODEL_QUESTION_ONCE] if text == q)
+        answer = expected if qid not in self.wrong else ("yes" if expected == "no" else "no")
+        return {"answer": answer, "reason": "fake"}, 1
+
+
+class Base(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        d = Path(self.tmp.name)
+        (d / "tablas").mkdir()
+        (d / "fichas").mkdir()
+        (d / "tablas" / TABLE).write_text(CSV_TEXT, encoding="utf-8")
+        (d / "fichas" / "PSI-25.json").write_text(json.dumps(FICHE), encoding="utf-8")
+        self.sources = A.Sources(d / "tablas", d / "fichas")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def audit(self, finding, model=None, review=None):
+        model = FakeModel() if model is None else model
+        raw = json.dumps(finding).encode()
+        audit = A.audit_finding(finding, raw, finding["id"], self.sources, model, review)
+        self.assertEqual(A.validate(audit, A.load_schema("audit.schema.json")), [])
+        return audit
+
+    @staticmethod
+    def result(audit, cid):
+        return next(c for c in audit["checks"] if c["id"] == cid)["result"]
+
+
+class TestHelpers(unittest.TestCase):
+    def test_parse_number_is_strict(self):
+        self.assertEqual(A.parse_number(" 22.2 "), 22.2)
+        self.assertEqual(A.parse_number("-1"), -1.0)
+        for bad in ("none", "", "~ 22.1", "0.17; 0.21", "2(?)", "0.27 mm", "037 mm"):
+            self.assertIsNone(A.parse_number(bad), bad)
+
+    def test_norm_col(self):
+        self.assertEqual(A.norm_col("Calibrated  initial O2 % by vol "), "Calibrated initial O2 % by vol")
+
+    def test_text_numbers_skip_formulas_and_ids(self):
+        nums = [m.group(1) for m in A._TEXT_NUM.finditer("PSI-25 O2 CO2 13.6–22.2% vol (n = 129) qwen3:8b 4b")]
+        self.assertEqual(nums, ["13.6", "22.2", "129"])
+
+    def test_text_units(self):
+        known = [A.Known(0.222, "fraction", "x"), A.Known(129, "other", "n")]
+        self.assertEqual(A.check_text_numbers("max 22.2%, n = 129", known), ([], []))
+        missing, bad = A.check_text_numbers("129% of 150 tests", known)
+        self.assertEqual(missing, ["150"])
+        self.assertEqual(len(bad), 1)
+
+    def test_name_forms(self):
+        self.assertIn("bass2", A._name_forms("BASS-II"))
+        self.assertEqual(A._name_forms("FLEX"), {"flex"})  # la X final no es número romano
+        self.assertIn("flex2", A._name_forms("FLEX-2"))
+
+    def test_validator_bool_is_not_integer(self):
+        f = base_finding()
+        f["tier"] = True
+        self.assertTrue(A.validate(f, A.load_schema("finding.schema.json")))
+
+    def test_repo_examples_match_schema(self):
+        for name in ("finding-example.json", "finding-example-with-chart.json"):
+            ex = json.loads((A.SCHEMAS / "examples" / name).read_text(encoding="utf-8"))
+            self.assertEqual(A.validate(ex, A.load_schema("finding.schema.json")), [], name)
+
+    def test_grade_rules(self):
+        ok = {c: "pass" for c in A.CHECK_NAMES}
+        self.assertEqual(A.assign_grade("has_data", ok, "clean")[0], "A")
+        self.assertEqual(A.assign_grade("has_data", {**ok, "C5": "fail"}, "clean")[0], "B")
+        self.assertEqual(A.assign_grade("has_data", ok, "minor")[0], "B")
+        self.assertEqual(A.assign_grade("has_data", ok, "many")[0], "C")
+        self.assertEqual(A.assign_grade("has_data", {**ok, "C6": "fail"}, "clean")[0], "C")
+        self.assertEqual(A.assign_grade("has_data", {**ok, "C8": "fail"}, "clean")[0], "C")
+        for hard in A.HARD_CHECKS:
+            self.assertEqual(A.assign_grade("has_data", {**ok, hard: "fail"}, "clean")[0], "rejected", hard)
+        self.assertEqual(A.assign_grade("no_data", ok, None)[0], "no_data")
+        self.assertEqual(A.assign_grade("no_data", {**ok, "C8": "fail"}, None)[0], "rejected")
+
+
+class TestAudit(Base):
+    def test_good_finding_small_sample_is_B(self):
+        a = self.audit(base_finding())
+        self.assertEqual(a["grade"], "B")  # 4 pruebas < 30: soporte limitado
+        for cid in ("C0", "C1", "C2", "C3", "C4", "C6", "C7", "C8"):
+            self.assertEqual(self.result(a, cid), "pass", cid)
+        self.assertEqual(self.result(a, "C5"), "fail")
+        self.assertEqual(self.result(a, "C9"), "not_applicable")
+        self.assertIsNone(a["send_back_to"])
+        self.assertEqual(a["audited_by"]["model"], "fake-model")
+
+    def test_c2_points_to_original_cell(self):
+        a = self.audit(base_finding())
+        c2 = next(c for c in a["checks"] if c["id"] == "C2")
+        self.assertIn("cell '22.2' at row 1", c2["detail"])
+        self.assertIn("cell '13.6' at row 3", c2["detail"])
+
+    def test_wrong_value_is_rejected(self):
+        f = base_finding()
+        f["values"]["bass2_o2_max"]["value"] = 25.0
+        a = self.audit(f)
+        self.assertEqual(a["grade"], "rejected")
+        self.assertEqual(self.result(a, "C3"), "fail")
+        self.assertEqual(a["send_back_to"], "04_calcular")
+
+    def test_fraction_units_are_converted(self):
+        f = base_finding()
+        f["values"] = {"bass2_o2_min": {"value": 0.136, "unit": "fraction"},
+                       "bass2_o2_max": {"value": 0.222, "unit": "fraction"}}
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C3"), "pass")
+        self.assertEqual(self.result(a, "C8"), "pass")  # '22.2%' en el texto = 0.222 fracción
+
+    def test_value_key_naming(self):
+        f = base_finding()
+        f["values"] = {"o2_min": {"value": 13.6, "unit": "% vol"}, "o2_max": {"value": 22.2, "unit": "% vol"}}
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C3"), "pass")  # llave genérica: se compara por valor
+        self.assertIn("matched by value only", a["recalculation"][0]["detail"])
+        f["values"] = {"flex_o2_max": {"value": 22.2, "unit": "% vol"}}
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C3"), "fail")  # 'flex' no es una investigación citada
+
+    def test_wrong_doi_is_rejected(self):
+        f = base_finding()
+        f["evidence"][0]["doi"] = "10.0000/wrong"
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C1"), "fail")
+        self.assertEqual(a["grade"], "rejected")
+
+    def test_missing_row_is_rejected(self):
+        f = base_finding()
+        f["evidence"][0]["rows"] = [1, 2, 9]
+        f["n_tests"] = 3
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C1"), "fail")
+
+    def test_n_tests_must_match_rows(self):
+        f = base_finding()
+        f["n_tests"] = 129
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C3"), "fail")
+
+    def test_number_without_source_fails_c8(self):
+        f = base_finding()
+        f["claim"] = "None of the 150 BASS-II tests reached 30% oxygen; the maximum was 25%."
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C8"), "fail")
+        q1 = next(t for t in a["text_review"] if t["question_id"] == "Q1" and t["field"] == "claim")
+        self.assertIn("150", q1["reason"])
+        self.assertIn("25%", q1["reason"])
+        self.assertEqual(a["grade"], "C")
+
+    def test_model_flag_fails_c8(self):
+        a = self.audit(base_finding(), FakeModel(wrong={"Q4"}))
+        self.assertEqual(self.result(a, "C8"), "fail")
+        self.assertEqual(a["grade"], "C")
+
+    def test_model_down_means_manual_review(self):
+        model = FakeModel(down=True)
+        a = self.audit(base_finding(), model)
+        self.assertEqual(model.calls, 1)  # no insiste después de la primera falla de conexión
+        self.assertEqual(self.result(a, "C8"), "fail")
+        self.assertIsNone(a["audited_by"]["model"])
+        self.assertTrue(all(t["answer"] is None for t in a["text_review"] if t["done_by"] == "model"))
+
+    def test_lunar_without_partial_gravity_warning_fails_c6(self):
+        f = base_finding()
+        f["warnings"] = []
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C6"), "fail")
+        self.assertEqual(a["grade"], "C")
+
+    def test_chart_numbers_must_trace(self):
+        f = base_finding()
+        f["version"] = 2
+        f["chart"] = {"title": "O2 tested", "data": {"values": [{"o2_min_pct": 13.6, "o2_max_pct": 22.2}]},
+                      "layer": [{"mark": "rule", "encoding": {"x": {"datum": 30, "scale": {"domain": [0, 40]}}}}]}
+        self.assertEqual(self.result(self.audit(f), "C9"), "pass")
+        f["chart"]["data"]["values"][0]["o2_max_pct"] = 24.0
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C9"), "fail")
+        self.assertEqual(a["grade"], "rejected")
+
+    def test_unknown_function_cannot_pass(self):
+        f = base_finding()
+        f["method"]["function"] = "something_new"
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C3"), "fail")
+        self.assertEqual(a["grade"], "rejected")
+
+    def test_bad_format_is_rejected(self):
+        f = base_finding()
+        del f["claim"]
+        a = A.audit_finding(f, b"{}", "F-001", self.sources, FakeModel())
+        self.assertEqual(self.result(a, "C0"), "fail")
+        self.assertEqual(a["grade"], "rejected")
+
+    def test_unreadable_cells_lower_quality(self):
+        f = base_finding()
+        bad = CSV_TEXT.replace("B4,SIBAL,18.2", "B4,SIBAL,~ 18")
+        (self.sources.tables_dir / TABLE).write_text(bad, encoding="utf-8")
+        self.sources._tables.clear()
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C7"), "fail")  # 3 de 4 legibles = 75% < 90%
+        self.assertEqual(a["grade"], "C")
+
+    def test_main_writes_files(self):
+        d = Path(self.tmp.name)
+        (d / "findings").mkdir()
+        (d / "findings" / "F-001.json").write_text(json.dumps(base_finding()), encoding="utf-8")
+        (d / "findings" / "F-002.json").write_text("not json", encoding="utf-8")
+        code = A.main(["--findings", str(d / "findings"), "--tables", str(d / "tablas"),
+                       "--fiches", str(d / "fichas"), "--out", str(d / "out"), "--no-model"])
+        self.assertEqual(code, 0)
+        audit = json.loads((d / "out" / "audits" / "F-001.json").read_text(encoding="utf-8"))
+        self.assertEqual(audit["grade"], "C")  # sin modelo, C8 queda para revisión manual
+        summary = (d / "out" / "summary.md").read_text(encoding="utf-8")
+        self.assertIn("F-002.json: not valid JSON", summary)
+
+
+class TestHumanReview(Base):
+    @staticmethod
+    def sha(finding):
+        import hashlib
+        return hashlib.sha256(json.dumps(finding).encode()).hexdigest()
+
+    def review(self, finding, flags, sha=None):
+        return {"finding_id": finding["id"], "finding_sha256": sha or self.sha(finding), "flags": flags}
+
+    @staticmethod
+    def flag(qid, field, decision="dismiss", reviewer="Pingui", note="false alarm"):
+        return {"question_id": qid, "field": field, "model_reason": "x", "decision": decision,
+                "reviewer": reviewer, "note": note}
+
+    def test_dismissing_every_flag_passes_c8(self):
+        f = base_finding()
+        flags = [self.flag("Q4", fld) for fld in A.TEXT_FIELDS]
+        a = self.audit(f, FakeModel(wrong={"Q4"}), self.review(f, flags))
+        self.assertEqual(self.result(a, "C8"), "pass")
+        self.assertEqual(a["grade"], "B")
+        c8 = next(c for c in a["checks"] if c["id"] == "C8")
+        self.assertIn("dismissed by a person", c8["detail"])
+        self.assertEqual(sum(1 for t in a["text_review"] if t.get("dismissed")), 3)
+
+    def test_confirm_or_partial_keeps_failing(self):
+        f = base_finding()
+        flags = [self.flag("Q4", "claim"), self.flag("Q4", "summary_student", "confirm")]
+        a = self.audit(f, FakeModel(wrong={"Q4"}), self.review(f, flags))
+        self.assertEqual(self.result(a, "C8"), "fail")
+
+    def test_dismiss_needs_reviewer_and_note(self):
+        f = base_finding()
+        flags = [self.flag("Q4", fld, reviewer=" ") for fld in A.TEXT_FIELDS]
+        a = self.audit(f, FakeModel(wrong={"Q4"}), self.review(f, flags))
+        self.assertEqual(self.result(a, "C8"), "fail")
+        self.assertIn("without reviewer or note", next(c for c in a["checks"] if c["id"] == "C8")["detail"])
+
+    def test_review_of_other_version_is_ignored(self):
+        f = base_finding()
+        flags = [self.flag("Q4", fld) for fld in A.TEXT_FIELDS]
+        a = self.audit(f, FakeModel(wrong={"Q4"}), self.review(f, flags, sha="0" * 64))
+        self.assertEqual(self.result(a, "C8"), "fail")
+        self.assertIn("another version", next(c for c in a["checks"] if c["id"] == "C8")["detail"])
+
+    def test_code_checks_cannot_be_dismissed(self):
+        f = base_finding()
+        f["claim"] = "None of the 150 BASS-II tests reached 30% oxygen."
+        bad = self.review(f, [self.flag("Q1", "claim")])  # Q1 no está permitido en el esquema
+        a = self.audit(f, FakeModel(), bad)
+        self.assertEqual(self.result(a, "C8"), "fail")
+        self.assertIn("Review file ignored", next(c for c in a["checks"] if c["id"] == "C8")["detail"])
+
+    def test_main_writes_template_and_keeps_decisions(self):
+        d = Path(self.tmp.name)
+        (d / "findings").mkdir()
+        f = base_finding()
+        (d / "findings" / "F-001.json").write_text(json.dumps(f), encoding="utf-8")
+        argv = ["--findings", str(d / "findings"), "--tables", str(d / "tablas"),
+                "--fiches", str(d / "fichas"), "--out", str(d / "out")]
+        model = FakeModel(wrong={"Q4"})
+        A.OllamaModel = lambda *a, **k: model  # main crea el modelo; aquí se usa el falso
+        self.assertEqual(A.main(argv), 0)
+        rpath = d / "out" / "reviews" / "F-001.json"
+        review = json.loads(rpath.read_text(encoding="utf-8"))
+        self.assertEqual(len(review["flags"]), 3)
+        self.assertTrue(all(r["decision"] == "pending" for r in review["flags"]))
+        for r in review["flags"]:
+            r.update(decision="dismiss", reviewer="Pingui", note="limited to BASS-II")
+        rpath.write_text(json.dumps(review), encoding="utf-8")
+        self.assertEqual(A.main(argv), 0)
+        audit = json.loads((d / "out" / "audits" / "F-001.json").read_text(encoding="utf-8"))
+        self.assertEqual(next(c for c in audit["checks"] if c["id"] == "C8")["result"], "pass")
+        self.assertEqual(json.loads(rpath.read_text(encoding="utf-8")), review)  # no se pisó
+        f["claim"] = "None of the 4 BASS-II tests reached 30% oxygen."
+        (d / "findings" / "F-001.json").write_text(json.dumps(f), encoding="utf-8")
+        self.assertEqual(A.main(argv), 0)
+        self.assertTrue((d / "out" / "reviews" / "F-001.old.json").is_file())  # la vieja se guarda
+        new = json.loads(rpath.read_text(encoding="utf-8"))
+        self.assertTrue(all(r["decision"] == "pending" for r in new["flags"]))
+
+    def setUp(self):
+        super().setUp()
+        self._ollama = A.OllamaModel
+
+    def tearDown(self):
+        A.OllamaModel = self._ollama
+        super().tearDown()
+
+
+if __name__ == "__main__":
+    unittest.main()
