@@ -51,6 +51,7 @@ Total aproximado: 2,000 filas de pruebas en 22 tablas CSV, y más de 340 publica
 
 - **Los datos crudos no son usables en el hackathon**: son video e imágenes, cerca de 10 TB en total (cada experimento ACME pesa alrededor de 2 TB).
 - **Cada tabla tiene columnas distintas.** No hay un esquema común; hay que normalizar (combustible, fase, % de O2, presión, flujo de aire, geometría, resultado).
+- **No todas vienen en UTF-8**: la tabla de FLEX (PSI-69) está en Windows-1252; hay que leerla con esa codificación.
 - **Las tablas están sucias**: celdas con rangos ("0.17; 0.21; 0.25; 0.3"), texto mezclado con números ("~ 22.1", "0.27 mm"), valores faltantes, "none", notas al pie como filas, errores de captura ("037 mm", "Samle Thickness"), y el símbolo μ perdido ("?-g").
 - Varias tablas ACME listan días de prueba, no pruebas individuales.
 - No hay datos de gravedad parcial (lo dice el reto).
