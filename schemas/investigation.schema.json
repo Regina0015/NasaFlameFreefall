@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "investigation.schema.json",
+  "title": "Investigation record",
+  "description": "One PSI investigation, written by scripts/write_investigation.py from PSI facts, the team's tier table and the Investigator agent's draft.",
+  "type": "object",
+  "required": [
+    "id", "acronym", "label", "title", "doi", "type", "subarea", "platform", "hardware", "scope",
+    "tier", "tier_reason", "boost_environments",
+    "summary_student", "summary_professional", "pillar", "environments",
+    "generated_by", "reviewed_by"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^PSI-[0-9]+$" },
+    "acronym": { "type": "string" },
+    "label": { "type": "string", "minLength": 1 },
+    "title": { "type": "string" },
+    "doi": { "type": "string", "minLength": 1 },
+    "type": { "enum": ["flight", "ground"] },
+    "subarea": { "type": "string" },
+    "platform": { "type": "string" },
+    "hardware": { "type": "string" },
+    "scope": { "const": "psi" },
+    "tier": { "enum": [1, 2, null] },
+    "tier_reason": { "type": ["string", "null"] },
+    "boost_environments": { "type": "array", "items": { "$ref": "#/$defs/environment" }, "uniqueItems": true },
+    "summary_student": { "$ref": "#/$defs/sourced_text" },
+    "summary_professional": { "$ref": "#/$defs/sourced_text" },
+    "pillar": {
+      "type": "object",
+      "required": ["value", "reason", "sources"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "enum": ["prevention", "detection", "suppression"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "sources": { "$ref": "#/$defs/sources" }
+      }
+    },
+    "environments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["environment", "reason", "sources"],
+        "additionalProperties": false,
+        "properties": {
+          "environment": { "$ref": "#/$defs/environment" },
+          "reason": { "type": "string", "minLength": 1 },
+          "sources": { "$ref": "#/$defs/sources" }
+        }
+      }
+    },
+    "generated_by": {
+      "type": "object",
+      "required": ["agent", "model", "date"],
+      "additionalProperties": false,
+      "properties": {
+        "agent": { "const": "investigator" },
+        "model": { "type": "string", "minLength": 1 },
+        "date": { "type": "string", "format": "date-time" }
+      }
+    },
+    "reviewed_by": { "type": ["string", "null"] }
+  },
+  "$defs": {
+    "environment": { "enum": ["transit_vehicle", "space_station", "lunar_base", "mars_base", "pressurized_rover"] },
+    "sources": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+    "sourced_text": {
+      "type": "object",
+      "required": ["text", "sources"],
+      "additionalProperties": false,
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "sources": { "$ref": "#/$defs/sources" }
+      }
+    }
+  }
+}

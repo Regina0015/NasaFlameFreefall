@@ -1,0 +1,21 @@
+{
+  "id": "PSI-25",
+  "summary_student": {
+    "text": "Astronauts burned plastic and fabric samples inside a small wind tunnel on the International Space Station to see how flames start, grow and go out without gravity. The results help engineers choose safer materials for spacecraft.",
+    "sources": ["approach", "researchImpacts"]
+  },
+  "summary_professional": {
+    "text": "Ignition, flame growth, flame spread and extinction limits of solid fuels (rods, slabs, films and spherical sections) in low-velocity forced flow in microgravity. Airflow up to 40 cm/s and oxygen below 21% by nitrogen vitiation, with spread rates measured in opposed and concurrent flow. It bridges the normal-gravity NASA-STD-6001 Test 1 method and material flammability in microgravity.",
+    "sources": ["objective", "approach", "10.1016/j.combustflame.2017.03.001"]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "It maps when solid materials ignite, spread flame and extinguish, which guides the selection of spacecraft materials.",
+    "sources": ["objective", "researchImpacts"]
+  },
+  "environments": [
+    {"environment": "space_station", "reason": "The tests ran aboard the International Space Station in a glovebox wind tunnel.", "sources": ["approach", "flightProgram"]},
+    {"environment": "transit_vehicle", "reason": "Its stated goal is spacecraft fire safety on missions far from Earth.", "sources": ["researchImpacts"]}
+  ],
+  "model": "claude-opus-5-5"
+}

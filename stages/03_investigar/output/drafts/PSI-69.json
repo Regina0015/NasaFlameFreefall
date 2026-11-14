@@ -1,0 +1,21 @@
+{
+  "id": "PSI-69",
+  "summary_student": {
+    "text": "Astronauts lit small drops of liquid fuel on the space station and watched when the flames went out. They also tested gases that put out fires, such as carbon dioxide and helium, to learn which work best in space.",
+    "sources": ["objective", "approach"]
+  },
+  "summary_professional": {
+    "text": "Large-droplet combustion in microgravity to map the flammability limits of liquid fuels and the Limiting Oxygen Index as a function of ambient pressure (0.5 to 1.5 atm), and to measure the effectiveness of gaseous suppressants (CO2, He, SF6). Measurements include droplet burning rates, flame extinction, radiation, soot and temperature.",
+    "sources": ["objective", "approach", "10.1016/j.combustflame.2011.06.014"]
+  },
+  "pillar": {
+    "value": "suppression",
+    "reason": "It measures how well gaseous suppressants such as CO2 and He extinguish flames in microgravity.",
+    "sources": ["objective"]
+  },
+  "environments": [
+    {"environment": "space_station", "reason": "The tests ran aboard the International Space Station.", "sources": ["flightProgram"]},
+    {"environment": "transit_vehicle", "reason": "It aims at fire safety for future space missions where usual suppression methods may not work.", "sources": ["researchImpacts"]}
+  ],
+  "model": "claude-opus-5-5"
+}
