@@ -1,34 +1,36 @@
-# Ruta de trabajo
+# Work route
 
-El proceso corre en orden. Cada etapa deja archivos en su `output/` y la siguiente los lee.
+The pipeline runs in order. Each stage leaves files in its `output/` and the next one reads them.
 
-| # | Etapa | Quién la hace | Qué produce |
+| # | Stage | Who does it | What it produces |
 |---|---|---|---|
-| 01 | `stages/01_ingesta` | Script (sin IA) | Fichas y tablas de PSI, sin tocar |
-| 02 | `stages/02_normalizar` | Script + revisión humana | Todas las pruebas en un mismo formato, con sus problemas anotados |
-| 03 | `stages/03_investigar` | **Agente 1: Investigador** | Resumen de cada investigación, relaciones entre ellas y preguntas por calcular |
-| 04 | `stages/04_calcular` | **Agente 2: Calculador** + scripts | Hallazgos con su evidencia, y el ranking por hábitat |
-| 05 | `stages/05_auditar` | **Agente 3: Auditor** + scripts | Una auditoría por hallazgo, con grado de confianza |
-| 06 | `stages/06_publicar` | Script (sin IA) | Las tablas de Supabase que lee el dashboard |
+| 01 | `stages/01_ingesta` | Script, no AI (`scripts/fetch_psi.py`) | PSI records (trimmed) and test tables, untouched, with `manifest.csv` |
+| 02 | `stages/02_normalizar` | Database owner; until then `scripts/build_snapshot.py` | Every test in one common format: `data/snapshot/` |
+| 03 | `stages/03_investigar` | **Investigator agent** (`/investigate`) | One record per investigation, relations, tier review, candidate questions |
+| 04 | `stages/04_calcular` | **Calculator agent** + scripts (`/ask`) | Findings with their evidence; charts and graphs on request |
+| 05 | `stages/05_auditar` | **Auditor agent** (teammate) | One audit per finding version, with a confidence grade |
+| 06 | `stages/06_publicar` | Script, no AI | The Supabase tables the dashboard reads |
 
-Entre etapas hay revisión humana: alguien del equipo abre el `output/`, lo lee y lo corrige si hace falta antes de seguir.
+Between stages there is human review: someone on the team opens the `output/`, reads it and corrects it if needed before moving on.
 
-## A dónde ir según la tarea
+## Where to go for each task
 
-| Quiero… | Ir a |
+| I want to… | Go to |
 |---|---|
-| Traer datos nuevos de PSI | `stages/01_ingesta` |
-| Arreglar cómo se lee una tabla | `stages/02_normalizar` |
-| Cambiar cómo se resume una investigación | `stages/03_investigar` |
-| Agregar un cálculo o cambiar el ranking | `stages/04_calcular` |
-| Cambiar qué se comprueba o cómo se califica | `stages/05_auditar` y `_config/confianza.md` |
-| Cambiar qué modelo usa cada agente | `_config/modelos.md` |
-| Cambiar lo que ve cada tipo de usuario | `_config/audiencias.md` y `dashboard/` |
+| Bring new data from PSI | `stages/01_ingesta`, `scripts/fetch_psi.py` |
+| Fix how a table is read | `scripts/mappers.py` (and its tests) |
+| Change how an investigation is summarized | `stages/03_investigar`, `.claude/agents/investigator.md` |
+| Add a calculation | `stages/04_calcular`, `scripts/functions.py` (with a test) |
+| Change what is checked or how it is graded | `stages/05_auditar` and `_config/confidence.md` |
+| Change which model runs each agent | `_config/models.md` |
+| Change what each kind of user sees | `_config/audiences.md` and `dashboard/` |
 
-## Reglas compartidas (`_config/`)
+## Shared rules (`_config/`)
 
-- `modelos.md`: qué modelo corre cada agente.
-- `confianza.md`: cómo se asigna el grado de confianza.
-- `esquema-datos.md`: campos comunes de una prueba.
-- `habitats.md`: condiciones de cada ambiente habitado, para el ranking.
-- `audiencias.md`: las dos vistas (estudiante y científico).
+- `challenge.md`: what the challenge asks.
+- `tiers.md`: the team's relevance tier for each investigation.
+- `environments.md`: atmosphere of each crewed environment, with sources.
+- `audiences.md`: the two views (student and professional).
+- `confidence.md`: how the confidence grade is assigned.
+- `data-schema.md`: where the snapshot columns are defined.
+- `models.md`: which model runs each agent.

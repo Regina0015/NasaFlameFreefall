@@ -19,9 +19,11 @@ The dashboard only shows results that went through all three. It has two views: 
 | Folder | Contents |
 |---|---|
 | `stages/` | Six numbered stages: ingest, normalize, investigate, calculate, audit and publish. Each has a `CONTEXT.md` that states what it reads, what it does and what it delivers |
-| `_config/` | Shared rules: models per agent, confidence grade, data schema, crew environments and the two views |
+| `_config/` | Shared context for the agents: challenge summary, tier table, crew environments, the two views, confidence grade, data schema, models |
+| `data/snapshot/` | The normalized PSI data the Calculator reads (temporary copy until the database export exists) |
+| `.claude/` | The Investigator and Calculator agents and their commands (`/investigate`, `/ask`, `/chart`, `/graph`) |
 | `schemas/` | Exact format of the data passed between stages, with examples |
-| `scripts/` | Python code for each task (empty for now) |
+| `scripts/` | Python tools for every deterministic step: download, normalize, query, calculate, check, chart |
 | `supabase/` | `schema.sql`: the database tables |
 | `dashboard/` | The React web app; reads from Supabase |
 | `docs/` | Challenge text, PSI data inventory, Calculator output format, and the ICM paper |
@@ -51,7 +53,7 @@ Full spec: `docs/calculator-output.md`. Schema: `schemas/finding.schema.json`. E
 
 ## Status
 
-Skeleton. The Calculator output format is drafted; scripts are empty and the dashboard only shows sample data. Some project documents are still in Spanish and are being translated: the whole project will be in English.
+In progress (branch `calculator-agent`): PSI download, the data snapshot (8 test tables), tiers and relations are built and tested; the Investigator and Calculator agents are being built. The dashboard only shows sample data. Setup: `uv sync`; tests: `uv run python -m unittest discover -s scripts/tests -t .` (see `CLAUDE.md`).
 
 ## Notes
 

@@ -1,28 +1,26 @@
-# Etapa 04 — Calcular (Agente 2: Calculador + scripts)
+# Stage 04 — Calculate (Calculator agent + scripts)
 
-Responde cada pregunta con código sobre las pruebas normalizadas y guarda exactamente qué filas usó.
+Answers each question with code over the snapshot and records exactly which rows it used. Run with `/ask "<question>"` (instructions: `.claude/agents/calculator.md`).
 
-## Entradas
-- Capa 4 (trabajo): `../03_investigar/output/preguntas.json` y `fichas/`
-- Capa 4 (trabajo): `../02_normalizar/output/pruebas.jsonl`
-- Capa 3 (referencia): `../../_config/esquema-datos.md`
-- Capa 3 (referencia): `../../_config/habitats.md`
-- Capa 3 (referencia): `references/calculos.md` (catálogo de cálculos disponibles y su fórmula)
+## Inputs
+- `../../data/snapshot/` (`tests.csv`, `investigations.csv`, `relations.csv`, `catalog.md`)
+- `../../_config/challenge.md`, `../../_config/tiers.md`, `../../_config/environments.md`
+- `../../docs/calculator-output.md` (the finding format) and `references/calculos.md` (the catalog)
 
-## Proceso
-1. Por cada pregunta, elegir un cálculo del catálogo. Si no existe, escribirlo como función en `scripts/calculos.py` con una prueba unitaria, y agregarlo al catálogo.
-2. Correr el cálculo con `scripts/calcular.py`. El modelo no escribe el resultado a mano: lo copia el script.
-3. Guardar el hallazgo con: afirmación en una frase, valores, unidades, cálculo usado y sus parámetros, filas de evidencia, número de pruebas, supuestos y límites.
-4. Si ninguna prueba responde la pregunta, guardar el hallazgo como "sin datos". Un hueco es un resultado válido.
-5. Calcular el ranking de investigaciones por hábitat. El puntaje se guarda con su desglose por criterio.
+## Process
+1. Explore with `uv run python -m scripts.query "<SELECT ...>"` (read-only; returns at most a fixed number of rows).
+2. Compute with `uv run python -m scripts.run_calc <function> ...`: a catalog function, or a SQL query saved verbatim (`sql_query`). The model never writes a result by hand.
+3. Write the text and save it with `uv run python -m scripts.write_finding`, which checks every number in the text against the computed values and validates the schema.
+4. If no test answers the question, the finding is `no_data`. A gap is a valid result.
+5. On request: `/chart F-001` or `/graph F-001` (new version, audited again).
 
-## Límites
-- Prohibido usar números que no salgan de `pruebas.jsonl` o de `_config/`.
-- Prohibido rellenar valores faltantes o extrapolar fuera de lo probado sin marcarlo en `limites`.
+## Limits
+- No number that does not come from the calculation output or `_config/`.
+- No filling of missing values, no extrapolation beyond the tested range without saying so in `limitations`.
 
-## Salidas
-- `output/hallazgos/H-XXX.json` (forma en `schemas/hallazgo.schema.json`)
-- `output/ranking.json`
+## Outputs
+- `output/findings/F-XXX.json` (format: `schemas/finding.schema.json`), earlier versions in `output/findings/history/`
+- `output/calcs/C-*.json` (calculation outputs)
 
-## Revisión humana
-Leer las afirmaciones: ¿se entienden y dicen algo útil para seguridad contra incendios?
+## Human review
+Read the claims: are they clear, and do they say something useful for fire safety?
