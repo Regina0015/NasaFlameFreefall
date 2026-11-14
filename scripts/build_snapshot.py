@@ -1,8 +1,10 @@
 """Build the temporary data snapshot in data/snapshot/ from the PSI files.
 
-Writes tests.csv (every mapped PSI test row in the contract format), catalog.md
-(meaning and unit of every column) and build-report.md (what was read, written
-and skipped). The database owner's export replaces this folder when it exists;
+Writes tests.csv (every mapped PSI test row in the contract format),
+investigations.csv (PSI facts + team tier + Investigator fields when reviewed
+records exist), relations.csv (connections PSI states, each with its source),
+catalog.md (meaning and unit of every column) and build-report.md (what was
+read, written and skipped). The database owner's export replaces this folder when it exists;
 it must keep the same column names (scripts/contract.py).
 
 Usage: uv run python -m scripts.build_snapshot
@@ -14,8 +16,9 @@ from pathlib import Path
 
 from scripts import contract
 from scripts.cells import read_table
+from scripts.investigations import derive_relations, facts, load_investigator_records, load_tiers
 from scripts.mappers import MAPPERS
-from scripts.paths import PSI_DIR, SNAPSHOT_DIR
+from scripts.paths import CONFIG_DIR, INVESTIGATOR_OUT, PSI_DIR, SNAPSHOT_DIR
 
 CAVEATS = [
     "Oxygen is stored in percent. Mole fraction and volume fraction are treated as equal (ideal gas).",
@@ -99,10 +102,37 @@ def write_catalog(path: Path) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 
 
-def build(psi_dir: Path, out_dir: Path) -> None:
+def _records(psi_dir: Path) -> list[dict]:
+    paths = sorted(psi_dir.glob("PSI-*.json"), key=lambda p: _investigation_number(p.stem))
+    return [json.loads(p.read_text(encoding="utf-8")) for p in paths]
+
+
+def build_investigations(records: list[dict], tiers: dict[str, dict], investigator: dict[str, dict]) -> list[dict]:
+    rows = []
+    for record in records:
+        row = facts(record)
+        tier = tiers.get(row["id"], {})
+        row.update(tier=tier.get("tier"), tier_reason=tier.get("reason"),
+                   boost_environments=",".join(tier.get("boost", [])) or None)
+        reviewed = investigator.get(row["id"])
+        if reviewed:
+            row.update(pillar=reviewed["pillar"]["value"],
+                       environments=",".join(e["environment"] for e in reviewed["environments"]) or None,
+                       summary_student=reviewed["summary_student"]["text"],
+                       summary_professional=reviewed["summary_professional"]["text"])
+        rows.append(row)
+    return rows
+
+
+def build(psi_dir: Path, out_dir: Path, tiers_path: Path = CONFIG_DIR / "tiers.md",
+          investigator_dir: Path = INVESTIGATOR_OUT) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     rows, report = build_tests(psi_dir)
     write_csv(out_dir / "tests.csv", contract.names(contract.TESTS), rows)
+    records = _records(psi_dir)
+    investigations = build_investigations(records, load_tiers(tiers_path), load_investigator_records(investigator_dir))
+    write_csv(out_dir / "investigations.csv", contract.names(contract.INVESTIGATIONS), investigations)
+    write_csv(out_dir / "relations.csv", contract.names(contract.RELATIONS), derive_relations(records, rows))
     write_catalog(out_dir / "catalog.md")
     (out_dir / "build-report.md").write_text(
         "# Snapshot build report\n\n" + "\n".join(report) + "\n", encoding="utf-8", newline="\n")

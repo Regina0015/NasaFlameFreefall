@@ -1,3 +1,4 @@
+import csv
 import tempfile
 import unittest
 from pathlib import Path
@@ -29,8 +30,38 @@ class IdempotenceTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
             build(PSI_DIR, Path(a))
             build(PSI_DIR, Path(b))
-            for name in ["tests.csv", "catalog.md"]:
+            for name in ["tests.csv", "catalog.md", "investigations.csv", "relations.csv"]:
                 self.assertEqual((Path(a) / name).read_bytes(), (Path(b) / name).read_bytes(), name)
+
+
+
+class InvestigationsAndRelationsTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        build(PSI_DIR, Path(cls.tmp.name))
+        with open(Path(cls.tmp.name) / "investigations.csv", encoding="utf-8") as f:
+            cls.investigations = list(csv.DictReader(f))
+        with open(Path(cls.tmp.name) / "relations.csv", encoding="utf-8") as f:
+            cls.relations = list(csv.DictReader(f))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def test_24_investigations_with_tiers(self):
+        self.assertEqual(len(self.investigations), 24)
+        bass2 = next(r for r in self.investigations if r["id"] == "PSI-25")
+        self.assertEqual((bass2["doi"], bass2["tier"], bass2["label"]), ("10.60555/4qc4-de67", "1", "BASS-II"))
+        bre = next(r for r in self.investigations if r["id"] == "PSI-20")
+        self.assertEqual(bre["boost_environments"], "transit_vehicle,lunar_base")
+
+    def test_expected_relations(self):
+        triples = {(r["from_id"], r["to_id"], r["type"]) for r in self.relations}
+        self.assertIn(("PSI-25", "PSI-26", "related_in_psi"), triples)
+        self.assertIn(("PSI-62", "PSI-25", "reuses_flight_data"), triples)
+        self.assertIn(("PSI-25", "PSI-26", "same_hardware"), triples)
+        self.assertEqual(len(triples), len(self.relations))
 
 
 if __name__ == "__main__":
