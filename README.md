@@ -1,58 +1,65 @@
 # NasaTwisters — Flame in Freefall
 
-Proyecto para NASA Space Apps Challenge 2026, reto "Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data".
+Project for the NASA Space Apps Challenge 2026, challenge "Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data".
 
-Un dashboard web que resume, ordena e interpreta las investigaciones de combustión en microgravedad de NASA para seguridad contra incendios en misiones tripuladas. Cada resultado muestra de dónde salió, quién lo calculó, quién lo auditó y qué tan confiable es.
+A web dashboard that summarizes, ranks and interprets NASA's microgravity combustion investigations to deliver fire-safety insights for crewed missions. Every result shows where it came from, who calculated it, who audited it, and how much it can be trusted.
 
-## Cómo funciona
+## How it works
 
-Tres agentes trabajan en cadena sobre los datos públicos de NASA:
+Three AI agents work in sequence on NASA's public data:
 
-1. **Investigador**: lee cada investigación y propone qué vale la pena calcular.
-2. **Calculador**: responde cada pregunta con código sobre las tablas de pruebas y guarda las filas que usó.
-3. **Auditor**: repite el cálculo por otro camino, revisa unidades, rangos y citas, y asigna un grado de confianza.
+1. **Investigator**: reads each investigation and proposes what is worth calculating.
+2. **Calculator**: answers each question with code on the test tables and records the exact rows it used. It offers a chart or a graph when the data justifies one, and draws it on request.
+3. **Auditor**: re-runs the calculation independently, checks units, ranges, citations and charts, and assigns a confidence grade.
 
-El dashboard solo muestra lo que pasó por los tres.
+The dashboard only shows results that went through all three. It has two views: **student** and **professional**.
 
-## Estructura
+## Structure
 
-| Carpeta | Qué hay |
+| Folder | Contents |
 |---|---|
-| `stages/` | Seis etapas numeradas: descargar, limpiar, investigar, calcular, auditar y publicar. Cada una tiene un `CONTEXT.md` que dice qué lee, qué hace y qué entrega |
-| `_config/` | Reglas compartidas: modelos por agente, grado de confianza, esquema de datos, ambientes habitados y las dos vistas |
-| `schemas/` | Forma de los datos que se pasan entre etapas, con un ejemplo |
-| `scripts/` | Código Python de cada tarea (por ahora vacío) |
-| `supabase/` | `schema.sql`: las tablas de la base de datos |
-| `dashboard/` | La aplicación web en React; lee de Supabase |
-| `docs/` | Texto del reto, inventario de datos de PSI y el artículo de ICM |
+| `stages/` | Six numbered stages: ingest, normalize, investigate, calculate, audit and publish. Each has a `CONTEXT.md` that states what it reads, what it does and what it delivers |
+| `_config/` | Shared rules: models per agent, confidence grade, data schema, crew environments and the two views |
+| `schemas/` | Exact format of the data passed between stages, with examples |
+| `scripts/` | Python code for each task (empty for now) |
+| `supabase/` | `schema.sql`: the database tables |
+| `dashboard/` | The React web app; reads from Supabase |
+| `docs/` | Challenge text, PSI data inventory, Calculator output format, and the ICM paper |
 
-## Tecnología
+To get started: `CONTEXT.md` gives the order of the stages and `CLAUDE.md` the working rules. The layout follows the ICM method (`docs/Interpretable Context Methodology.pdf`): numbered stage folders, with plain-text files as the contract between them.
 
-| Parte | Con qué | Dónde corre |
+## Technology
+
+| Part | With | Runs on |
 |---|---|---|
-| Agentes y scripts | Python | En la computadora del equipo, antes del demo |
-| Base de datos | Supabase (Postgres) | En la nube |
+| Agents and scripts | Python | The team's computers, before the demo |
+| Database | Supabase (Postgres) | Cloud |
 | Dashboard | React + Vite (JavaScript) | Vercel |
+| Charts | Vega-Lite (JSON) | Drawn by the dashboard |
 
 ```
-PSI (NASA) → agentes y scripts en Python → Supabase → dashboard en Vercel
+PSI (NASA) → Python agents and scripts → Supabase → dashboard on Vercel
 ```
 
-Los agentes nunca corren en Vercel: el dashboard solo lee resultados ya verificados.
+The agents never run on Vercel: the dashboard only reads results that are already verified.
 
-Para empezar: `CONTEXT.md` da el orden de las etapas y `CLAUDE.md` las reglas de trabajo. La organización sigue el método ICM (`docs/Interpretable Context Methodology.pdf`): carpetas numeradas por etapa y archivos de texto como contrato entre ellas.
+## Calculator output
 
-## Estado
+Each finding is one JSON file: the claim, a student summary, a professional summary, the values, the method, the evidence (rows and DOI), assumptions, limitations and warnings. Charts and graphs are created only when someone asks for them; by default the finding carries a footnote offering one.
 
-Esqueleto. Las etapas tienen su contrato escrito; los scripts están vacíos y el dashboard solo muestra datos de ejemplo. Decisiones abiertas en `_config/modelos.md` y `dashboard/README.md`.
+Full spec: `docs/calculator-output.md`. Schema: `schemas/finding.schema.json`. Examples: `schemas/examples/`.
 
-## Notas
+## Status
 
-> **Supabase gratis se pausa.** El plan gratuito pausa el proyecto tras 7 días sin actividad en la base, y la evaluación empieza el 16 de noviembre de 2026. Si un juez abre el demo con la base pausada, lo verá vacío.
-> - Antes de entregar y durante la evaluación, entrar al panel de Supabase y confirmar que el proyecto está activo. Si está pausado, se reactiva con "Restore".
-> - El dashboard usa la copia en JSON de `dashboard/public/data/` cuando no tiene conexión a Supabase. Mantenerla al día: la etapa 06 la escribe cada vez que publica.
-> - Confirmar el límite exacto en la página oficial de precios de Supabase; el dato de 7 días viene de blogs.
+Skeleton. The Calculator output format is drafted; scripts are empty and the dashboard only shows sample data. Some project documents are still in Spanish and are being translated: the whole project will be in English.
 
-## Datos
+## Notes
 
-Fuente: [NASA PSI Data Repository](https://psi.nasa.gov/physci/repo/search?q=combustion), licencia CC0-1.0. PSI pide citar cada investigación por su DOI; el dashboard muestra el DOI junto a cada dato. Detalle en `docs/datos-psi-inventario.md`.
+> **Free Supabase projects pause.** The free plan pauses a project after 7 days without database activity, and judging starts on November 16, 2026. If a judge opens the demo while the database is paused, it will look empty.
+> - Before submitting and during judging, open the Supabase dashboard and confirm the project is active. If it is paused, restore it with "Restore".
+> - The dashboard falls back to the JSON copy in `dashboard/public/data/` when it cannot reach Supabase. Keep that copy current: stage 06 writes it on every publish.
+> - Confirm the exact limit on Supabase's official pricing page; the 7-day figure comes from blog posts.
+
+## Data
+
+Source: [NASA PSI Data Repository](https://psi.nasa.gov/physci/repo/search?q=combustion), license CC0-1.0. PSI asks that each investigation be cited by its DOI; the dashboard shows the DOI next to every result. Details in `docs/datos-psi-inventario.md`.
