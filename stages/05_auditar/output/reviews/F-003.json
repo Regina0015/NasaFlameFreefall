@@ -1,0 +1,14 @@
+{
+  "finding_id": "F-003",
+  "finding_sha256": "29d4348c52a817070939fda1fec28b846b170fe4e2906cd97051b69188f08d75",
+  "flags": [
+    {
+      "question_id": "Q8",
+      "field": "method",
+      "model_reason": "Pending. The snapshot covers 21 of 22 PSI tables; a claim about 'PSI' or 'no test' does not see: PSI-142_Experimental table_Data Summary Table.csv.",
+      "decision": "dismiss",
+      "reviewer": "Regina Flores",
+      "note": "The SQL answers the question: it counts FLEX tests per diluent and those that ended in extinction. All 274 PSI-69 tests have a diluent, so no row is dropped by the filter."
+    }
+  ]
+}

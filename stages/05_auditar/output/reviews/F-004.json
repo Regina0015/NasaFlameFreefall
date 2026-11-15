@@ -1,0 +1,14 @@
+{
+  "finding_id": "F-004",
+  "finding_sha256": "e42aa38de7a6a555d8a46ee63e5d1d4f0444685fd316f83451bb3c9386b58f6f",
+  "flags": [
+    {
+      "question_id": "Q8",
+      "field": "method",
+      "model_reason": "Pending. The snapshot covers 21 of 22 PSI tables; a claim about 'PSI' or 'no test' does not see: PSI-142_Experimental table_Data Summary Table.csv.",
+      "decision": "dismiss",
+      "reviewer": "Regina Flores",
+      "note": "The SQL answers the question: it counts the 179 CFI-G normal-flame tests, the self-extinguished (se) and flow-terminated (ft) ones, and the O2 range of the self-extinguished. Tests with no recorded end are named in the limitations."
+    }
+  ]
+}

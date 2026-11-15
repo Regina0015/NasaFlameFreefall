@@ -1,0 +1,85 @@
+{
+  "id": "F-004",
+  "version": 1,
+  "question": "How many CFI-G normal gas flames went out by themselves, and over what oxygen range?",
+  "status": "has_data",
+  "claim": "Of 179 CFI-G normal gas flames, 102 went out by themselves (self-extinguished) at oxygen levels from 17.968567% to 39.97%, and 31 ended when the fuel flow was stopped.",
+  "summary_student": "In the CFI-G experiment on the space station, more than half of the small gas flames went out on their own instead of being switched off. They did so over a wide range of oxygen levels, from below to well above the level in normal air.",
+  "summary_professional": "ACME CFI-G (PSI-159) normal-flame table: 179 tests; outcome se (self-extinguished) in 102 and ft (flow terminated) in 31; the rest have no outcome recorded. XO2 before test for self-extinguished flames: 17.968567–39.97% (n = 102).",
+  "values": {
+    "psi159_normal_tests": {
+      "value": 179.0,
+      "unit": "tests"
+    },
+    "psi159_normal_self_extinguished": {
+      "value": 102.0,
+      "unit": "tests"
+    },
+    "psi159_normal_flow_terminated": {
+      "value": 31.0,
+      "unit": "tests"
+    },
+    "psi159_normal_self_extinguished_o2_min": {
+      "value": 17.968567,
+      "unit": "% O2"
+    },
+    "psi159_normal_self_extinguished_o2_max": {
+      "value": 39.97,
+      "unit": "% O2"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "SELECT 'psi159_normal_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.outcome')) AS source_columns FROM tests WHERE source_table = 'PSI-159_Experimental table_CFI-G_Normal Flames.csv' GROUP BY investigation, source_table UNION ALL SELECT 'psi159_normal_self_extinguished', count(*), 'tests', investigation, source_table, list(source_row ORDER BY source_row), list(DISTINCT json_extract_string(field_sources, '$.outcome')) FROM tests WHERE source_table = 'PSI-159_Experimental table_CFI-G_Normal Flames.csv' AND outcome = 'se' GROUP BY investigation, source_table UNION ALL SELECT 'psi159_normal_flow_terminated', count(*), 'tests', investigation, source_table, list(source_row ORDER BY source_row), list(DISTINCT json_extract_string(field_sources, '$.outcome')) FROM tests WHERE source_table = 'PSI-159_Experimental table_CFI-G_Normal Flames.csv' AND outcome = 'ft' GROUP BY investigation, source_table UNION ALL SELECT 'psi159_normal_self_extinguished_o2_min', min(o2_pct_min), '% O2', investigation, source_table, list(source_row ORDER BY source_row), list_distinct(list_concat(list(json_extract_string(field_sources, '$.outcome')), list(json_extract_string(field_sources, '$.o2_pct_max')))) FROM tests WHERE source_table = 'PSI-159_Experimental table_CFI-G_Normal Flames.csv' AND outcome = 'se' GROUP BY investigation, source_table UNION ALL SELECT 'psi159_normal_self_extinguished_o2_max', max(o2_pct_max), '% O2', investigation, source_table, list(source_row ORDER BY source_row), list_distinct(list_concat(list(json_extract_string(field_sources, '$.outcome')), list(json_extract_string(field_sources, '$.o2_pct_max')))) FROM tests WHERE source_table = 'PSI-159_Experimental table_CFI-G_Normal Flames.csv' AND outcome = 'se' GROUP BY investigation, source_table"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-159",
+      "doi": "10.60555/cyt1-kh64",
+      "table": "PSI-159_Experimental table_CFI-G_Normal Flames.csv",
+      "columns": [
+        "Self-ext or flow term",
+        "XO2 before test"
+      ],
+      "rows": "all"
+    }
+  ],
+  "n_tests": 179,
+  "assumptions": [
+    "\"se\" and \"ft\" in the column \"Self-ext or flow term\" are read as self-extinguished and flow terminated.",
+    "Oxygen is the \"XO2 before test\" mole fraction, read as a percentage."
+  ],
+  "limitations": [
+    "Covers only the CFI-G normal-flame table; inverse flames are not included.",
+    "Counts how flames ended; it does not say why each one went out.",
+    "Pressure and fuel mixture also differ between tests and were not held equal."
+  ],
+  "warnings": [],
+  "environments": [
+    "space_station"
+  ],
+  "tier": 2,
+  "pillar": "suppression",
+  "visual_offer": {
+    "chart": {
+      "available": false,
+      "idea": null
+    },
+    "graph": {
+      "available": false,
+      "idea": null
+    },
+    "footnote": null
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T00:11:26Z"
+  }
+}

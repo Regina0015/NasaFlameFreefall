@@ -1,11 +1,11 @@
 {
   "id": "F-010",
-  "version": 1,
+  "version": 2,
   "question": "Across FLEX and FLEX-2, at what oxygen levels did droplet flames go out (extinction)?",
   "status": "has_data",
-  "claim": "In FLEX (PSI-69), 186 microgravity droplet tests ended in flame extinction at oxygen levels from 12% to 30% O2, spread over 13 distinct O2 levels, while the FLEX-2 (PSI-68) table records no test outcome (0 rows with an outcome), so it cannot say where its flames went out.",
-  "summary_student": "On the space station, FLEX burned single fuel droplets and 186 of those flames went out on their own, at oxygen levels anywhere from 12% to 30%. FLEX-2 also burned droplets at oxygen levels from 17% to 30%, but its data table only lists the conditions it tried, not whether each flame went out, so it does not answer this question.",
-  "summary_professional": "PSI-69 (FLEX) experimental table: n = 186 tests with Test end = extinction, initial ambient O2 mole fraction from 12% to 30% O2 across 13 distinct O2 levels, with N2, N2+CO2 or N2+He diluents, all in microgravity. PSI-68 (FLEX-2) experimental table is a condition matrix (O2 tested from 17% to 30% O2) with no outcome column: 0 rows with an outcome, so no FLEX-2 extinction oxygen level can be derived from PSI. The 12% to 30% range describes where extinction was observed, not a limiting oxygen index.",
+  "claim": "In FLEX (PSI-69), 186 droplet tests ended in flame extinction at initial ambient oxygen levels from 12.0% to 30.0% O2, while the FLEX-2 (PSI-68) table records no test outcome and cannot answer the question.",
+  "summary_student": "In the FLEX experiment on the space station, 186 burning fuel droplets had their flames go out, in air mixtures that held between 12.0% and 30.0% oxygen. The FLEX-2 experiment's table does not say how each test ended, so it tells us nothing about when flames went out.",
+  "summary_professional": "Of the FLEX (PSI-69) tests, 186 have Test end = extinction; their initial ambient O2 mole fraction spans 12.0% to 30.0% O2 (each row gives a single O2 value). The FLEX-2 (PSI-68) experimental table has 8 condition-matrix rows and no outcome column, so it contributes no extinction data. The finding draws on 194 rows in total, of which only the 186 FLEX rows carry an outcome.",
   "values": {
     "flex_extinction_o2_min": {
       "value": 12.0,
@@ -19,28 +19,16 @@
       "value": 186.0,
       "unit": "tests"
     },
-    "flex_extinction_o2_levels": {
-      "value": 13.0,
-      "unit": "distinct O2 levels"
-    },
-    "flex2_rows_with_outcome": {
-      "value": 0.0,
-      "unit": "rows"
-    },
-    "flex2_o2_tested_min": {
-      "value": 17.0,
-      "unit": "% O2"
-    },
-    "flex2_o2_tested_max": {
-      "value": 30.0,
-      "unit": "% O2"
+    "flex2_tests_without_outcome": {
+      "value": 8.0,
+      "unit": "tests"
     }
   },
   "method": {
     "script": "scripts/functions.py",
     "function": "sql_query",
     "params": {
-      "sql": "SELECT 'flex_extinction_o2_min' AS name, min(o2_pct_min) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_min')) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND outcome = 'extinction' AND o2_pct_min IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'flex_extinction_o2_max', max(o2_pct_max), '% O2', investigation, source_table, list(source_row ORDER BY source_row), list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) FROM tests WHERE investigation = 'PSI-69' AND outcome = 'extinction' AND o2_pct_max IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'flex_extinction_tests', count(*), 'tests', investigation, source_table, list(source_row ORDER BY source_row), list(DISTINCT json_extract_string(field_sources, '$.outcome')) FROM tests WHERE investigation = 'PSI-69' AND outcome = 'extinction' GROUP BY investigation, source_table UNION ALL SELECT 'flex_extinction_o2_levels', count(DISTINCT o2_pct_min), 'distinct O2 levels', investigation, source_table, list(source_row ORDER BY source_row), list(DISTINCT json_extract_string(field_sources, '$.o2_pct_min')) FROM tests WHERE investigation = 'PSI-69' AND outcome = 'extinction' AND o2_pct_min IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'flex2_rows_with_outcome', count(outcome), 'rows', investigation, source_table, list(source_row ORDER BY source_row), flatten(list(DISTINCT json_keys(raw))) FROM tests WHERE investigation = 'PSI-68' GROUP BY investigation, source_table UNION ALL SELECT 'flex2_o2_tested_min', min(o2_pct_min), '% O2', investigation, source_table, list(source_row ORDER BY source_row), list(DISTINCT json_extract_string(field_sources, '$.o2_pct_min')) FROM tests WHERE investigation = 'PSI-68' AND o2_pct_min IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'flex2_o2_tested_max', max(o2_pct_max), '% O2', investigation, source_table, list(source_row ORDER BY source_row), list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) FROM tests WHERE investigation = 'PSI-68' AND o2_pct_max IS NOT NULL GROUP BY investigation, source_table"
+      "sql": "SELECT 'flex_extinction_o2_min' AS name, min(o2_pct_min) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_min')) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND outcome = 'extinction' AND o2_pct_min IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'flex_extinction_o2_max' AS name, max(o2_pct_max) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND outcome = 'extinction' AND o2_pct_max IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'flex_extinction_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.outcome')) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND outcome = 'extinction' GROUP BY investigation, source_table UNION ALL SELECT 'flex2_tests_without_outcome' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_min')) AS source_columns FROM tests WHERE investigation = 'PSI-68' AND (outcome IS NULL OR outcome = '') GROUP BY investigation, source_table"
     },
     "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
   },
@@ -50,13 +38,7 @@
       "doi": "10.60555/byp8-h018",
       "table": "PSI-68_Experimental table_Flex2.csv",
       "columns": [
-        "Ambient Gas Mixture",
-        "Ambient Pressure (atm)",
-        "Ambient Temperature (C)",
-        "Flow Velocity (cm/s)",
-        "Initial Droplet Diameter (mm)",
-        "Oxygen Mole Fraction",
-        "Sample (Fuel Type)"
+        "Oxygen Mole Fraction"
       ],
       "rows": [
         1,
@@ -269,15 +251,14 @@
   ],
   "n_tests": 194,
   "assumptions": [
-    "A FLEX test counts as an extinction when its Test end column reads extinction; tests ending in completion or disruption are excluded.",
-    "Oxygen is the initial ambient O2 mole fraction, treated as equal to volume percent.",
-    "FLEX headers lost their subscripts in PSI's file, so the O column is read as O2."
+    "Extinction is taken from the FLEX table column Test end, as normalized to the outcome value extinction.",
+    "The oxygen level is the initial ambient O2 mole fraction from the FLEX table, treated as equal to percent by volume."
   ],
   "limitations": [
-    "FLEX-2 gives no per-test outcome, so this finding says nothing about where FLEX-2 flames went out.",
-    "The range covers all FLEX fuels, diluents, droplet sizes and pressures together; it is not an extinction limit for any one fuel or condition.",
-    "Extinction at a given oxygen level does not mean flames cannot survive there: other FLEX tests at overlapping levels ended in completion or disruption.",
-    "All tests are microgravity droplet flames; the finding does not cover solids, gases, partial gravity or Earth gravity."
+    "The FLEX-2 (PSI-68) table has no outcome column, so it cannot answer the question; no FLEX-2 extinction oxygen level is reported here.",
+    "The range covers all FLEX extinction tests together; it does not separate fuels, diluents, pressures or droplet sizes, so it is not an extinction limit for any single condition.",
+    "The finding does not compare extinction with FLEX tests that ended in completion or disruption, so it does not show that oxygen level alone decides whether a droplet flame goes out.",
+    "All FLEX tests are in microgravity; the finding says nothing about Earth gravity or partial gravity, and nothing about solid or gas fuels."
   ],
   "warnings": [],
   "environments": [],
@@ -286,19 +267,19 @@
   "visual_offer": {
     "chart": {
       "available": true,
-      "idea": "Bar chart of FLEX extinction tests per O2 level from 12% to 30% O2, next to a range bar of the O2 levels FLEX-2 tested with no outcome recorded."
+      "idea": "Range bar of the initial O2 levels of the FLEX extinction tests, with the FLEX-2 table marked as having no outcome data."
     },
     "graph": {
       "available": true,
-      "idea": "Proof graph linking this finding to FLEX and FLEX-2, which share the MDCA droplet hardware, and to their PSI tables."
+      "idea": "Proof graph linking the finding to the FLEX and FLEX-2 investigations and their shared droplet hardware."
     },
-    "footnote": "Want a visual? I can draw a chart of how many FLEX droplet flames went out at each oxygen level, or a graph linking FLEX and FLEX-2 through their shared droplet hardware."
+    "footnote": "Want a visual? I can draw a chart of the oxygen range where FLEX droplet flames went out, or a graph of how FLEX and FLEX-2 connect."
   },
   "chart": null,
   "graph": null,
   "generated_by": {
     "agent": "calculator",
     "model": "claude-opus-5-5",
-    "date": "2026-11-15T07:54:08Z"
+    "date": "2026-11-15T08:02:19Z"
   }
 }
