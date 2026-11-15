@@ -1,0 +1,138 @@
+{
+  "id": "F-008",
+  "version": 1,
+  "question": "How high did oxygen go in the ACME gas-flame tests (BRE and CFI-G), and did any reach 30%?",
+  "status": "has_data",
+  "claim": "Yes: all 16 BRE test-day rows with oxygen data included a condition at 30% or more (up to 40%), and 230 of 333 CFI-G tests reached 30% or more (up to 85%).",
+  "summary_student": "Gas flames were burned in space at oxygen levels above the one planned for a Moon base, much higher than normal air. Some of the highest values come from a special flame where oxygen is blown into the fuel, not from the air around it.",
+  "summary_professional": "ACME BRE (PSI-20): O2 21–40% over 16 test-day rows, each including at least one condition at or above 30%. ACME CFI-G (PSI-159): XO2 12–85%, 230 of 333 tests at or above 30%; the highest values are inverse flames, where XO2 is the burner stream.",
+  "values": {
+    "psi20_o2_min": {
+      "value": 21.0,
+      "unit": "% O2"
+    },
+    "psi20_o2_max": {
+      "value": 40.0,
+      "unit": "% O2"
+    },
+    "psi20_n_tests": {
+      "value": 16,
+      "unit": "tests"
+    },
+    "psi20_n_at_or_above": {
+      "value": 16,
+      "unit": "tests"
+    },
+    "psi159_o2_min": {
+      "value": 12.0,
+      "unit": "% O2"
+    },
+    "psi159_o2_max": {
+      "value": 85.0,
+      "unit": "% O2"
+    },
+    "psi159_n_tests": {
+      "value": 333,
+      "unit": "tests"
+    },
+    "psi159_n_at_or_above": {
+      "value": 230,
+      "unit": "tests"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "o2_range",
+    "params": {
+      "investigations": [
+        "PSI-20",
+        "PSI-159"
+      ],
+      "threshold_pct": 30.0
+    },
+    "formula": "For each investigation, the lowest and highest oxygen percentage over its tests that report oxygen, the number of those tests, and how many reached at least threshold_pct (o2_pct_max >= threshold_pct)."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-20",
+      "doi": "10.60555/vb93-3y72",
+      "table": "PSI-20_Experimental table_ACME BRE.csv",
+      "columns": [
+        "Oxygen Conc (percent)"
+      ],
+      "rows": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ]
+    },
+    {
+      "investigation": "PSI-159",
+      "doi": "10.60555/cyt1-kh64",
+      "table": "PSI-159_Experimental table_CFI-G_Inverse Flames.csv",
+      "columns": [
+        "XO2"
+      ],
+      "rows": "all"
+    },
+    {
+      "investigation": "PSI-159",
+      "doi": "10.60555/cyt1-kh64",
+      "table": "PSI-159_Experimental table_CFI-G_Normal Flames.csv",
+      "columns": [
+        "XO2 before test"
+      ],
+      "rows": "all"
+    }
+  ],
+  "n_tests": 349,
+  "assumptions": [
+    "Mole fraction and volume fraction are treated as equal (ideal gas).",
+    "A BRE row is one test day that lists several oxygen conditions; its highest condition is used."
+  ],
+  "limitations": [
+    "BRE rows are test days, not single tests, so 16 counts days.",
+    "CFI-G inverse-flame oxygen is the burner stream, not the surrounding gas; it does not describe a breathable atmosphere.",
+    "These are gas flames; they say nothing about how solid materials burn."
+  ],
+  "warnings": [
+    "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+  ],
+  "environments": [
+    "lunar_base",
+    "pressurized_rover"
+  ],
+  "tier": 2,
+  "pillar": "prevention",
+  "visual_offer": {
+    "chart": {
+      "available": true,
+      "idea": "Range bars of the oxygen levels tested by BRE and CFI-G, with a dashed line at 30%."
+    },
+    "graph": {
+      "available": false,
+      "idea": null
+    },
+    "footnote": "Want a visual? I can draw a chart of the oxygen levels tested by BRE and CFI-G against the 30% lunar habitat target."
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T00:11:30Z"
+  }
+}

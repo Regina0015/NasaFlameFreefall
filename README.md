@@ -53,7 +53,22 @@ Full spec: `docs/calculator-output.md`. Schema: `schemas/finding.schema.json`. E
 
 ## Status
 
-In progress (branch `calculator-agent`): PSI download, the data snapshot (8 test tables), tiers and relations are built and tested; the Investigator and Calculator agents are being built. The dashboard only shows sample data. Setup: `uv sync`; tests: `uv run python -m unittest discover -s scripts/tests -t .` (see `CLAUDE.md`).
+Branch `calculator-agent`. Setup: `uv sync` (needs uv and Python 3.12+); tests: `uv run python -m unittest discover -s scripts/tests -t .` (see `CLAUDE.md`).
+
+**Works now**
+
+- PSI download (24 combustion investigations, 22 test tables) and the data snapshot: 967 tests from 9 tables of 8 investigations, tiers, and 63 relations between investigations.
+- Read-only SQL over the snapshot (`scripts.query`), a tested calculation catalog (`o2_range`, `coverage_by_environment`, `sql_query`) and calc files (`scripts.run_calc`).
+- Findings checked before they are saved (`scripts.write_finding`): every number in the text must come from the computed values, and every finding validates against `schemas/finding.schema.json`.
+- Charts (Vega-Lite 6) and proof graphs on request, saved as a new version of the finding.
+- Agent commands in Claude Code: `/investigate`, `/ask "<question>"`, `/chart F-001`, `/graph F-001`.
+- Eight demo findings in `stages/04_calcular/output/findings/` from `docs/demo-questions.md` (draft for team review), including the lunar oxygen gap and a `no_data` answer.
+
+**Waiting on teammates**
+
+- **Auditor:** set `AUDITOR_CMD` in `.env` (see `.env.example`). Until then every finding is `pending audit`; no grade is ever invented.
+- **Database:** run `/investigate` once from a fresh pull, review its output, then define the findings table; the publish script comes after that. If the database export changes the snapshot columns, the query tool reports the missing ones by name.
+- **Dashboard:** reads findings from the database; it draws `chart` (Vega-Lite 6) and `graph` from the finding file.
 
 ## Notes
 

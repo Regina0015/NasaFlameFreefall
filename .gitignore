@@ -31,3 +31,4 @@ models/
 data/user/
 stages/04_calcular/output/queries/
 stages/04_calcular/output/drafts/
+stages/04_calcular/output/calcs/
