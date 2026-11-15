@@ -58,13 +58,15 @@ async function snapshotUpdated(config) {
 
 async function ollamaStatus(config) {
   try {
-    const r = await fetch(`${config.ollamaUrl}/api/tags`, { signal: AbortSignal.timeout(3000) })
+    const r = await fetch(`${config.ollamaUrl}/api/tags`, { headers: config.ollamaHeaders, signal: AbortSignal.timeout(5000) })
+    if (!r.ok) throw new Error(`answered ${r.status}`) // a gateway without the right key answers 401
     const { models = [] } = await r.json()
     const installed = models.some((m) => m.name === config.model || m.model === config.model)
     // Preload the model on the GPU when the dashboard opens, so the first question does not wait.
     if (installed) {
       fetch(`${config.ollamaUrl}/api/generate`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...config.ollamaHeaders },
         body: JSON.stringify({ model: config.model, keep_alive: config.keepAlive }),
       }).catch(() => {})
     }

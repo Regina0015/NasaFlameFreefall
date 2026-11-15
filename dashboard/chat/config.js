@@ -8,6 +8,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url))
 export function createConfig(env = process.env) {
   return {
     ollamaUrl: env.OLLAMA_URL || 'http://localhost:11434',
+    // With OLLAMA_URL=http://<gateway>:8000/llm, the gateway's API key (api/routes/llm.py). Server side only.
+    ollamaHeaders: env.OLLAMA_API_KEY ? { 'X-API-Key': env.OLLAMA_API_KEY } : {},
     model: env.CHAT_MODEL || 'gemma4:e4b-it-qat',
     think: false, // required with Gemma 4, or it "thinks" before answering
     options: { temperature: 0, seed: 42, num_ctx: 8192 },

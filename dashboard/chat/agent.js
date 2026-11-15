@@ -14,7 +14,7 @@ export const PARTIAL_GRAVITY_WARNING =
 export async function callOllama(config, body) {
   const response = await fetch(`${config.ollamaUrl}/api/chat`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...config.ollamaHeaders },
     body: JSON.stringify({
       model: config.model,
       stream: false,

@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 
 from api import config
 from api.jobs import AuditQueue
-from api.routes import audit, findings, health
+from api.routes import audit, findings, health, llm
 from api.security import require_key
 from api.store import Store
 
@@ -73,7 +73,7 @@ def create_app(gateway_dir=None) -> FastAPI:
                        allow_headers=["X-API-Key", "Content-Type"])
 
     app.include_router(health.router)
-    for router in (audit.router, findings.router):
+    for router in (audit.router, findings.router, llm.router):
         app.include_router(router, dependencies=[Depends(require_key)])
     return app
 
