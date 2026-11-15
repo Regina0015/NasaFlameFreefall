@@ -32,7 +32,7 @@
       "required": ["value", "reason", "sources"],
       "additionalProperties": false,
       "properties": {
-        "value": { "enum": ["prevention", "detection", "suppression"] },
+        "value": { "enum": ["prevention", "detection", "suppression", "none"] },
         "reason": { "type": "string", "minLength": 1 },
         "sources": { "$ref": "#/$defs/sources" }
       }

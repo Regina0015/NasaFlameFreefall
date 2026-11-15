@@ -107,6 +107,10 @@ The official path stays fixed: each finding uses one documented interpretation, 
   - Tier filter: Tier 1 only, or all investigations.
 - **Show next to each result:** how many tests each choice adds or drops, and which investigations they come from.
 
+## Auditor gateway
+
+`api/` exposes the Auditor over HTTP so the Calculator and Chatbot PCs can reach it: `POST /audit`, `GET /audits`, `GET /findings`, `GET /health`. Every route except `/health` needs the `X-API-Key` header. Start it on the Wi-Fi/LAN address of the Auditor's PC (`ip -4 addr show wlp0s20f3`): `uv run uvicorn api.main:app --host 192.168.1.128 --port 8000` (set `API_KEY` in `.env`). Binding to that address means `localhost` does not work on that PC: use the LAN address there too. Open the port to the LAN only: `sudo ufw allow from 192.168.1.0/24 to any port 8000 proto tcp`. Router DHCP can change the address: reserve it in the router, or update `base_url` and `AUDITOR_URL` when it changes. To test across PCs, import `postman/NasaFlameFreefall.postman_collection.json` and `postman/local.postman_environment.json`, then set `base_url` and `api_key`. The Calculator PC runs `uv run python -m scripts.audit_client F-001`, and the Chatbot PC reads grades through `scripts/chat_tools.py`; both need `AUDITOR_URL=http://192.168.1.128:8000` and `AUDITOR_API_KEY` (the chatbot's launcher must export them: `chat_tools` does not read `.env`). Received findings and their audits are kept in `stages/05_auditar/output/gateway/` (git-ignored).
+
 ## Notes
 
 > **Free Supabase projects pause.** The free plan pauses a project after 7 days without database activity, and judging starts on November 16, 2026. If a judge opens the demo while the database is paused, it will look empty.

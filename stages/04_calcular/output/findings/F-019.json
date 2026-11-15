@@ -1,0 +1,58 @@
+{
+  "id": "F-019",
+  "version": 1,
+  "question": "Would a PMMA fire spread faster on the Moon than on the International Space Station?",
+  "status": "no_data",
+  "claim": "No PSI test answers this question: every PMMA test in the PSI tables was run in microgravity, and none was run in lunar gravity or in a lunar habitat atmosphere, so PSI data cannot say whether PMMA fire would spread faster on the Moon.",
+  "summary_student": "NASA's PSI data has no PMMA (acrylic plastic) fire tests on the Moon or in Moon-like gravity, and no PMMA tests at all outside microgravity in its test tables. That means the data cannot tell us whether an acrylic fire would spread faster on the Moon than on the space station. This is a gap in the data, not a sign that either place is safe or unsafe.",
+  "summary_professional": "A query over the tests table for PMMA samples with gravity other than microgravity returned no rows; the PMMA tests that exist (BASS PSI-26, BASS-II PSI-25, Saffire-II PSI-99) are all microgravity tests. PSI holds no partial-gravity combustion data, and the normalized tables carry no numeric PMMA flame-spread rate, so neither a lunar spread rate nor a microgravity-to-Earth-gravity bound can be computed from these tables. A comparison would also need a sourced ISS atmosphere, which the project does not yet have.",
+  "values": {},
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "SELECT 'pmma_tests_not_microgravity' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.gravity')) AS source_columns FROM tests WHERE fuel ILIKE '%PMMA%' AND gravity <> 'microgravity' GROUP BY investigation, source_table"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [],
+  "n_tests": 0,
+  "assumptions": [
+    "PMMA tests were identified by the text PMMA in the fuel column, as written in the source tables.",
+    "The International Space Station is represented by the microgravity tests; its cabin atmosphere is not sourced in _config/environments.md and was not used."
+  ],
+  "limitations": [
+    "PSI has no partial-gravity combustion data, so no lunar-gravity spread rate exists to compare with microgravity.",
+    "The normalized tests table has no numeric flame-spread-rate column for PMMA; Saffire-II gives only qualitative spread notes in its raw cells, so spread rates cannot be compared even within microgravity.",
+    "There are no Earth-gravity PMMA rows in the tests table, so the microgravity and Earth-gravity bounds suggested by the challenge cannot be built for PMMA from these tables.",
+    "The lunar habitat atmosphere (higher oxygen, lower pressure) differs from the ISS cabin, and pressure is not given in the PMMA tables, so the effect of atmosphere on spread cannot be separated from the effect of gravity.",
+    "Published papers on these investigations may report PMMA spread rates; this finding covers only the PSI tables in the snapshot."
+  ],
+  "warnings": [
+    "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+  ],
+  "environments": [
+    "lunar_base",
+    "space_station"
+  ],
+  "tier": null,
+  "pillar": "prevention",
+  "visual_offer": {
+    "chart": {
+      "available": false,
+      "idea": null
+    },
+    "graph": {
+      "available": false,
+      "idea": null
+    },
+    "footnote": null
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T08:45:22Z"
+  }
+}

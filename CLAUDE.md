@@ -15,6 +15,7 @@ Everything in this project is in **English**: code, comments, documents, agent o
 | `_config/` | Shared context for every agent: challenge summary, tier table, environments, audiences, confidence grade, data schema, models |
 | `data/snapshot/` | The data the Calculator reads, copied from the database with `scripts.pull_db` (the database wins): `tests.csv`, `investigations.csv`, `relations.csv`, `catalog.md` (column meanings and units) |
 | `data/user/` | Per-user datasets (phase 2). Git-ignored; never mixed into the PSI layer |
+| `api/` | Auditor gateway (FastAPI): other machines send findings to stage 05 and read grades over HTTP. Postman files in `postman/` |
 | `scripts/` | Python tools that do all deterministic work: download, normalize, query, calculate, check, chart |
 | `.claude/agents/` | Agent instructions: `investigator.md`, `calculator.md` |
 | `.claude/skills/` | Commands: `/investigate`, `/ask`, `/chart`, `/graph` |
@@ -46,6 +47,9 @@ uv run python -m unittest discover -s scripts/tests -t .   # run all tests
 uv run python -m scripts.fetch_psi                         # download PSI records and test tables
 uv run python -m scripts.build_snapshot                    # rebuild data/snapshot/
 uv run python -m scripts.pull_db                           # copy the database (Supabase) into data/snapshot/; --check only compares
+uv run uvicorn api.main:app --host <this PC's LAN IP>      # Auditor gateway (needs API_KEY in .env)
+uv run python -m scripts.audit_client F-001                # Calculator PC: send a finding to the gateway
+uv run python -m scripts.build_postman                     # regenerate postman/*.json
 ```
 
 Agent commands (Claude Code):

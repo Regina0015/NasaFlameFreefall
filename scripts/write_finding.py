@@ -157,8 +157,10 @@ def main(argv: list[str] | None = None, findings_dir: Path = FINDINGS_DIR, calcs
         return 1
     if old:
         finding["version"] = findings.bump_version(old, now, findings_dir)["version"]
-    path = findings.save(finding, findings_dir)
-    print(f"saved {fid}: {path}")
+        path = findings.save(finding, findings_dir)
+    else:
+        path = findings.save_new(finding, findings_dir)
+    print(f"saved {finding['id']}: {path}")
     return 0
 
 

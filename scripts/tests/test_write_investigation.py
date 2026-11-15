@@ -74,6 +74,14 @@ class BuildRecordTest(unittest.TestCase):
         d["pillar"]["value"] = "maybe"
         self.assertIsNone(build_record(RECORD, d, TIERS, NOW)[0])
 
+    def test_pillar_none_when_psi_states_no_fire_safety_use(self):
+        # PSI-22 says it does not serve space applications: "none" with a sourced reason, never a forced pillar.
+        d = valid_draft()
+        d["pillar"] = {"value": "none", "reason": "The record states no fire-safety use.", "sources": ["researchImpacts"]}
+        rec, problems = build_record(RECORD, d, TIERS, NOW)
+        self.assertEqual(problems, [])
+        self.assertEqual(rec["pillar"]["value"], "none")
+
     def test_wrong_id_is_rejected(self):
         d = valid_draft()
         d["id"] = "PSI-26"

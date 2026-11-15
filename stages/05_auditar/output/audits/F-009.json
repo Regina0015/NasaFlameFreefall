@@ -1,7 +1,7 @@
 {
   "finding_id": "F-009",
-  "finding_version": 1,
-  "finding_sha256": "9cf72acf838895fe7385d2a05c1570ec3077171df4102b0c51cbfa89de5b9bcc",
+  "finding_version": 2,
+  "finding_sha256": "a2972a8dc200067c4f9efe03ab7f27cf7ce24c3ba4baa29ced8dd33884c7700f",
   "checks": [
     {
       "id": "C0",
@@ -15,21 +15,21 @@
       "name": "traceability",
       "done_by": "code",
       "result": "pass",
-      "detail": "Rows, columns and DOI found: PSI-99: 15 rows in PSI-99_Experimental table_SAFFIRE-2.csv"
+      "detail": "Rows, columns and DOI found: PSI-99: 9 rows in PSI-99_Experimental table_SAFFIRE-2.csv"
     },
     {
       "id": "C2",
       "name": "fidelity",
       "done_by": "code",
-      "result": "not_applicable",
-      "detail": "No extreme value to compare with a single cell."
+      "result": "pass",
+      "detail": "psi99_o2_min = 21.5 % O2 <- cell '~ 21.5' at row 1 of PSI-99_Experimental table_SAFFIRE-2.csv (approximate or multi-value cell); psi99_o2_max = 22.1 % O2 <- cell '~ 22.1' at row 2 of PSI-99_Experimental table_SAFFIRE-2.csv (approximate or multi-value cell)"
     },
     {
       "id": "C3",
       "name": "recalculation",
       "done_by": "code",
-      "result": "fail",
-      "detail": "values.psi99_o2_min = 21.5 % O2, recalculated nothing; values.psi99_o2_max = 22.1 % O2, recalculated nothing; values.psi99_n_tests: cannot tell which statistic it is (expected a _min, _max or count suffix); n_tests = 9 but the evidence cites 15 rows"
+      "result": "pass",
+      "detail": "All 5 numbers recomputed from the original cells match (relative tolerance 1e-06, counts exact)."
     },
     {
       "id": "C4",
@@ -57,14 +57,14 @@
       "name": "data_quality",
       "done_by": "code",
       "result": "fail",
-      "detail": "0 of 15 needed cells readable (0.0%); level: many."
+      "detail": "9 of 9 needed cells readable (100.0%), 9 of them approximate or multi-value; level: minor."
     },
     {
       "id": "C8",
       "name": "faithful_text",
       "done_by": "code+model",
       "result": "fail",
-      "detail": "13 of 19 answers differ from the expected one: Q3/claim, Q4/claim, Q5/claim, Q6/claim, Q3/summary_student, Q4/summary_student, Q5/summary_student, Q6/summary_student, Q3/summary_professional, Q4/summary_professional, Q5/summary_professional, Q6/summary_professional, Q7/limitations. 13 unanswered (model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>); needs manual review."
+      "detail": "2 of 19 answers differ from the expected one: Q4/summary_student, Q3/summary_professional."
     },
     {
       "id": "C9",
@@ -78,26 +78,26 @@
     {
       "value_name": "psi99_o2_min",
       "finding_value": 21.5,
-      "recalculated_value": null,
+      "recalculated_value": 21.5,
       "unit": "% O2",
-      "match": false,
+      "match": true,
       "detail": "min of PSI-99"
     },
     {
       "value_name": "psi99_o2_max",
       "finding_value": 22.1,
-      "recalculated_value": null,
+      "recalculated_value": 22.1,
       "unit": "% O2",
-      "match": false,
+      "match": true,
       "detail": "max of PSI-99"
     },
     {
       "value_name": "psi99_n_tests",
       "finding_value": 9,
-      "recalculated_value": null,
+      "recalculated_value": 9.0,
       "unit": "tests",
-      "match": false,
-      "detail": "not recomputed"
+      "match": true,
+      "detail": "n_tests of PSI-99"
     },
     {
       "value_name": "psi99_n_at_or_above",
@@ -110,9 +110,9 @@
     {
       "value_name": "n_tests",
       "finding_value": 9,
-      "recalculated_value": 15,
+      "recalculated_value": 9,
       "unit": "tests",
-      "match": false,
+      "match": true,
       "detail": "sum of the cited rows over all evidence"
     }
   ],
@@ -183,9 +183,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text mentions 'Saffire-II' and 'PSI-99' which are present in the cited investigations and evidence, but it does not name any other specific fuel, material, experiment, investigation, or test condition not covered by the provided context.",
+      "attempts": 1
     },
     {
       "question_id": "Q4",
@@ -193,9 +193,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The text specifically references the '9 Saffire-II (PSI-99) tests' which corresponds directly to the cited investigation.",
+      "attempts": 1
     },
     {
       "question_id": "Q5",
@@ -203,9 +203,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text reports the range of oxygen levels tested and the outcome of those tests, not the absence of tests.",
+      "attempts": 1
     },
     {
       "question_id": "Q6",
@@ -213,9 +213,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text only discusses oxygen levels in tests and does not mention lunar or Martian gravity.",
+      "attempts": 1
     },
     {
       "question_id": "Q3",
@@ -223,9 +223,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text mentions 'Saffire-II' and 'solid materials' which are referenced in the cited investigations and evidence, but it does not name a specific fuel or material.",
+      "attempts": 1
     },
     {
       "question_id": "Q4",
@@ -233,9 +233,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text refers to '9 samples of solid materials' and 'these results' without explicitly limiting the scope to only the SAFFIRE-II investigation.",
+      "attempts": 1
     },
     {
       "question_id": "Q5",
@@ -243,9 +243,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text states that the results cannot tell us how materials would burn at a higher oxygen level, which is a limitation of the testing scope, not a direct safety conclusion based on the tests performed.",
+      "attempts": 1
     },
     {
       "question_id": "Q6",
@@ -253,9 +253,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text only discusses combustion in microgravity and explicitly states the results cannot tell us how materials would burn at a lunar habitat's oxygen level.",
+      "attempts": 1
     },
     {
       "question_id": "Q3",
@@ -263,9 +263,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The text mentions 'silicone' and 'cotton-fiberglass SIBAL' as fuels, which are not explicitly listed in the cited evidence, values, assumptions, or limitations.",
+      "attempts": 1
     },
     {
       "question_id": "Q4",
@@ -273,9 +273,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The text specifically refers to PSI-99 (SAFFIRE-II) reports, which is the only investigation cited.",
+      "attempts": 1
     },
     {
       "question_id": "Q5",
@@ -283,9 +283,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text reports the number of tests conducted and their oxygen levels, but it does not draw any conclusions about safety based on the lack of tests at higher oxygen levels.",
+      "attempts": 1
     },
     {
       "question_id": "Q6",
@@ -293,9 +293,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text only reports on microgravity combustion tests and does not describe or predict combustion behavior under lunar or Martian gravity.",
+      "attempts": 1
     },
     {
       "question_id": "Q7",
@@ -303,20 +303,25 @@
       "field": "limitations",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The limitations explicitly name several investigations and conditions that the finding does not cover.",
+      "attempts": 1
     }
   ],
-  "grade": "rejected",
+  "grade": "C",
   "reasons": [
-    "C3 (recalculation) failed; the finding cannot be published."
+    "C8 failed: the text says more than the evidence supports, or it was not reviewed."
   ],
-  "send_back_to": "04_calcular",
+  "send_back_to": null,
   "audited_by": {
     "script": "scripts/auditar.py",
-    "model": null,
-    "model_params": null,
-    "date": "2026-11-15T01:13:12Z"
+    "model": "gemma4:e4b-it-qat",
+    "model_params": {
+      "think": false,
+      "temperature": 0,
+      "seed": 42,
+      "num_ctx": 8192
+    },
+    "date": "2026-11-15T09:32:20Z"
   }
 }

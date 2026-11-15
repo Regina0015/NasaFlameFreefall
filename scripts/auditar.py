@@ -134,6 +134,8 @@ RETRY_REMINDER = "Reply ONLY with JSON of the form {\"reason\": \"one sentence\"
 COUNT_UNITS = {"tests", "test", "count", "rows", "days", "test days"}
 POSITIVE_UNITS = {"atm", "psi", "kpa", "pa", "cm/s", "mm/s", "m/s", "mm", "cm", "m", "s", "ms",
                   "k", "ppm", "w", "kw", "g", "mg"}
+# Velocidades: 0 es posible (SAME-R lista pruebas a 0 cm/s, sin flujo); negativas no.
+NONNEGATIVE_UNITS = {"cm/s", "mm/s", "m/s"}
 
 
 # =============================================================================
@@ -1477,7 +1479,7 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
                 if v < 0 or not float(v).is_integer():
                     c4.append(f"values.{key} = {v} {unit} is not a whole, non-negative count")
             elif u in POSITIVE_UNITS:
-                if v <= 0:
+                if v < 0 or (v == 0 and u not in NONNEGATIVE_UNITS):
                     c4.append(f"values.{key} = {v} {unit} must be positive")
             else:
                 c4.append(f"values.{key}: unit '{unit}' is not in the auditor's unit table")

@@ -1,0 +1,112 @@
+{
+  "id": "F-016",
+  "version": 1,
+  "question": "How many tests burned Kapton, and in which investigations?",
+  "status": "has_data",
+  "claim": "Kapton appears as the sample material in 30 PSI tests, all in the two smoke-detection investigations: 29 in SAME-R (PSI-101) and 1 in SAME (PSI-102).",
+  "summary_student": "Kapton, a plastic film used on spacecraft wiring, shows up in 30 tests in the PSI data. Almost all of them, 29, are in SAME-R and 1 is in SAME. Both experiments heated materials to make smoke so they could test smoke detectors in space, rather than to study open flames.",
+  "summary_professional": "Rows whose fuel (Sample Type) is Kapton: n = 30, split as 29 tests in PSI-101 (SAME-R) and 1 test in PSI-102 (SAME). All rows are phase smoke: the samples were heated to generate smoke particulate for detector evaluation, not burned as flames. The tables give no O2 or pressure for these rows; SAME-R rows do give inlet velocity, aging times and Rt/R0.",
+  "values": {
+    "psi101_kapton_tests": {
+      "value": 29,
+      "unit": "tests"
+    },
+    "psi102_kapton_tests": {
+      "value": 1,
+      "unit": "tests"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "SELECT lower(replace(investigation, '-', '')) || '_kapton_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.fuel')) AS source_columns FROM tests WHERE fuel ILIKE '%kapton%' GROUP BY investigation, source_table ORDER BY investigation"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-101",
+      "doi": "10.60555/2np7-jv14",
+      "table": "PSI-101_Experimental table_SAME-R.csv",
+      "columns": [
+        "Sample Type"
+      ],
+      "rows": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ]
+    },
+    {
+      "investigation": "PSI-102",
+      "doi": "10.60555/gd4k-8h62",
+      "table": "PSI-102_Experimental table_SAME.csv",
+      "columns": [
+        "Sample Material"
+      ],
+      "rows": [
+        5
+      ]
+    }
+  ],
+  "n_tests": 30,
+  "assumptions": [
+    "A test counts as a Kapton test when its fuel column contains the text Kapton (case-insensitive); no other spelling (for example polyimide) appears in the fuel or raw cells.",
+    "Each table row is counted as one test, as it is listed in PSI's file."
+  ],
+  "limitations": [
+    "In SAME and SAME-R, Kapton was heated to produce smoke for detector testing; these rows are not flame-spread or flammability tests, so they say nothing about how readily Kapton ignites or burns.",
+    "Some SAME-R rows (test numbers ending in a, described as aged) appear to be the same smoke sample measured again after aging, so the row count may be higher than the number of separate heating events.",
+    "The tables give no O2 or pressure for these rows, so the finding cannot be related to lunar base or other high-oxygen, low-pressure atmospheres.",
+    "Only the PSI snapshot is covered; Kapton tests outside PSI (for example NASA-STD-6001 materials testing) are not included."
+  ],
+  "warnings": [],
+  "environments": [],
+  "tier": 1,
+  "pillar": "detection",
+  "visual_offer": {
+    "chart": {
+      "available": true,
+      "idea": "Bar chart of the number of Kapton tests in SAME-R (PSI-101) and SAME (PSI-102)."
+    },
+    "graph": {
+      "available": true,
+      "idea": "Proof graph linking this finding to SAME-R and SAME, their test tables, and the connection between the two investigations."
+    },
+    "footnote": "Want a visual? I can draw a bar chart of Kapton tests in SAME-R and SAME, or a graph linking the two investigations and their tables."
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T08:45:07Z"
+  }
+}

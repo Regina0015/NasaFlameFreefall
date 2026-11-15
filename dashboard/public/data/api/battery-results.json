@@ -1,0 +1,220 @@
+[
+  {
+    "finding": "F-001",
+    "version": 2,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 21.6
+  },
+  {
+    "finding": "F-002",
+    "version": 5,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C7",
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 23.2
+  },
+  {
+    "finding": "F-003",
+    "version": 2,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 23.8
+  },
+  {
+    "finding": "F-004",
+    "version": 2,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 23.0
+  },
+  {
+    "finding": "F-005",
+    "version": 1,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 24.2
+  },
+  {
+    "finding": "F-006",
+    "version": 4,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C7",
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 22.0
+  },
+  {
+    "finding": "F-007",
+    "version": 1,
+    "status": "no_data",
+    "grade": "rejected",
+    "failed": [
+      "C8"
+    ],
+    "send_back_to": "04_calcular",
+    "seconds": 22.0
+  },
+  {
+    "finding": "F-008",
+    "version": 1,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C7",
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 23.4
+  },
+  {
+    "finding": "F-009",
+    "version": 2,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C5",
+      "C7",
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 24.5
+  },
+  {
+    "finding": "F-010",
+    "version": 2,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 76.0
+  },
+  {
+    "finding": "F-011",
+    "version": 1,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 10.5
+  },
+  {
+    "finding": "F-012",
+    "version": 1,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C5",
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 9.2
+  },
+  {
+    "finding": "F-013",
+    "version": 2,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C5",
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 16.4
+  },
+  {
+    "finding": "F-014",
+    "version": 1,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C5",
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 11.0
+  },
+  {
+    "finding": "F-016",
+    "version": 2,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 9.5
+  },
+  {
+    "finding": "F-017",
+    "version": 2,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C5",
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 9.5
+  },
+  {
+    "finding": "F-018",
+    "version": 1,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 10.2
+  },
+  {
+    "finding": "F-019",
+    "version": 1,
+    "status": "no_data",
+    "grade": "rejected",
+    "failed": [
+      "C8"
+    ],
+    "send_back_to": "04_calcular",
+    "seconds": 10.2
+  },
+  {
+    "finding": "F-020",
+    "version": 1,
+    "status": "has_data",
+    "grade": "C",
+    "failed": [
+      "C8"
+    ],
+    "send_back_to": null,
+    "seconds": 10.0
+  }
+]

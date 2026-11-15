@@ -62,7 +62,7 @@ The Auditor repeats every `sql_query` and rejects the finding if these are broke
 - **Units:** counts use `tests`, `rows`, `days` or `test days`; oxygen uses `% O2`; other measures use `atm`, `psi`, `kPa`, `Pa`, `cm/s`, `mm/s`, `m/s`, `mm`, `cm`, `m`, `s`, `ms`, `K`, `ppm`, `W`, `kW`, `g` or `mg`. No other unit (for example not `distinct O2 levels`).
 - **A count equals its rows:** `source_rows` must list exactly the rows counted. Never return a value of 0 with rows listed (for example "rows with an outcome" over a table that has none): say that in `limitations` instead.
 
-Do not write numbers into the SQL other than thresholds taken from the question or from `_config/environments.md`. A threshold goes in the `WHERE` clause, never as a returned value: the text may quote any number written in the SQL. `run_calc` refuses unknown units and counts that do not equal their rows; fix the SQL, do not work around it.
+Do not write numbers into the SQL other than thresholds taken from the question or from `_config/environments.md`, and the one unit factor allowed: `14.6959` psi per atm (the factor `coverage_by_environment` uses). For a value in psi, return `value * 14.6959` with unit `psi`; the text then says it was converted from atm. A threshold goes in the `WHERE` clause, never as a returned value: the text may quote any number written in the SQL. `run_calc` refuses unknown units and counts that do not equal their rows; fix the SQL, do not work around it.
 
 **Saving a new version:** if you were told to replace a finding (for example `F-002`) because the data changed, add `--replace F-002` to `write_finding`.
 
@@ -92,6 +92,8 @@ Write a JSON file `stages/04_calcular/output/drafts/<calc file name without .jso
 
 - **Numbers:** copy them exactly from the `values` that `run_calc` printed, from `n_tests` or from the params (a number that is only in the question does not count: put thresholds in the params). Write every text field as one plain line. Never round, convert units, add, subtract or compute a percentage in your head; if you need another number, compute it with `run_calc`. Ids like `PSI-25`, `O2` or `BASS-II` are not numbers.
 - **No data:** if `n_tests` is 0, use `"status": "no_data"`, say plainly that no PSI test answers the question, and set the footnote to `null`. "No test" means no data, never "safe" or "unsafe".
+- **Only this data:** every sentence comes from the computed values, the tables, the question or `_config/`. Never name outside standards, papers, tests or facts from memory (for example a NASA standard), not even as an example.
+- **Scope:** every sentence names what was counted: the investigations ("the 129 BASS-II tests") or, when the calculation scanned every table, "the PSI tests in the database". Never widen it ("solid materials", "materials in space", "plastics and fabrics"). Name fuels and phases with the words of the `fuel` and `phase` columns.
 - **Limitations:** at least one. Say what the finding covers and what it does not (other investigations, gravity levels, pressure).
 - **Lunar or Mars:** if `environments` has `lunar_base` or `mars_base`, add this warning, exactly: `PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only.`
 - `environments`: any of `transit_vehicle`, `space_station`, `lunar_base`, `mars_base`, `pressurized_rover` that the question concerns. `pillar`: `prevention`, `detection`, `suppression` or `null`.

@@ -1,0 +1,892 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NasaFlameFreefall Auditor gateway",
+    "description": "Send a finding to the Auditor (stage 05) and read grades. The Auditor reports; it never fixes.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Is the Auditor ready? (no API key needed)",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit": {
+      "post": {
+        "summary": "Audit a finding (Calculator -> Auditor)",
+        "description": "Stores the finding, audits it with `scripts/auditar.py` and returns the grade with its checks.\n\nA `rejected` grade is a normal result (HTTP 200): the Auditor reports, it never fixes. Send it back to the\nstage named in `send_back_to`. If the audit takes longer than 30 s you get 202 and a `job_id`.",
+        "operationId": "post_audit_audit_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Still running: poll GET /audits/jobs/{job_id}",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audits/jobs/{job_id}": {
+      "get": {
+        "summary": "Result of a queued audit",
+        "operationId": "get_job_audits_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audits": {
+      "get": {
+        "summary": "Grade of every stored finding",
+        "operationId": "list_audits_audits_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audits/{finding_id}": {
+      "get": {
+        "summary": "Full audit of one finding",
+        "operationId": "get_audit_audits__finding_id__get",
+        "parameters": [
+          {
+            "name": "finding_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Finding Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/findings": {
+      "get": {
+        "summary": "Stored findings with their grade",
+        "description": "Rejected findings are never published (`_config/confidence.md`), so they are left out unless asked for.",
+        "operationId": "list_findings_findings_get",
+        "parameters": [
+          {
+            "name": "grade",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(A|B|C|no_data|rejected|pending audit)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Grade"
+            }
+          },
+          {
+            "name": "investigation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "e.g. PSI-25",
+              "title": "Investigation"
+            },
+            "description": "e.g. PSI-25"
+          },
+          {
+            "name": "include_rejected",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Rejected"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FindingList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/findings/{finding_id}": {
+      "get": {
+        "summary": "One finding with its grade",
+        "operationId": "get_finding_findings__finding_id__get",
+        "parameters": [
+          {
+            "name": "finding_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Finding Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FindingEntry"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuditList": {
+        "properties": {
+          "audits": {
+            "items": {
+              "$ref": "#/components/schemas/AuditSummary"
+            },
+            "type": "array",
+            "title": "Audits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "audits"
+        ],
+        "title": "AuditList"
+      },
+      "AuditRequest": {
+        "properties": {
+          "finding": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Finding",
+            "description": "The complete finding (schemas/finding.schema.json), exactly as the Calculator saved it."
+          },
+          "use_model": {
+            "type": "boolean",
+            "title": "Use Model",
+            "description": "False: code checks only; C8 stays 'fail' for manual review (auditar.py --no-model).",
+            "default": true
+          },
+          "reaudit": {
+            "type": "boolean",
+            "title": "Reaudit",
+            "description": "True: audit again even if a valid audit of this exact finding already exists.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "finding"
+        ],
+        "title": "AuditRequest",
+        "examples": [
+          {
+            "finding": {
+              "...": "full finding",
+              "id": "F-001",
+              "version": 2
+            },
+            "use_model": true
+          }
+        ]
+      },
+      "AuditResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "done",
+              "queued",
+              "running",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "finding_id": {
+            "type": "string",
+            "title": "Finding Id"
+          },
+          "finding_version": {
+            "type": "integer",
+            "title": "Finding Version"
+          },
+          "stored": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "new",
+                  "same",
+                  "new_version"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stored",
+            "description": "What the gateway did with the received finding."
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "A",
+                  "B",
+                  "C",
+                  "no_data",
+                  "rejected",
+                  "pending audit"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "failed_checks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Failed Checks",
+            "default": []
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons",
+            "default": []
+          },
+          "send_back_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Send Back To",
+            "description": "Which stage must fix the finding when the grade is 'rejected'."
+          },
+          "finding_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finding Sha256"
+          },
+          "model_used": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Used"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "default": false
+          },
+          "audit": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audit",
+            "description": "The full audit (schemas/audit.schema.json): checks C0-C9, recalculation, text review."
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail",
+            "description": "Why the audit failed to run (status 'failed'). Never a grade."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "finding_id",
+          "finding_version"
+        ],
+        "title": "AuditResponse"
+      },
+      "AuditSummary": {
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "title": "Finding Id"
+          },
+          "finding_version": {
+            "type": "integer",
+            "title": "Finding Version"
+          },
+          "grade": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "no_data",
+              "rejected",
+              "pending audit"
+            ],
+            "title": "Grade"
+          },
+          "failed_checks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Failed Checks"
+          },
+          "stale_audit": {
+            "type": "boolean",
+            "title": "Stale Audit",
+            "description": "An audit exists but belongs to another version of the finding: it does not count."
+          },
+          "finding_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finding Sha256"
+          },
+          "model_used": {
+            "type": "boolean",
+            "title": "Model Used"
+          },
+          "audited_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audited At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "finding_id",
+          "finding_version",
+          "grade",
+          "failed_checks",
+          "stale_audit",
+          "finding_sha256",
+          "model_used",
+          "audited_at"
+        ],
+        "title": "AuditSummary"
+      },
+      "FindingEntry": {
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "title": "Finding Id"
+          },
+          "finding_version": {
+            "type": "integer",
+            "title": "Finding Version"
+          },
+          "grade": {
+            "type": "string",
+            "enum": [
+              "A",
+              "B",
+              "C",
+              "no_data",
+              "rejected",
+              "pending audit"
+            ],
+            "title": "Grade"
+          },
+          "failed_checks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Failed Checks"
+          },
+          "stale_audit": {
+            "type": "boolean",
+            "title": "Stale Audit",
+            "description": "An audit exists but belongs to another version of the finding: it does not count."
+          },
+          "finding_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finding Sha256"
+          },
+          "model_used": {
+            "type": "boolean",
+            "title": "Model Used"
+          },
+          "audited_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audited At"
+          },
+          "finding": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Finding"
+          }
+        },
+        "type": "object",
+        "required": [
+          "finding_id",
+          "finding_version",
+          "grade",
+          "failed_checks",
+          "stale_audit",
+          "finding_sha256",
+          "model_used",
+          "audited_at",
+          "finding"
+        ],
+        "title": "FindingEntry"
+      },
+      "FindingList": {
+        "properties": {
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/FindingEntry"
+            },
+            "type": "array",
+            "title": "Findings"
+          },
+          "rejected_not_shown": {
+            "type": "integer",
+            "title": "Rejected Not Shown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "findings",
+          "rejected_not_shown"
+        ],
+        "title": "FindingList"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status"
+          },
+          "ollama": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Ollama"
+          },
+          "duckdb": {
+            "type": "boolean",
+            "title": "Duckdb"
+          },
+          "psi_tables": {
+            "type": "integer",
+            "title": "Psi Tables"
+          },
+          "snapshot": {
+            "type": "boolean",
+            "title": "Snapshot"
+          },
+          "findings_stored": {
+            "type": "integer",
+            "title": "Findings Stored"
+          },
+          "audits_pending": {
+            "type": "integer",
+            "title": "Audits Pending"
+          },
+          "api_key_set": {
+            "type": "boolean",
+            "title": "Api Key Set"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "ollama",
+          "duckdb",
+          "psi_tables",
+          "snapshot",
+          "findings_stored",
+          "audits_pending",
+          "api_key_set"
+        ],
+        "title": "Health"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

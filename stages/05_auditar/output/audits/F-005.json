@@ -1,7 +1,7 @@
 {
   "finding_id": "F-005",
   "finding_version": 1,
-  "finding_sha256": "322045f89b0f6bee6c1d01e13fda88f92167012dc943f62f8aaba5e880f6876d",
+  "finding_sha256": "6baf7d2d5504bc7f8c7d76885ffec05021a32b5f231b99fc5e2c748675e86e05",
   "checks": [
     {
       "id": "C0",
@@ -29,7 +29,7 @@
       "name": "recalculation",
       "done_by": "code",
       "result": "pass",
-      "detail": "All 6 values reproduced by running the finding's SQL over data\\snapshot (read-only); every source row and column it reports exists in the original CSVs."
+      "detail": "All 6 values reproduced by running the finding's SQL over data/snapshot (read-only); every source row and column it reports exists in the original CSVs."
     },
     {
       "id": "C4",
@@ -64,7 +64,7 @@
       "name": "faithful_text",
       "done_by": "code+model",
       "result": "fail",
-      "detail": "14 of 20 answers differ from the expected one: Q3/claim, Q4/claim, Q5/claim, Q6/claim, Q3/summary_student, Q4/summary_student, Q5/summary_student, Q6/summary_student, Q3/summary_professional, Q4/summary_professional, Q5/summary_professional, Q6/summary_professional, Q7/limitations, Q8/method. 13 unanswered (model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>); needs manual review."
+      "detail": "7 of 20 answers differ from the expected one: Q3/claim, Q4/claim, Q3/summary_student, Q4/summary_student, Q3/summary_professional, Q4/summary_professional, Q8/method."
     },
     {
       "id": "C9",
@@ -191,9 +191,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The text mentions 'smoke' which is a result, but the cited materials and experiment are present, and 'smoke' itself is not explicitly listed as a distinct entity in the provided sections.",
+      "attempts": 1
     },
     {
       "question_id": "Q4",
@@ -201,9 +201,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text specifies the materials and number of tests conducted by SAME-R, which is the cited investigation, but it does not limit the scope to only the cited investigation's findings.",
+      "attempts": 1
     },
     {
       "question_id": "Q5",
@@ -211,9 +211,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text only reports the number of tests conducted for various materials, not the results of those tests in relation to safety.",
+      "attempts": 1
     },
     {
       "question_id": "Q6",
@@ -221,9 +221,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text only lists materials and the number of tests conducted, but it does not mention lunar or Martian gravity.",
+      "attempts": 1
     },
     {
       "question_id": "Q3",
@@ -231,9 +231,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The text mentions 'common spacecraft materials' which is a general description not specifically listed in the cited evidence or other sections.",
+      "attempts": 1
     },
     {
       "question_id": "Q4",
@@ -241,9 +241,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text mentions testing 'common spacecraft materials' and 'Kapton' without explicitly limiting the scope to only the SAME-R investigation.",
+      "attempts": 1
     },
     {
       "question_id": "Q5",
@@ -251,9 +251,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text describes tests that were performed, not a lack of tests that would imply a safety conclusion based on absence of data.",
+      "attempts": 1
     },
     {
       "question_id": "Q6",
@@ -261,9 +261,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text only describes testing materials on the space station, not under lunar or Martian gravity.",
+      "attempts": 1
     },
     {
       "question_id": "Q3",
@@ -271,9 +271,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The text mentions 'smoke tests' in the summary, but the cited investigations, evidence, values, assumptions, and limitations refer to specific materials or experimental objectives without explicitly using the phrase 'smoke tests' as a distinct entity.",
+      "attempts": 1
     },
     {
       "question_id": "Q4",
@@ -281,9 +281,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text mentions 'SAME-R (PSI-101)' and lists specific sample types tested, which is a specific subset of the cited investigation, not the entire scope of the cited investigation.",
+      "attempts": 1
     },
     {
       "question_id": "Q5",
@@ -291,9 +291,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text lists the number of smoke tests conducted for various sample types but does not make any claims about safety or lack thereof based on the testing.",
+      "attempts": 1
     },
     {
       "question_id": "Q6",
@@ -301,9 +301,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text only mentions the PSI objective is to quantify smoke particulate size in low gravity, but it does not describe or predict the behavior of fire or combustion under lunar or Martian gravity.",
+      "attempts": 1
     },
     {
       "question_id": "Q7",
@@ -311,9 +311,9 @@
       "field": "limitations",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The first limitation explicitly states that the tests only count and do not compare smoke particle sizes or detector responses, which is a specific thing the finding does not allow a conclusion about.",
+      "attempts": 1
     },
     {
       "question_id": "Q8",
@@ -333,8 +333,13 @@
   "send_back_to": null,
   "audited_by": {
     "script": "scripts/auditar.py",
-    "model": null,
-    "model_params": null,
-    "date": "2026-11-15T08:01:30Z"
+    "model": "gemma4:e4b-it-qat",
+    "model_params": {
+      "think": false,
+      "temperature": 0,
+      "seed": 42,
+      "num_ctx": 8192
+    },
+    "date": "2026-11-15T09:30:48Z"
   }
 }

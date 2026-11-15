@@ -1,0 +1,83 @@
+{
+  "id": "F-017",
+  "version": 1,
+  "question": "What was the lowest pressure tested in FLEX-2, in psi?",
+  "status": "has_data",
+  "claim": "The lowest ambient pressure listed for FLEX-2 (PSI-68) is 0.5 atm; the PSI table gives pressure only in atm, so this finding does not give a value in psi.",
+  "summary_student": "FLEX-2 burned small fuel droplets in space at different air pressures, and the lowest pressure in its test table is 0.5 atm. The table records pressure in atmospheres, not psi, so no psi value is given here. The highest pressure in the same table is 3.0 atm.",
+  "summary_professional": "Across the 8 condition-matrix rows of the FLEX-2 (PSI-68) experimental table, the minimum ambient pressure is 0.5 atm and the maximum is 3.0 atm (column Ambient Pressure (atm)). All 8 rows, covering pure and mixed liquid fuels, list the same pressure span. The value is reported in the source unit (atm); a psi value was not computed in this finding.",
+  "values": {
+    "flex2_pressure_min": {
+      "value": 0.5,
+      "unit": "atm"
+    },
+    "flex2_pressure_max": {
+      "value": 3.0,
+      "unit": "atm"
+    },
+    "flex2_rows_with_pressure": {
+      "value": 8.0,
+      "unit": "rows"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "SELECT 'flex2_pressure_min' AS name, min(pressure_atm_min) AS value, 'atm' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.pressure_atm_min')) AS source_columns FROM tests WHERE investigation = 'PSI-68' AND pressure_atm_min IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'flex2_pressure_max' AS name, max(pressure_atm_max) AS value, 'atm' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.pressure_atm_max')) AS source_columns FROM tests WHERE investigation = 'PSI-68' AND pressure_atm_max IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'flex2_rows_with_pressure' AS name, count(*) AS value, 'rows' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.pressure_atm_min')) AS source_columns FROM tests WHERE investigation = 'PSI-68' AND pressure_atm_min IS NOT NULL GROUP BY investigation, source_table"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-68",
+      "doi": "10.60555/byp8-h018",
+      "table": "PSI-68_Experimental table_Flex2.csv",
+      "columns": [
+        "Ambient Pressure (atm)"
+      ],
+      "rows": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    }
+  ],
+  "n_tests": 8,
+  "assumptions": [
+    "Each row of the FLEX-2 experimental table is a condition-matrix row that lists the tested pressure values for one fuel, not a single test; the lowest listed value is taken as the lowest pressure tested.",
+    "The pressure values are ambient chamber pressure as labeled in the source column Ambient Pressure (atm)."
+  ],
+  "limitations": [
+    "The value is given in atm, the unit of the PSI table; this finding does not report it in psi, and a psi value would need a separate unit-conversion calculation.",
+    "The table rows are condition matrices, so this finding does not say how many individual droplet burns ran at the lowest pressure or which oxygen and diluent combinations were used there.",
+    "The finding covers FLEX-2 only; it does not describe pressures in FLEX, CFI or other investigations, nor any partial-gravity condition."
+  ],
+  "warnings": [],
+  "environments": [],
+  "tier": 1,
+  "pillar": "suppression",
+  "visual_offer": {
+    "chart": {
+      "available": false,
+      "idea": null
+    },
+    "graph": {
+      "available": false,
+      "idea": null
+    },
+    "footnote": null
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T08:45:14Z"
+  }
+}

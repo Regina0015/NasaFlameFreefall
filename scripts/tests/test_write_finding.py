@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.findings import bump_version, load, next_id, save
+from scripts.findings import bump_version, load, next_id, save, save_new
 from scripts.run_calc import run
 from scripts.tests.helpers import FIXTURE_TEXT as TEXT, NO_OFFER, NOW, TIERS, fixture_o2_calc, make_fixture_snapshot
 from scripts.write_finding import LUNAR_WARNING, build_finding, load_calc, main
@@ -93,6 +93,17 @@ class FindingFilesTest(unittest.TestCase):
             self.assertTrue((folder / "history" / "F-001.v1.json").exists())
             self.assertEqual((bumped["version"], bumped["generated_by"]["date"], f["version"]), (2, "2026-11-15T09:00:00Z", 1))
             self.assertEqual(next_id(folder), "F-002")
+
+    def test_save_new_never_overwrites_a_finding_saved_meanwhile(self):
+        # Two /ask runs at once both see F-001 as free; the second must become F-002, not overwrite F-001.
+        with tempfile.TemporaryDirectory() as d:
+            folder = Path(d)
+            first, _ = build_finding(CALC, TEXT, TIERS, "m", NOW, "F-001")
+            second, _ = build_finding(CALC, TEXT, TIERS, "other", NOW, "F-001")
+            self.assertEqual(save_new(first, folder), folder / "F-001.json")
+            self.assertEqual(save_new(second, folder), folder / "F-002.json")
+            self.assertEqual(load("F-001", folder)["generated_by"]["model"], "m")
+            self.assertEqual(load("F-002", folder)["id"], "F-002")
 
     def test_bad_ids_are_rejected(self):
         with tempfile.TemporaryDirectory() as d:

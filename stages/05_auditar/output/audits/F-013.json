@@ -29,7 +29,7 @@
       "name": "recalculation",
       "done_by": "code",
       "result": "pass",
-      "detail": "All 10 values reproduced by running the finding's SQL over data\\snapshot (read-only); every source row and column it reports exists in the original CSVs."
+      "detail": "All 10 values reproduced by running the finding's SQL over data/snapshot (read-only); every source row and column it reports exists in the original CSVs."
     },
     {
       "id": "C4",
@@ -64,7 +64,7 @@
       "name": "faithful_text",
       "done_by": "code+model",
       "result": "fail",
-      "detail": "14 of 20 answers differ from the expected one: Q3/claim, Q4/claim, Q5/claim, Q6/claim, Q3/summary_student, Q4/summary_student, Q5/summary_student, Q6/summary_student, Q3/summary_professional, Q4/summary_professional, Q5/summary_professional, Q6/summary_professional, Q7/limitations, Q8/method. 13 unanswered (model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>); needs manual review. Review file ignored: it is for another version of the finding (SHA-256 differs); review it again."
+      "detail": "6 of 20 answers differ from the expected one: Q4/claim, Q3/summary_student, Q4/summary_student, Q3/summary_professional, Q4/summary_professional, Q8/method."
     },
     {
       "id": "C9",
@@ -223,9 +223,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text mentions 'Nomex' as a fuel, which is present in the evidence, values, and assumptions, but it does not mention any other specific fuel, material, experiment, investigation, or test condition not covered by the provided context.",
+      "attempts": 1
     },
     {
       "question_id": "Q4",
@@ -233,9 +233,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text refers to 'the 10 Nomex tests' without explicitly limiting them to the cited investigations.",
+      "attempts": 1
     },
     {
       "question_id": "Q5",
@@ -243,9 +243,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text states that PSI cannot determine safety because the existing tests do not cover the specified oxygen level, which is a statement about the scope of the data, not a conclusion about safety based on the absence of data.",
+      "attempts": 1
     },
     {
       "question_id": "Q6",
@@ -253,9 +253,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text explicitly states that none of the tests mention pressure or partial gravity, which includes lunar or Martian gravity.",
+      "attempts": 1
     },
     {
       "question_id": "Q3",
@@ -263,9 +263,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The text mentions 'Nomex' as a fuel, which is present in the evidence, values, and assumptions, but the text also mentions 'air close to normal Earth air' which is not explicitly listed as a condition in the cited sections.",
+      "attempts": 1
     },
     {
       "question_id": "Q4",
@@ -273,9 +273,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text discusses Nomex samples burned in space across BASS-II, BASS, and Saffire-II, which are the cited investigations, but it makes general statements about the tests conducted, not limiting itself to specific counts or scopes within those investigations.",
+      "attempts": 1
     },
     {
       "question_id": "Q5",
@@ -283,9 +283,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text explicitly states that the lack of certain tests means the data cannot determine safety, rather than making a definitive safety claim based on the absence of testing.",
+      "attempts": 1
     },
     {
       "question_id": "Q6",
@@ -293,9 +293,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text explicitly states that no Nomex test was run in lunar gravity, and it does not describe how combustion behaves under lunar or Martian gravity.",
+      "attempts": 1
     },
     {
       "question_id": "Q3",
@@ -303,9 +303,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The text mentions 'PSI tests table' which is not explicitly listed in the cited investigations, evidence, values, assumptions, or limitations.",
+      "attempts": 1
     },
     {
       "question_id": "Q4",
@@ -313,9 +313,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text discusses '10 microgravity Nomex tests' and refers to them by their PSI designations (PSI-25, PSI-26, PSI-99), which are linked to the cited investigations, but it also makes general statements about the scope of these tests (e.g., 'No Nomex row states ambient pressure or a test outcome') that are not strictly limited to the named investigations.",
+      "attempts": 1
     },
     {
       "question_id": "Q5",
@@ -323,9 +323,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text describes the scope of testing and notes that a specific condition lies outside the tested range, but it does not draw a safety conclusion based on the absence of data.",
+      "attempts": 1
     },
     {
       "question_id": "Q6",
@@ -333,9 +333,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text only discusses microgravity tests and does not mention lunar or Martian gravity conditions.",
+      "attempts": 1
     },
     {
       "question_id": "Q7",
@@ -343,9 +343,9 @@
       "field": "limitations",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The limitations explicitly name several things the finding does not cover, such as Nomex burning at 34% O2, reduced habitat pressure, or lunar gravity.",
+      "attempts": 1
     },
     {
       "question_id": "Q8",
@@ -365,8 +365,13 @@
   "send_back_to": null,
   "audited_by": {
     "script": "scripts/auditar.py",
-    "model": null,
-    "model_params": null,
-    "date": "2026-11-15T08:22:23Z"
+    "model": "gemma4:e4b-it-qat",
+    "model_params": {
+      "think": false,
+      "temperature": 0,
+      "seed": 42,
+      "num_ctx": 8192
+    },
+    "date": "2026-11-15T09:34:12Z"
   }
 }

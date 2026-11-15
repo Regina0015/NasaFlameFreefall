@@ -1,7 +1,9 @@
 import hashlib
 import json
+import os
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from scripts import chat_tools
@@ -131,6 +133,55 @@ class GetFindingsTest(ChatToolsCase):
         self.assertEqual(r["availability"]["rejected_not_shown"], 1)
         self.assertTrue(r["preliminary"])
 
+    def _remote(self, path, grade="A", sha=None, stale=False, failed=()):
+        return {path.stem: {"finding_id": path.stem, "grade": grade, "failed_checks": list(failed), "stale_audit": stale,
+                            "finding_sha256": sha or hashlib.sha256(path.read_bytes()).hexdigest()}}
+
+    def test_grades_come_from_the_gateway_when_it_answers(self):
+        good = self._finding("F-001", "Solid flame claim")
+        edited = self._finding("F-002", "Edited flame claim")
+        unknown = self._finding("F-003", "Unaudited flame claim")
+        self._audit(good, "C")  # a local audit must be ignored while the gateway answers
+        remote = {**self._remote(good, "A", failed=["C5"]), **self._remote(edited, "B", sha="0" * 64)}
+        with mock.patch.dict(os.environ, {"AUDITOR_URL": "http://gateway"}), mock.patch.object(chat_tools, "_remote_audits", return_value=remote):
+            r = self._run({"topic": "flame"})
+        grades = {f["id"]: (f["grade"], f["failed_checks"]) for f in r["findings"]}
+        self.assertEqual(grades["F-001"], ("A", ["C5"]))
+        self.assertEqual(grades["F-002"], ("pending audit", []))  # the gateway audited other content
+        self.assertEqual(grades["F-003"], ("pending audit", []))
+        self.assertEqual(r["warnings"], [])
+
+    def test_gateway_stale_flag_and_rejected(self):
+        stale = self._finding("F-001", "Stale flame claim")
+        rejected = self._finding("F-002", "Rejected flame claim")
+        remote = {**self._remote(stale, "A", stale=True), **self._remote(rejected, "rejected")}
+        with mock.patch.object(chat_tools, "_remote_audits", return_value=remote):
+            r = self._run({"topic": "flame"})
+        self.assertEqual([(f["id"], f["grade"]) for f in r["findings"]], [("F-001", "pending audit")])
+        self.assertEqual(r["availability"]["rejected_not_shown"], 1)
+
+    def test_unreachable_gateway_falls_back_to_local_audits_with_a_warning(self):
+        self._audit(self._finding("F-001", "Local flame claim"), "B")
+        with mock.patch.dict(os.environ, {"AUDITOR_URL": "http://gateway"}), \
+                mock.patch("urllib.request.urlopen", side_effect=OSError("down")):
+            r = self._run({"topic": "flame"})
+        self.assertEqual(r["findings"][0]["grade"], "B")
+        self.assertTrue(any("unreachable" in w for w in r["warnings"]))
+
+    def test_remote_audits_reads_the_gateway_response(self):
+        body = json.dumps({"audits": [{"finding_id": "F-001", "grade": "A"}]}).encode()
+        response = mock.MagicMock()
+        response.__enter__.return_value = mock.MagicMock(read=lambda *a: body)
+        with mock.patch.dict(os.environ, {"AUDITOR_URL": "http://gateway/", "AUDITOR_API_KEY": "k"}), \
+                mock.patch("urllib.request.urlopen", return_value=response) as urlopen:
+            self.assertEqual(chat_tools._remote_audits()["F-001"]["grade"], "A")
+        sent = urlopen.call_args.args[0]
+        self.assertEqual((sent.full_url, sent.get_header("X-api-key")), ("http://gateway/audits", "k"))
+
+    def test_no_auditor_url_means_local_only(self):
+        with mock.patch.dict(os.environ, {"AUDITOR_URL": ""}):
+            self.assertIsNone(chat_tools._remote_audits())
+
     def test_environment_filter(self):
         self._finding("F-001", "Lunar flame claim")  # tagged lunar_base
         self.assertEqual(len(self._run({"topic": "flame", "environment": "lunar_base"})["findings"]), 1)
@@ -165,3 +216,17 @@ class ReadOnlyTest(ChatToolsCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AuditorSettingsFromEnvFileTest(unittest.TestCase):
+    def test_reads_only_the_two_auditor_settings_and_never_overrides(self):
+        # The dashboard runs chat_tools without exporting .env, so it reads AUDITOR_URL and AUDITOR_API_KEY itself.
+        with tempfile.TemporaryDirectory() as d:
+            env_file = Path(d) / ".env"
+            env_file.write_text("SUPABASE_SERVICE_ROLE_KEY=secret\nAUDITOR_URL=http://10.0.0.5:8000\n"
+                                "AUDITOR_API_KEY='k1'\n", encoding="utf-8")
+            with mock.patch.dict(os.environ, {"AUDITOR_API_KEY": "already set"}, clear=True):
+                chat_tools.load_auditor_settings(env_file)
+                self.assertEqual(os.environ.get("AUDITOR_URL"), "http://10.0.0.5:8000")
+                self.assertEqual(os.environ.get("AUDITOR_API_KEY"), "already set")
+                self.assertNotIn("SUPABASE_SERVICE_ROLE_KEY", os.environ)

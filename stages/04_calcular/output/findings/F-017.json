@@ -1,0 +1,79 @@
+{
+  "id": "F-017",
+  "version": 2,
+  "question": "What was the lowest pressure tested in FLEX-2, in psi?",
+  "status": "has_data",
+  "claim": "The lowest ambient pressure listed in the FLEX-2 (PSI-68) condition matrix is 7.34795 psi, converted from the 0.5 atm given in the table.",
+  "summary_student": "FLEX-2 burned fuel droplets on the space station at several air pressures. The lowest pressure in its table is 0.5 atm, which is 7.34795 psi. The psi value was converted from atm by the calculation script, not measured in psi.",
+  "summary_professional": "Across the 8 condition-matrix rows of the FLEX-2 (PSI-68) experimental table, the minimum of the Ambient Pressure (atm) column is 0.5 atm, equal to 7.34795 psi. The psi value was converted from atm in the calculation, using the same atm-to-psi factor that coverage_by_environment uses. Every one of the 8 rows (one per fuel or fuel mixture) lists this same lowest pressure.",
+  "values": {
+    "flex2_pressure_min_atm": {
+      "value": 0.5,
+      "unit": "atm"
+    },
+    "flex2_pressure_min_psi": {
+      "value": 7.34795,
+      "unit": "psi"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "SELECT 'flex2_pressure_min_atm' AS name, min(pressure_atm_min) AS value, 'atm' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.pressure_atm_min')) AS source_columns FROM tests WHERE investigation = 'PSI-68' AND pressure_atm_min IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'flex2_pressure_min_psi' AS name, min(pressure_atm_min) * 14.6959 AS value, 'psi' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.pressure_atm_min')) AS source_columns FROM tests WHERE investigation = 'PSI-68' AND pressure_atm_min IS NOT NULL GROUP BY investigation, source_table"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-68",
+      "doi": "10.60555/byp8-h018",
+      "table": "PSI-68_Experimental table_Flex2.csv",
+      "columns": [
+        "Ambient Pressure (atm)"
+      ],
+      "rows": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    }
+  ],
+  "n_tests": 8,
+  "assumptions": [
+    "The pressure in PSI's table is in atm, as its column header states, and the psi value was converted from atm in the calculation script.",
+    "The lowest value of each row's listed pressures is the lowest pressure FLEX-2 tested for that fuel."
+  ],
+  "limitations": [
+    "The FLEX-2 rows are condition-matrix rows that list the tested values, not individual tests, so n counts table rows, not burns.",
+    "The table does not say which droplets burned or extinguished at the lowest pressure, nor at which oxygen level each pressure was tested.",
+    "This covers only FLEX-2 (PSI-68) in microgravity; it says nothing about other investigations, other gravity levels or pressures outside the matrix."
+  ],
+  "warnings": [],
+  "environments": [],
+  "tier": 1,
+  "pillar": null,
+  "visual_offer": {
+    "chart": {
+      "available": false,
+      "idea": null
+    },
+    "graph": {
+      "available": false,
+      "idea": null
+    },
+    "footnote": null
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T08:49:00Z"
+  }
+}

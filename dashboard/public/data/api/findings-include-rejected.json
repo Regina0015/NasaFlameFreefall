@@ -1,0 +1,4598 @@
+{
+  "http_status": 200,
+  "note": "GET /findings?include_rejected=true",
+  "body": {
+    "findings": [
+      {
+        "finding_id": "F-001",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "a5736e8e6d7f59bc1754820e487ad3633bdd1d4fa3f51545b52f8a181e5a0f65",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:29:14Z",
+        "finding": {
+          "id": "F-001",
+          "version": 2,
+          "question": "Did any BASS-II or FLEX test reach the lunar habitat oxygen level (30% or more)?",
+          "status": "has_data",
+          "claim": "None of the 129 BASS-II solid-fuel tests reached 30% oxygen (highest 22.2%), while 24 of the 274 FLEX droplet tests did, up to 34%.",
+          "summary_student": "Solid materials such as plastics and fabrics were never burned in space at the oxygen level planned for a Moon base. Only some liquid fuel droplet tests reached that level.",
+          "summary_professional": "BASS-II (PSI-25) initial O2 ranged 13.6–22.2% by volume over 129 tests, none at or above 30%. FLEX (PSI-69) initial O2 ranged 12–34% mole fraction over 274 droplet tests, 24 of them at or above 30%.",
+          "values": {
+            "psi25_o2_min": {
+              "value": 13.6,
+              "unit": "% O2"
+            },
+            "psi25_o2_max": {
+              "value": 22.2,
+              "unit": "% O2"
+            },
+            "psi25_n_tests": {
+              "value": 129,
+              "unit": "tests"
+            },
+            "psi25_n_at_or_above": {
+              "value": 0,
+              "unit": "tests"
+            },
+            "psi69_o2_min": {
+              "value": 12.0,
+              "unit": "% O2"
+            },
+            "psi69_o2_max": {
+              "value": 34.0,
+              "unit": "% O2"
+            },
+            "psi69_n_tests": {
+              "value": 274,
+              "unit": "tests"
+            },
+            "psi69_n_at_or_above": {
+              "value": 24,
+              "unit": "tests"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "o2_range",
+            "params": {
+              "investigations": [
+                "PSI-25",
+                "PSI-69"
+              ],
+              "threshold_pct": 30.0
+            },
+            "formula": "For each investigation, the lowest and highest oxygen percentage over its tests that report oxygen, the number of those tests, and how many reached at least threshold_pct (o2_pct_max >= threshold_pct)."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-25",
+              "doi": "10.60555/4qc4-de67",
+              "table": "PSI-25_Experimental table_BASS-II.csv",
+              "columns": [
+                "Calibrated initial O2 % by vol"
+              ],
+              "rows": "all"
+            },
+            {
+              "investigation": "PSI-69",
+              "doi": "10.60555/mbq8-0451",
+              "table": "PSI-69_Experimental table_FLEX.csv",
+              "columns": [
+                "O initial ambient composition; mole fraction"
+              ],
+              "rows": "all"
+            }
+          ],
+          "n_tests": 403,
+          "assumptions": [
+            "Uses the initial oxygen level of each test.",
+            "Mole fraction and volume fraction are treated as equal (ideal gas)."
+          ],
+          "limitations": [
+            "Covers only BASS-II and FLEX, not every solid-fuel investigation in PSI.",
+            "No test at 30% oxygen means no data, not that these materials are safe or unsafe at that level.",
+            "Oxygen is compared alone; the lunar habitat also has a lower pressure, which this calculation does not compare."
+          ],
+          "warnings": [
+            "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+          ],
+          "environments": [
+            "lunar_base",
+            "pressurized_rover"
+          ],
+          "tier": 1,
+          "pillar": "prevention",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Range bars of the oxygen levels tested by BASS-II and FLEX, with a dashed line at the 30% lunar habitat target."
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": "Want a visual? I can draw a chart comparing the oxygen levels tested by BASS-II and FLEX against the 30% lunar habitat target."
+          },
+          "chart": {
+            "config": {
+              "view": {
+                "continuousWidth": 300,
+                "continuousHeight": 300
+              }
+            },
+            "layer": [
+              {
+                "mark": {
+                  "type": "bar",
+                  "height": 14,
+                  "opacity": 0.8
+                },
+                "encoding": {
+                  "tooltip": [
+                    {
+                      "field": "investigation",
+                      "title": "Investigation",
+                      "type": "nominal"
+                    },
+                    {
+                      "field": "o2_min_pct",
+                      "title": "Lowest O2 (%)",
+                      "type": "quantitative"
+                    },
+                    {
+                      "field": "o2_max_pct",
+                      "title": "Highest O2 (%)",
+                      "type": "quantitative"
+                    }
+                  ],
+                  "x": {
+                    "field": "o2_min_pct",
+                    "title": "Oxygen (% O2)",
+                    "type": "quantitative"
+                  },
+                  "x2": {
+                    "field": "o2_max_pct"
+                  },
+                  "y": {
+                    "field": "investigation",
+                    "sort": null,
+                    "title": null,
+                    "type": "nominal"
+                  }
+                }
+              },
+              {
+                "data": {
+                  "values": [
+                    {
+                      "threshold_pct": 30.0
+                    }
+                  ]
+                },
+                "mark": {
+                  "type": "rule",
+                  "color": "#444",
+                  "strokeDash": [
+                    6,
+                    4
+                  ]
+                },
+                "encoding": {
+                  "x": {
+                    "field": "threshold_pct",
+                    "type": "quantitative"
+                  }
+                }
+              },
+              {
+                "data": {
+                  "values": [
+                    {
+                      "threshold_pct": 30.0
+                    }
+                  ]
+                },
+                "mark": {
+                  "type": "text",
+                  "align": "left",
+                  "color": "#444",
+                  "dx": 4,
+                  "dy": 8,
+                  "text": "Threshold: 30% O2"
+                },
+                "encoding": {
+                  "x": {
+                    "field": "threshold_pct",
+                    "type": "quantitative"
+                  },
+                  "y": {
+                    "value": 0
+                  }
+                }
+              },
+              {
+                "mark": {
+                  "type": "tick",
+                  "thickness": 2
+                },
+                "encoding": {
+                  "tooltip": [
+                    {
+                      "field": "investigation",
+                      "title": "Investigation",
+                      "type": "nominal"
+                    },
+                    {
+                      "field": "o2_min_pct",
+                      "title": "Lowest O2 (%)",
+                      "type": "quantitative"
+                    },
+                    {
+                      "field": "o2_max_pct",
+                      "title": "Highest O2 (%)",
+                      "type": "quantitative"
+                    }
+                  ],
+                  "x": {
+                    "field": "o2_min_pct",
+                    "type": "quantitative"
+                  },
+                  "y": {
+                    "field": "investigation",
+                    "sort": null,
+                    "title": null,
+                    "type": "nominal"
+                  }
+                }
+              },
+              {
+                "mark": {
+                  "type": "tick",
+                  "thickness": 2
+                },
+                "encoding": {
+                  "tooltip": [
+                    {
+                      "field": "investigation",
+                      "title": "Investigation",
+                      "type": "nominal"
+                    },
+                    {
+                      "field": "o2_min_pct",
+                      "title": "Lowest O2 (%)",
+                      "type": "quantitative"
+                    },
+                    {
+                      "field": "o2_max_pct",
+                      "title": "Highest O2 (%)",
+                      "type": "quantitative"
+                    }
+                  ],
+                  "x": {
+                    "field": "o2_max_pct",
+                    "type": "quantitative"
+                  },
+                  "y": {
+                    "field": "investigation",
+                    "sort": null,
+                    "title": null,
+                    "type": "nominal"
+                  }
+                }
+              }
+            ],
+            "data": {
+              "values": [
+                {
+                  "investigation": "BASS-II",
+                  "o2_min_pct": 13.6,
+                  "o2_max_pct": 22.2
+                },
+                {
+                  "investigation": "FLEX",
+                  "o2_min_pct": 12.0,
+                  "o2_max_pct": 34.0
+                }
+              ]
+            },
+            "title": "Oxygen levels tested (% O2)",
+            "$schema": "https://vega.github.io/schema/vega-lite/v6.4.1.json"
+          },
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T00:05:54Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-002",
+        "finding_version": 5,
+        "grade": "C",
+        "failed_checks": [
+          "C7",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "12d2ba4a75dd72b16368f143e65d12c268915585d655ebfc9b33ccaa3a4ef20e",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:29:37Z",
+        "finding": {
+          "id": "F-002",
+          "version": 5,
+          "question": "How many tests of each fuel phase reached the lunar habitat atmosphere (30% oxygen or more, at or below 10.2 psi)?",
+          "status": "has_data",
+          "claim": "Of the PSI tests that reached 30% O2 or more, only 8 of 32 droplet tests and 20 of 262 gas tests also ran at or below 10.2 psi, while 16 of those gas tests report no pressure and no solid-fuel test in the data reaches that oxygen level.",
+          "summary_student": "The lunar habitat plan uses air with at least 30% oxygen at a low pressure of 10.2 psi or less. Among NASA's combustion tests, 32 droplet tests and 262 gas-flame tests used that much oxygen, but only 8 droplet tests and 20 gas tests also used a low enough pressure. No test with burning solid materials in this data used that much oxygen.",
+          "summary_professional": "Applying the lunar_base atmosphere (O2 >= 30% and pressure_atm_min <= 10.2 psi), 294 tests reach the oxygen threshold: 32 droplet tests (PSI-68 FLEX-2, PSI-69 FLEX), of which 8 also meet the pressure limit and 0 lack a pressure value; and 262 gas tests (PSI-10 Flame Design normal flames, PSI-159 CFI-G normal flames, PSI-20 BRE), of which 20 also meet the pressure limit and 16 report no pressure. Inverse-flame tests are left out because their O2 value is the burner oxidizer stream, not the chamber atmosphere. No solid-phase test reaches 30% O2, and several solid tables report no oxygen at all, so the solid phase is no data rather than zero.",
+          "values": {
+            "droplet_o2_match": {
+              "value": 32,
+              "unit": "tests"
+            },
+            "droplet_o2_and_pressure_match": {
+              "value": 8,
+              "unit": "tests"
+            },
+            "droplet_pressure_unknown": {
+              "value": 0,
+              "unit": "tests"
+            },
+            "gas_o2_match": {
+              "value": 262,
+              "unit": "tests"
+            },
+            "gas_o2_and_pressure_match": {
+              "value": 20,
+              "unit": "tests"
+            },
+            "gas_pressure_unknown": {
+              "value": 16,
+              "unit": "tests"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "coverage_by_environment",
+            "params": {
+              "environment": "lunar_base",
+              "o2_min_pct": 30.0,
+              "pressure_max_psi": 10.2,
+              "source": "Challenge text, \"Spacesuits and oxygen concentration\""
+            },
+            "formula": "For each fuel phase, the number of tests whose oxygen reached at least o2_min_pct, how many of them also ran at or below pressure_max_psi (pressure_atm_min <= pressure_max_psi / 14.6959), and how many of them report no pressure. Inverse-flame tests are left out: their oxygen is the burner stream, not the room. A phase with no test at that oxygen but with tests that report no oxygen is left out of the values: that is no data, not zero."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-10",
+              "doi": "10.60555/w4zy-bt45",
+              "table": "PSI-10_Experimental table_Flame Design_Normal Flame.csv",
+              "columns": [
+                "XO2 (init)",
+                "pinit (atm)",
+                "pmean (atm)"
+              ],
+              "rows": [
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119,
+                120,
+                121,
+                122,
+                123,
+                124,
+                125,
+                126,
+                127,
+                128,
+                129,
+                130,
+                131,
+                132,
+                133,
+                134,
+                135,
+                136,
+                137,
+                138,
+                139,
+                140,
+                141,
+                142,
+                143,
+                144,
+                145,
+                146,
+                147,
+                148,
+                149,
+                150,
+                151,
+                152,
+                153,
+                154,
+                155,
+                156,
+                157,
+                158,
+                159,
+                160,
+                161,
+                162,
+                188,
+                189,
+                190,
+                191,
+                192,
+                193,
+                194,
+                195,
+                196,
+                197,
+                198,
+                199,
+                200,
+                201,
+                202,
+                203,
+                204,
+                205,
+                206,
+                207
+              ]
+            },
+            {
+              "investigation": "PSI-20",
+              "doi": "10.60555/vb93-3y72",
+              "table": "PSI-20_Experimental table_ACME BRE.csv",
+              "columns": [
+                "Oxygen Conc (percent)"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                6,
+                7,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18
+              ]
+            },
+            {
+              "investigation": "PSI-68",
+              "doi": "10.60555/byp8-h018",
+              "table": "PSI-68_Experimental table_Flex2.csv",
+              "columns": [
+                "Ambient Pressure (atm)",
+                "Oxygen Mole Fraction"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+              ]
+            },
+            {
+              "investigation": "PSI-69",
+              "doi": "10.60555/mbq8-0451",
+              "table": "PSI-69_Experimental table_FLEX.csv",
+              "columns": [
+                "Ambient pressure; mmHg",
+                "O initial ambient composition; mole fraction"
+              ],
+              "rows": [
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                52
+              ]
+            },
+            {
+              "investigation": "PSI-159",
+              "doi": "10.60555/cyt1-kh64",
+              "table": "PSI-159_Experimental table_CFI-G_Normal Flames.csv",
+              "columns": [
+                "XO2 before test",
+                "approx p (bar)"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119,
+                120,
+                121,
+                125,
+                126,
+                127,
+                128,
+                129,
+                130,
+                131,
+                132,
+                133,
+                134,
+                135,
+                136,
+                137,
+                138,
+                139,
+                140,
+                141,
+                142,
+                143,
+                152,
+                153,
+                154,
+                155,
+                156,
+                157,
+                158,
+                159,
+                160,
+                161,
+                162,
+                163,
+                164,
+                165,
+                166,
+                167,
+                168,
+                169,
+                170,
+                171,
+                172,
+                173,
+                174,
+                175,
+                176,
+                177,
+                178,
+                179
+              ]
+            }
+          ],
+          "n_tests": 294,
+          "assumptions": [
+            "The lunar habitat atmosphere is 30% O2 or more at 10.2 psi or less, as stated in the challenge text.",
+            "A test meets the pressure limit when its lowest reported ambient pressure is at or below 10.2 psi.",
+            "Mole fraction and volume fraction of oxygen are treated as equal (ideal gas).",
+            "Inverse-flame tests (CFI-G and Flame Design) are left out because their oxygen value is the burner stream, not the room atmosphere."
+          ],
+          "limitations": [
+            "All counted tests ran in microgravity or Earth gravity; none ran at lunar gravity, so this does not show how flames behave on the Moon.",
+            "The gas tests that report no pressure (PSI-20 BRE) cannot be placed above or below the 10.2 psi limit.",
+            "No solid-fuel test reaches 30% O2, and several solid investigations (BASS, SPICE, SLICE, Saffire-III) do not report oxygen, so nothing here describes how habitat materials burn in the lunar atmosphere.",
+            "A test that reached these conditions says nothing by itself about whether the condition is safe or unsafe; it only shows that data exists."
+          ],
+          "warnings": [
+            "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+          ],
+          "environments": [
+            "lunar_base"
+          ],
+          "tier": 2,
+          "pillar": "prevention",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Grouped bars per fuel phase (droplet, gas) showing tests that reached 30% O2, tests that also met the 10.2 psi limit, and tests with no reported pressure."
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": "Want a visual? I can draw a bar chart comparing, for droplet and gas fuels, how many tests reached the lunar habitat oxygen level and how many also met its pressure limit."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T08:27:50Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-003",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "0a16ddc934bfbf5aba1b9cc388636ecc5ff04e7b2b463e50b8b423e0ec071096",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:30:01Z",
+        "finding": {
+          "id": "F-003",
+          "version": 2,
+          "question": "How did FLEX droplet flames end with each diluent gas (nitrogen, carbon dioxide, helium)?",
+          "status": "has_data",
+          "claim": "Most FLEX droplet flames ended in extinction with every diluent: 58 of 101 with nitrogen, 88 of 123 with nitrogen and carbon dioxide, and 40 of 50 with nitrogen and helium.",
+          "summary_student": "In space, burning fuel droplets often went out before the fuel was used up. This happened in most tests, whether the air around them was diluted with nitrogen, carbon dioxide or helium.",
+          "summary_professional": "FLEX (PSI-69) test end by ambient diluent: N2 101 tests, 58 extinction; N2+CO2 123 tests, 88 extinction; N2+He 50 tests, 40 extinction (n = 274). The other test ends recorded are disruption and completion.",
+          "values": {
+            "psi69_n2_co2_extinction": {
+              "value": 88,
+              "unit": "tests"
+            },
+            "psi69_n2_co2_tests": {
+              "value": 123,
+              "unit": "tests"
+            },
+            "psi69_n2_extinction": {
+              "value": 58,
+              "unit": "tests"
+            },
+            "psi69_n2_he_extinction": {
+              "value": 40,
+              "unit": "tests"
+            },
+            "psi69_n2_he_tests": {
+              "value": 50,
+              "unit": "tests"
+            },
+            "psi69_n2_tests": {
+              "value": 101,
+              "unit": "tests"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "SELECT 'psi69_' || lower(replace(diluent, '+', '_')) || '_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.diluent')) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND diluent IS NOT NULL GROUP BY investigation, source_table, diluent UNION ALL SELECT 'psi69_' || lower(replace(diluent, '+', '_')) || '_extinction' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list_distinct(list_concat(list(json_extract_string(field_sources, '$.diluent')), list(json_extract_string(field_sources, '$.outcome')))) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND diluent IS NOT NULL AND outcome = 'extinction' GROUP BY investigation, source_table, diluent ORDER BY name"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-69",
+              "doi": "10.60555/mbq8-0451",
+              "table": "PSI-69_Experimental table_FLEX.csv",
+              "columns": [
+                "CO initial ambient composition; mole fraction",
+                "He initial ambient composition; mole fraction",
+                "N initial ambient composition; mole fraction",
+                "Test end"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119,
+                120,
+                121,
+                122,
+                123,
+                124,
+                125,
+                126,
+                127,
+                128,
+                129,
+                130,
+                131,
+                132,
+                133,
+                134,
+                135,
+                136,
+                137,
+                138,
+                139,
+                140,
+                141,
+                142,
+                143,
+                144,
+                145,
+                146,
+                147,
+                148,
+                149,
+                150,
+                151,
+                152,
+                153,
+                154,
+                155,
+                156,
+                157,
+                158,
+                159,
+                160,
+                161,
+                162,
+                163,
+                164,
+                165,
+                166,
+                167,
+                168,
+                169,
+                170,
+                171,
+                172,
+                173,
+                174,
+                175,
+                176,
+                177,
+                178,
+                179,
+                180,
+                181,
+                182,
+                183,
+                184,
+                185,
+                186,
+                187,
+                188,
+                189,
+                190,
+                191,
+                192,
+                193,
+                194,
+                195,
+                196,
+                197,
+                198,
+                199,
+                200,
+                201,
+                202,
+                203,
+                204,
+                205,
+                206,
+                207,
+                208,
+                209,
+                210,
+                211,
+                212,
+                213,
+                214,
+                215,
+                216,
+                217,
+                218,
+                219,
+                220,
+                221,
+                222,
+                223,
+                224,
+                225,
+                226,
+                227,
+                228,
+                229,
+                230,
+                231,
+                232,
+                233,
+                234,
+                235,
+                236,
+                237,
+                238,
+                239,
+                240,
+                241,
+                242,
+                243,
+                244,
+                245,
+                246,
+                247,
+                248,
+                249,
+                250,
+                251,
+                252,
+                253,
+                254,
+                255,
+                256,
+                257,
+                258,
+                259,
+                260,
+                261,
+                262,
+                263,
+                264,
+                265,
+                266,
+                267,
+                268,
+                269,
+                270,
+                271,
+                272,
+                273,
+                274
+              ]
+            }
+          ],
+          "n_tests": 274,
+          "assumptions": [
+            "\"Extinction\" is the test end recorded in the FLEX table (column \"Test end\"); PSI does not define it further.",
+            "Tests are grouped by the diluent gases named in the FLEX table."
+          ],
+          "limitations": [
+            "Counts outcomes only; oxygen level, pressure and droplet size also differ between tests and were not held equal.",
+            "Does not show that carbon dioxide or helium suppress fires better: the groups are not matched experiments.",
+            "Covers only FLEX droplet fuels (heptane and methanol), not solid materials."
+          ],
+          "warnings": [],
+          "environments": [
+            "space_station",
+            "transit_vehicle"
+          ],
+          "tier": 1,
+          "pillar": "suppression",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Bars of FLEX tests and extinctions for each diluent gas."
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": "Want a visual? I can draw a chart of FLEX tests and extinctions for each diluent gas."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T02:07:37Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-004",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "e42aa38de7a6a555d8a46ee63e5d1d4f0444685fd316f83451bb3c9386b58f6f",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:30:24Z",
+        "finding": {
+          "id": "F-004",
+          "version": 2,
+          "question": "How many CFI-G normal gas flames went out by themselves, and over what oxygen range?",
+          "status": "has_data",
+          "claim": "Of 179 CFI-G normal gas flames, 102 went out by themselves (self-extinguished) at oxygen levels from 17.968567% to 39.97%, and 31 ended when the fuel flow was stopped.",
+          "summary_student": "In the CFI-G experiment on the space station, more than half of the small gas flames went out on their own instead of being switched off. They did so over a wide range of oxygen levels, from below to well above the level in normal air.",
+          "summary_professional": "ACME CFI-G (PSI-159) normal-flame table: 179 tests; outcome se (self-extinguished) in 102 and ft (flow terminated) in 31; the rest have no outcome recorded. XO2 before test for self-extinguished flames: 17.968567–39.97% (n = 102).",
+          "values": {
+            "psi159_normal_tests": {
+              "value": 179.0,
+              "unit": "tests"
+            },
+            "psi159_normal_self_extinguished": {
+              "value": 102.0,
+              "unit": "tests"
+            },
+            "psi159_normal_flow_terminated": {
+              "value": 31.0,
+              "unit": "tests"
+            },
+            "psi159_normal_self_extinguished_o2_min": {
+              "value": 17.968567,
+              "unit": "% O2"
+            },
+            "psi159_normal_self_extinguished_o2_max": {
+              "value": 39.97,
+              "unit": "% O2"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "SELECT 'psi159_normal_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.outcome')) AS source_columns FROM tests WHERE source_table = 'PSI-159_Experimental table_CFI-G_Normal Flames.csv' GROUP BY investigation, source_table UNION ALL SELECT 'psi159_normal_self_extinguished', count(*), 'tests', investigation, source_table, list(source_row ORDER BY source_row), list(DISTINCT json_extract_string(field_sources, '$.outcome')) FROM tests WHERE source_table = 'PSI-159_Experimental table_CFI-G_Normal Flames.csv' AND outcome = 'se' GROUP BY investigation, source_table UNION ALL SELECT 'psi159_normal_flow_terminated', count(*), 'tests', investigation, source_table, list(source_row ORDER BY source_row), list(DISTINCT json_extract_string(field_sources, '$.outcome')) FROM tests WHERE source_table = 'PSI-159_Experimental table_CFI-G_Normal Flames.csv' AND outcome = 'ft' GROUP BY investigation, source_table UNION ALL SELECT 'psi159_normal_self_extinguished_o2_min', min(o2_pct_min), '% O2', investigation, source_table, list(source_row ORDER BY source_row), list_distinct(list_concat(list(json_extract_string(field_sources, '$.outcome')), list(json_extract_string(field_sources, '$.o2_pct_max')))) FROM tests WHERE source_table = 'PSI-159_Experimental table_CFI-G_Normal Flames.csv' AND outcome = 'se' GROUP BY investigation, source_table UNION ALL SELECT 'psi159_normal_self_extinguished_o2_max', max(o2_pct_max), '% O2', investigation, source_table, list(source_row ORDER BY source_row), list_distinct(list_concat(list(json_extract_string(field_sources, '$.outcome')), list(json_extract_string(field_sources, '$.o2_pct_max')))) FROM tests WHERE source_table = 'PSI-159_Experimental table_CFI-G_Normal Flames.csv' AND outcome = 'se' GROUP BY investigation, source_table"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-159",
+              "doi": "10.60555/cyt1-kh64",
+              "table": "PSI-159_Experimental table_CFI-G_Normal Flames.csv",
+              "columns": [
+                "Self-ext or flow term",
+                "XO2 before test"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119,
+                120,
+                121,
+                122,
+                123,
+                124,
+                125,
+                126,
+                127,
+                128,
+                129,
+                130,
+                131,
+                132,
+                133,
+                134,
+                135,
+                136,
+                137,
+                138,
+                139,
+                140,
+                141,
+                142,
+                143,
+                144,
+                145,
+                146,
+                147,
+                148,
+                149,
+                150,
+                151,
+                152,
+                153,
+                154,
+                155,
+                156,
+                157,
+                158,
+                159,
+                160,
+                161,
+                162,
+                163,
+                164,
+                165,
+                166,
+                167,
+                168,
+                169,
+                170,
+                171,
+                172,
+                173,
+                174,
+                175,
+                176,
+                177,
+                178,
+                179
+              ]
+            }
+          ],
+          "n_tests": 179,
+          "assumptions": [
+            "\"se\" and \"ft\" in the column \"Self-ext or flow term\" are read as self-extinguished and flow terminated.",
+            "Oxygen is the \"XO2 before test\" mole fraction, read as a percentage."
+          ],
+          "limitations": [
+            "Covers only the CFI-G normal-flame table; inverse flames are not included.",
+            "Some CFI-G normal-flame tests have no recorded end (\"-\" in the column \"Self-ext or flow term\") and are counted in neither group, so the self-extinguished and flow-terminated counts do not add up to the total.",
+            "Counts how flames ended; it does not say why each one went out.",
+            "Pressure and fuel mixture also differ between tests and were not held equal."
+          ],
+          "warnings": [],
+          "environments": [
+            "space_station"
+          ],
+          "tier": 2,
+          "pillar": "suppression",
+          "visual_offer": {
+            "chart": {
+              "available": false,
+              "idea": null
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": null
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T08:01:47Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-005",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "6baf7d2d5504bc7f8c7d76885ffec05021a32b5f231b99fc5e2c748675e86e05",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:30:48Z",
+        "finding": {
+          "id": "F-005",
+          "version": 1,
+          "question": "Which materials did SAME-R heat to make smoke, and how many tests did each get?",
+          "status": "has_data",
+          "claim": "SAME-R made smoke from five spacecraft materials: Kapton in 29 tests, silicone in 22, lampwick and Pyrell in 20 each, and Teflon in 18.",
+          "summary_student": "SAME-R heated common spacecraft materials on the space station until they smoked, and measured how big the smoke particles were, which matters for smoke detectors. Kapton was tested most often.",
+          "summary_professional": "SAME-R (PSI-101): 109 smoke tests by sample type: Kapton 29, silicone 22, lampwick 20, Pyrell 20, Teflon 18. Its PSI objective is to quantify the sizes smoke particulate reaches in low gravity.",
+          "values": {
+            "psi101_kapton": {
+              "value": 29,
+              "unit": "tests"
+            },
+            "psi101_silicone": {
+              "value": 22,
+              "unit": "tests"
+            },
+            "psi101_lampwick": {
+              "value": 20,
+              "unit": "tests"
+            },
+            "psi101_pyrell": {
+              "value": 20,
+              "unit": "tests"
+            },
+            "psi101_teflon": {
+              "value": 18,
+              "unit": "tests"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "SELECT 'psi101_' || lower(fuel) AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.fuel')) AS source_columns FROM tests WHERE investigation = 'PSI-101' AND fuel IS NOT NULL GROUP BY investigation, source_table, fuel ORDER BY value DESC, name"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-101",
+              "doi": "10.60555/2np7-jv14",
+              "table": "PSI-101_Experimental table_SAME-R.csv",
+              "columns": [
+                "Sample Type"
+              ],
+              "rows": "all"
+            }
+          ],
+          "n_tests": 109,
+          "assumptions": [
+            "Tests are counted by the sample type named in the SAME-R table."
+          ],
+          "limitations": [
+            "Counts tests only; it does not compare smoke particle sizes or detector responses.",
+            "These materials were heated to make smoke; the counts say nothing about how easily they ignite."
+          ],
+          "warnings": [],
+          "environments": [
+            "space_station",
+            "transit_vehicle"
+          ],
+          "tier": 1,
+          "pillar": "detection",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Bars of SAME-R smoke tests per material."
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": "Want a visual? I can draw a chart of how many SAME-R smoke tests each material got."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T00:11:27Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-006",
+        "finding_version": 4,
+        "grade": "C",
+        "failed_checks": [
+          "C7",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "b8566ec1104b046ae24975113997d73c9b26ea488f4dc14317bd50edf24f3a10",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:31:10Z",
+        "finding": {
+          "id": "F-006",
+          "version": 4,
+          "question": "Did BASS-II or Saffire-II burn solid materials at Earth's 21% oxygen level or more?",
+          "status": "has_data",
+          "claim": "Yes: all 9 Saffire-II tests (21.5–22.1% oxygen) and 27 of the 129 BASS-II tests (up to 22.2%) were at 21% oxygen or more.",
+          "summary_student": "Both experiments burned solid materials, such as acrylic plastic and fabric, at about the oxygen level of normal air. Neither went much higher than that.",
+          "summary_professional": "BASS-II (PSI-25) initial O2: 13.6–22.2% by volume, 27 of 129 tests at or above 21%. Saffire-II (PSI-99): 21.5–22.1%, all 9 tests at or above 21%.",
+          "values": {
+            "psi25_o2_min": {
+              "value": 13.6,
+              "unit": "% O2"
+            },
+            "psi25_o2_max": {
+              "value": 22.2,
+              "unit": "% O2"
+            },
+            "psi25_n_tests": {
+              "value": 129,
+              "unit": "tests"
+            },
+            "psi25_n_at_or_above": {
+              "value": 27,
+              "unit": "tests"
+            },
+            "psi99_o2_min": {
+              "value": 21.5,
+              "unit": "% O2"
+            },
+            "psi99_o2_max": {
+              "value": 22.1,
+              "unit": "% O2"
+            },
+            "psi99_n_tests": {
+              "value": 9,
+              "unit": "tests"
+            },
+            "psi99_n_at_or_above": {
+              "value": 9,
+              "unit": "tests"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "o2_range",
+            "params": {
+              "investigations": [
+                "PSI-25",
+                "PSI-99"
+              ],
+              "threshold_pct": 21.0
+            },
+            "formula": "For each investigation, the lowest and highest oxygen percentage over its tests that report oxygen, the number of those tests, and how many reached at least threshold_pct (o2_pct_max >= threshold_pct)."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-25",
+              "doi": "10.60555/4qc4-de67",
+              "table": "PSI-25_Experimental table_BASS-II.csv",
+              "columns": [
+                "Calibrated initial O2 % by vol"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119,
+                120,
+                121,
+                122,
+                123,
+                124,
+                125,
+                126,
+                127,
+                128,
+                129
+              ]
+            },
+            {
+              "investigation": "PSI-99",
+              "doi": "10.60555/2chp-m469",
+              "table": "PSI-99_Experimental table_SAFFIRE-2.csv",
+              "columns": [
+                "Percent O2 (Note 1)"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            }
+          ],
+          "n_tests": 138,
+          "assumptions": [
+            "Uses the initial oxygen level of each test.",
+            "Mole fraction and volume fraction are treated as equal (ideal gas)."
+          ],
+          "limitations": [
+            "Covers only BASS-II and Saffire-II, not every solid-fuel investigation in PSI.",
+            "At or above 21% does not mean far above it: the highest level in either investigation is 22.2%."
+          ],
+          "warnings": [],
+          "environments": [
+            "space_station",
+            "transit_vehicle"
+          ],
+          "tier": 1,
+          "pillar": "prevention",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Range bars of the oxygen levels tested by BASS-II and Saffire-II, with a dashed line at 21%."
+            },
+            "graph": {
+              "available": true,
+              "idea": "How BASS-II and Saffire-II connect: shared fuels and related PSI studies."
+            },
+            "footnote": "Want a visual? I can draw a chart of the oxygen levels tested, or a graph of how BASS-II and Saffire-II connect to related PSI studies."
+          },
+          "chart": null,
+          "graph": {
+            "nodes": [
+              {
+                "id": "F-006",
+                "type": "finding",
+                "label": "Yes: all 9 Saffire-II tests (21.5–22.1% oxygen) and 27 of the 129 BASS-II tests…"
+              },
+              {
+                "id": "o2_range",
+                "type": "method",
+                "label": "o2_range"
+              },
+              {
+                "id": "PSI-25",
+                "type": "investigation",
+                "label": "BASS-II"
+              },
+              {
+                "id": "PSI-99",
+                "type": "investigation",
+                "label": "SAFFIRE-II"
+              },
+              {
+                "id": "PSI-26",
+                "type": "investigation",
+                "label": "BASS"
+              },
+              {
+                "id": "PSI-62",
+                "type": "investigation",
+                "label": "Concurrent Flame Spread Modeling using…"
+              },
+              {
+                "id": "PSI-98",
+                "type": "investigation",
+                "label": "SAFFIRE-I"
+              },
+              {
+                "id": "PSI-100",
+                "type": "investigation",
+                "label": "SAFFIRE-III"
+              }
+            ],
+            "edges": [
+              {
+                "from": "F-006",
+                "to": "o2_range",
+                "type": "computed_with",
+                "source": "method"
+              },
+              {
+                "from": "o2_range",
+                "to": "PSI-25",
+                "type": "uses_data_from",
+                "source": "evidence[0]"
+              },
+              {
+                "from": "o2_range",
+                "to": "PSI-99",
+                "type": "uses_data_from",
+                "source": "evidence[1]"
+              },
+              {
+                "from": "PSI-25",
+                "to": "PSI-26",
+                "type": "related_in_psi",
+                "source": "related_glds"
+              },
+              {
+                "from": "PSI-98",
+                "to": "PSI-99",
+                "type": "related_in_psi",
+                "source": "related_glds"
+              },
+              {
+                "from": "PSI-99",
+                "to": "PSI-100",
+                "type": "related_in_psi",
+                "source": "related_glds"
+              },
+              {
+                "from": "PSI-62",
+                "to": "PSI-25",
+                "type": "reuses_flight_data",
+                "source": "related_glds + projectType"
+              },
+              {
+                "from": "PSI-25",
+                "to": "PSI-99",
+                "type": "same_fuel",
+                "source": "tests.fuel: pmma, sibal"
+              }
+            ]
+          },
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T02:07:48Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-007",
+        "finding_version": 1,
+        "grade": "rejected",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "c17776b6809f3adf9e63df248d42ccc4fc2b43cbb9454342af8241b71a972277",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:31:32Z",
+        "finding": {
+          "id": "F-007",
+          "version": 1,
+          "question": "Is there any PSI combustion test at lunar or Mars gravity?",
+          "status": "no_data",
+          "claim": "No PSI combustion test in the snapshot ran at lunar or Mars gravity.",
+          "summary_student": "NASA's combustion database has no fire tests at the gravity of the Moon or Mars. Fire tests were done in orbit or on Earth, never at partial gravity.",
+          "summary_professional": "No test in the snapshot has a gravity level other than microgravity or Earth gravity (n = 0 matching tests). Partial-gravity behavior can only be bounded by microgravity and normal-gravity results.",
+          "values": {},
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "SELECT 'partial_gravity_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, ['gravity'] AS source_columns FROM tests WHERE gravity NOT IN ('microgravity', 'earth') GROUP BY investigation, source_table"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [],
+          "n_tests": 0,
+          "assumptions": [
+            "Uses the gravity recorded for each test in the snapshot."
+          ],
+          "limitations": [
+            "No data is not a safety result: it means fire behavior at lunar and Mars gravity is untested in PSI.",
+            "Some experiments imitated partial gravity in other ways (for example the E-FIELD Flames electric field), which this query does not count."
+          ],
+          "warnings": [
+            "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+          ],
+          "environments": [
+            "lunar_base",
+            "mars_base"
+          ],
+          "tier": null,
+          "pillar": null,
+          "visual_offer": {
+            "chart": {
+              "available": false,
+              "idea": null
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": null
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T00:11:30Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-008",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C7",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "adaa1258fe72f836187ac21a9e4a063c7aa547895c2722bbd3c1ce4683faf91f",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:31:55Z",
+        "finding": {
+          "id": "F-008",
+          "version": 1,
+          "question": "How high did oxygen go in the ACME gas-flame tests (BRE and CFI-G), and did any reach 30%?",
+          "status": "has_data",
+          "claim": "Yes: all 16 BRE test-day rows with oxygen data included a condition at 30% or more (up to 40%), and 230 of 333 CFI-G tests reached 30% or more (up to 85%).",
+          "summary_student": "Gas flames were burned in space at oxygen levels above the one planned for a Moon base, much higher than normal air. Some of the highest values come from a special flame where oxygen is blown into the fuel, not from the air around it.",
+          "summary_professional": "ACME BRE (PSI-20): O2 21–40% over 16 test-day rows, each including at least one condition at or above 30%. ACME CFI-G (PSI-159): XO2 12–85%, 230 of 333 tests at or above 30%; the highest values are inverse flames, where XO2 is the burner stream.",
+          "values": {
+            "psi20_o2_min": {
+              "value": 21.0,
+              "unit": "% O2"
+            },
+            "psi20_o2_max": {
+              "value": 40.0,
+              "unit": "% O2"
+            },
+            "psi20_n_tests": {
+              "value": 16,
+              "unit": "tests"
+            },
+            "psi20_n_at_or_above": {
+              "value": 16,
+              "unit": "tests"
+            },
+            "psi159_o2_min": {
+              "value": 12.0,
+              "unit": "% O2"
+            },
+            "psi159_o2_max": {
+              "value": 85.0,
+              "unit": "% O2"
+            },
+            "psi159_n_tests": {
+              "value": 333,
+              "unit": "tests"
+            },
+            "psi159_n_at_or_above": {
+              "value": 230,
+              "unit": "tests"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "o2_range",
+            "params": {
+              "investigations": [
+                "PSI-20",
+                "PSI-159"
+              ],
+              "threshold_pct": 30.0
+            },
+            "formula": "For each investigation, the lowest and highest oxygen percentage over its tests that report oxygen, the number of those tests, and how many reached at least threshold_pct (o2_pct_max >= threshold_pct)."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-20",
+              "doi": "10.60555/vb93-3y72",
+              "table": "PSI-20_Experimental table_ACME BRE.csv",
+              "columns": [
+                "Oxygen Conc (percent)"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                6,
+                7,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18
+              ]
+            },
+            {
+              "investigation": "PSI-159",
+              "doi": "10.60555/cyt1-kh64",
+              "table": "PSI-159_Experimental table_CFI-G_Inverse Flames.csv",
+              "columns": [
+                "XO2"
+              ],
+              "rows": "all"
+            },
+            {
+              "investigation": "PSI-159",
+              "doi": "10.60555/cyt1-kh64",
+              "table": "PSI-159_Experimental table_CFI-G_Normal Flames.csv",
+              "columns": [
+                "XO2 before test"
+              ],
+              "rows": "all"
+            }
+          ],
+          "n_tests": 349,
+          "assumptions": [
+            "Mole fraction and volume fraction are treated as equal (ideal gas).",
+            "A BRE row is one test day that lists several oxygen conditions; its highest condition is used."
+          ],
+          "limitations": [
+            "BRE rows are test days, not single tests, so 16 counts days.",
+            "CFI-G inverse-flame oxygen is the burner stream, not the surrounding gas; it does not describe a breathable atmosphere.",
+            "These are gas flames; they say nothing about how solid materials burn."
+          ],
+          "warnings": [
+            "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+          ],
+          "environments": [
+            "lunar_base",
+            "pressurized_rover"
+          ],
+          "tier": 2,
+          "pillar": "prevention",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Range bars of the oxygen levels tested by BRE and CFI-G, with a dashed line at 30%."
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": "Want a visual? I can draw a chart of the oxygen levels tested by BRE and CFI-G against the 30% lunar habitat target."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T00:11:30Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-009",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C5",
+          "C7",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "a2972a8dc200067c4f9efe03ab7f27cf7ce24c3ba4baa29ced8dd33884c7700f",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:32:20Z",
+        "finding": {
+          "id": "F-009",
+          "version": 2,
+          "question": "What oxygen levels did the Saffire-II tests cover, and did any reach the lunar habitat level of 30%?",
+          "status": "has_data",
+          "claim": "The 9 Saffire-II (PSI-99) tests covered oxygen levels from 21.5% to 22.1% O2, and none of them (0 of 9) reached the 30% lunar habitat level.",
+          "summary_student": "Saffire-II burned 9 samples of solid materials in microgravity, and the air around them held between 21.5% and 22.1% oxygen, close to ordinary Earth air. None of the 9 tests reached the 30% oxygen of a lunar habitat, so these results cannot tell us directly how these materials would burn at that level.",
+          "summary_professional": "PSI-99 (SAFFIRE-II) reports 9 microgravity solid-fuel tests (silicone, cotton-fiberglass SIBAL, PMMA, and PMMA with Nomex) with O2 ranging from 21.5% to 22.1% across all rows (o2_pct_min to o2_pct_max). 0 of 9 tests were at or above the 30% O2 threshold of the lunar base atmosphere. The source table gives no ambient pressure, so the pressure side of the lunar atmosphere cannot be compared.",
+          "values": {
+            "psi99_o2_min": {
+              "value": 21.5,
+              "unit": "% O2"
+            },
+            "psi99_o2_max": {
+              "value": 22.1,
+              "unit": "% O2"
+            },
+            "psi99_n_tests": {
+              "value": 9,
+              "unit": "tests"
+            },
+            "psi99_n_at_or_above": {
+              "value": 0,
+              "unit": "tests"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "o2_range",
+            "params": {
+              "investigations": [
+                "PSI-99"
+              ],
+              "threshold_pct": 30.0
+            },
+            "formula": "For each investigation, the lowest and highest oxygen percentage over its tests that report oxygen, the number of those tests, and how many reached at least threshold_pct (o2_pct_max >= threshold_pct)."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-99",
+              "doi": "10.60555/2chp-m469",
+              "table": "PSI-99_Experimental table_SAFFIRE-2.csv",
+              "columns": [
+                "Percent O2 (Note 1)"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            }
+          ],
+          "n_tests": 9,
+          "assumptions": [
+            "Oxygen is read from the Percent O2 column of the Saffire-II table; a note in the table says it was derived from measured CO2 production, and several cells are approximate (marked ~) or given as ranges.",
+            "For cells that give a range, the lowest and highest values of the cell are used as o2_pct_min and o2_pct_max.",
+            "Mole fraction and volume fraction of O2 are treated as equal (ideal gas).",
+            "The lunar habitat level is the 30% O2 threshold given in the question and in _config/environments.md."
+          ],
+          "limitations": [
+            "This finding covers only PSI-99 (Saffire-II); it does not include Saffire-I, Saffire-III, BASS, BASS-II or other solid-fuel investigations, which may have tested other oxygen levels.",
+            "All Saffire-II tests are in microgravity; the finding says nothing about burning behavior in lunar gravity.",
+            "The Saffire-II table gives no ambient pressure, so these tests cannot be checked against the lunar base pressure limit.",
+            "No test at 30% O2 means no data at that level, not that these materials are safe or unsafe there; results near Earth-air oxygen must not be extrapolated to 30% O2.",
+            "Some rows have an empty material cell in the source table (possibly merged cells), so this finding does not assign a material to those rows."
+          ],
+          "warnings": [
+            "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+          ],
+          "environments": [
+            "lunar_base"
+          ],
+          "tier": 1,
+          "pillar": "prevention",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "A range bar of the oxygen levels tested by Saffire-II, with a dashed line at the 30% lunar habitat level."
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": "Want a visual? I can draw a chart of the Saffire-II oxygen range against the 30% lunar habitat level."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T02:07:38Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-010",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "ea049d14c100e9ea6b0f699d21aebffd8ff32ffedabe6074e5c969f8d636513d",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:33:33Z",
+        "finding": {
+          "id": "F-010",
+          "version": 2,
+          "question": "Across FLEX and FLEX-2, at what oxygen levels did droplet flames go out (extinction)?",
+          "status": "has_data",
+          "claim": "In FLEX (PSI-69), 186 droplet tests ended in flame extinction at initial ambient oxygen levels from 12.0% to 30.0% O2, while the FLEX-2 (PSI-68) table records no test outcome and cannot answer the question.",
+          "summary_student": "In the FLEX experiment on the space station, 186 burning fuel droplets had their flames go out, in air mixtures that held between 12.0% and 30.0% oxygen. The FLEX-2 experiment's table does not say how each test ended, so it tells us nothing about when flames went out.",
+          "summary_professional": "Of the FLEX (PSI-69) tests, 186 have Test end = extinction; their initial ambient O2 mole fraction spans 12.0% to 30.0% O2 (each row gives a single O2 value). The FLEX-2 (PSI-68) experimental table has 8 condition-matrix rows and no outcome column, so it contributes no extinction data. The finding draws on 194 rows in total, of which only the 186 FLEX rows carry an outcome.",
+          "values": {
+            "flex_extinction_o2_min": {
+              "value": 12.0,
+              "unit": "% O2"
+            },
+            "flex_extinction_o2_max": {
+              "value": 30.0,
+              "unit": "% O2"
+            },
+            "flex_extinction_tests": {
+              "value": 186.0,
+              "unit": "tests"
+            },
+            "flex2_tests_without_outcome": {
+              "value": 8.0,
+              "unit": "tests"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "SELECT 'flex_extinction_o2_min' AS name, min(o2_pct_min) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_min')) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND outcome = 'extinction' AND o2_pct_min IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'flex_extinction_o2_max' AS name, max(o2_pct_max) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND outcome = 'extinction' AND o2_pct_max IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'flex_extinction_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.outcome')) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND outcome = 'extinction' GROUP BY investigation, source_table UNION ALL SELECT 'flex2_tests_without_outcome' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_min')) AS source_columns FROM tests WHERE investigation = 'PSI-68' AND (outcome IS NULL OR outcome = '') GROUP BY investigation, source_table"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-68",
+              "doi": "10.60555/byp8-h018",
+              "table": "PSI-68_Experimental table_Flex2.csv",
+              "columns": [
+                "Oxygen Mole Fraction"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+              ]
+            },
+            {
+              "investigation": "PSI-69",
+              "doi": "10.60555/mbq8-0451",
+              "table": "PSI-69_Experimental table_FLEX.csv",
+              "columns": [
+                "O initial ambient composition; mole fraction",
+                "Test end"
+              ],
+              "rows": [
+                2,
+                3,
+                4,
+                5,
+                6,
+                10,
+                11,
+                13,
+                14,
+                15,
+                16,
+                18,
+                30,
+                33,
+                34,
+                35,
+                36,
+                45,
+                49,
+                50,
+                54,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                64,
+                65,
+                66,
+                67,
+                68,
+                70,
+                71,
+                73,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                94,
+                95,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                109,
+                110,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119,
+                120,
+                121,
+                122,
+                123,
+                124,
+                125,
+                126,
+                127,
+                128,
+                129,
+                130,
+                134,
+                140,
+                141,
+                142,
+                143,
+                144,
+                145,
+                146,
+                147,
+                150,
+                152,
+                153,
+                154,
+                155,
+                157,
+                158,
+                159,
+                160,
+                161,
+                162,
+                163,
+                164,
+                165,
+                166,
+                167,
+                169,
+                170,
+                171,
+                172,
+                176,
+                177,
+                178,
+                180,
+                181,
+                183,
+                184,
+                185,
+                186,
+                187,
+                188,
+                189,
+                190,
+                191,
+                192,
+                193,
+                194,
+                195,
+                196,
+                197,
+                199,
+                200,
+                201,
+                202,
+                203,
+                209,
+                210,
+                211,
+                212,
+                213,
+                214,
+                215,
+                216,
+                217,
+                218,
+                219,
+                220,
+                221,
+                222,
+                223,
+                225,
+                226,
+                227,
+                228,
+                230,
+                232,
+                235,
+                236,
+                239,
+                240,
+                241,
+                242,
+                243,
+                244,
+                245,
+                246,
+                247,
+                248,
+                249,
+                251,
+                253,
+                255,
+                256,
+                257,
+                258,
+                259,
+                260,
+                261,
+                262,
+                263,
+                264,
+                265,
+                266,
+                267,
+                268,
+                269,
+                271,
+                272,
+                273,
+                274
+              ]
+            }
+          ],
+          "n_tests": 194,
+          "assumptions": [
+            "Extinction is taken from the FLEX table column Test end, as normalized to the outcome value extinction.",
+            "The oxygen level is the initial ambient O2 mole fraction from the FLEX table, treated as equal to percent by volume."
+          ],
+          "limitations": [
+            "The FLEX-2 (PSI-68) table has no outcome column, so it cannot answer the question; no FLEX-2 extinction oxygen level is reported here.",
+            "The range covers all FLEX extinction tests together; it does not separate fuels, diluents, pressures or droplet sizes, so it is not an extinction limit for any single condition.",
+            "The finding does not compare extinction with FLEX tests that ended in completion or disruption, so it does not show that oxygen level alone decides whether a droplet flame goes out.",
+            "All FLEX tests are in microgravity; the finding says nothing about Earth gravity or partial gravity, and nothing about solid or gas fuels."
+          ],
+          "warnings": [],
+          "environments": [],
+          "tier": 1,
+          "pillar": "suppression",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Range bar of the initial O2 levels of the FLEX extinction tests, with the FLEX-2 table marked as having no outcome data."
+            },
+            "graph": {
+              "available": true,
+              "idea": "Proof graph linking the finding to the FLEX and FLEX-2 investigations and their shared droplet hardware."
+            },
+            "footnote": "Want a visual? I can draw a chart of the oxygen range where FLEX droplet flames went out, or a graph of how FLEX and FLEX-2 connect."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T08:02:19Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-011",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "0ea3e49517e7bd6c991d2e7ceb2c4d3c6ffd1ac328d6d503d6c49b6d6f802745",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:33:46Z",
+        "finding": {
+          "id": "F-011",
+          "version": 1,
+          "question": "How many smoke tests were run in the smoke-detection experiments (SAME, SAME-R, DAFT), and with which materials?",
+          "status": "has_data",
+          "claim": "PSI tables list 109 SAME-R smoke tests (Kapton, Silicone, Lampwick, Teflon, Pyrell) and 8 SAME smoke tests (Teflon, Kapton, Silicone Rubber, Lampwick, Dibutyl Phthalate), while DAFT lists 2 tests that used Arizona Road Dust, not smoke.",
+          "summary_student": "The SAME-R experiment made smoke from five materials in 109 tests: Kapton in 29, Silicone in 22, Lampwick in 20, Pyrell in 20 and Teflon in 18. The earlier SAME experiment ran 8 tests: Teflon in 4, and Kapton, Silicone Rubber, Lampwick and Dibutyl Phthalate in 1 each. DAFT is different: its 2 tests used a fine road dust instead of smoke, to check that detectors can tell dust apart from smoke.",
+          "summary_professional": "Counting rows in the PSI experimental tables (n = 119 rows across the three investigations): SAME-R (PSI-101) has 109 smoke tests, by sample material Kapton 29, Silicone 22, Lampwick 20, Pyrell 20, Teflon 18. SAME (PSI-102) has 8 smoke tests: Teflon 4, Kapton 1, Silicone Rubber 1, Lampwick 1, Dibutyl Phthalate 1. DAFT (PSI-47) has 2 tests with Arizona Road Dust (ARD Fine) aerosolized in nitrogen; the snapshot records no combustion phase for them, so they are dust tests, not smoke tests.",
+          "values": {
+            "psi_47_arizona_road_dust_tests": {
+              "value": 2,
+              "unit": "tests"
+            },
+            "psi_101_kapton_tests": {
+              "value": 29,
+              "unit": "tests"
+            },
+            "psi_102_silicone_rubber_tests": {
+              "value": 1,
+              "unit": "tests"
+            },
+            "psi_102_lampwick_tests": {
+              "value": 1,
+              "unit": "tests"
+            },
+            "psi_101_lampwick_tests": {
+              "value": 20,
+              "unit": "tests"
+            },
+            "psi_101_pyrell_tests": {
+              "value": 20,
+              "unit": "tests"
+            },
+            "psi_102_kapton_tests": {
+              "value": 1,
+              "unit": "tests"
+            },
+            "psi_102_teflon_tests": {
+              "value": 4,
+              "unit": "tests"
+            },
+            "psi_101_silicone_tests": {
+              "value": 22,
+              "unit": "tests"
+            },
+            "psi_101_teflon_tests": {
+              "value": 18,
+              "unit": "tests"
+            },
+            "psi_102_dibutyl_phthalate_tests": {
+              "value": 1,
+              "unit": "tests"
+            },
+            "psi_47_total_tests": {
+              "value": 2,
+              "unit": "tests"
+            },
+            "psi_102_total_tests": {
+              "value": 8,
+              "unit": "tests"
+            },
+            "psi_101_total_tests": {
+              "value": 109,
+              "unit": "tests"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "SELECT lower(regexp_replace(investigation || '_' || regexp_extract(fuel, '^[^(]*') || '_tests', '[^[:alnum:]]+', '_', 'g')) AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.fuel')) AS source_columns FROM tests WHERE investigation IN ('PSI-102','PSI-101','PSI-47') GROUP BY investigation, source_table, fuel UNION ALL SELECT lower(regexp_replace(investigation || '_total_tests', '[^[:alnum:]]+', '_', 'g')) AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.fuel')) AS source_columns FROM tests WHERE investigation IN ('PSI-102','PSI-101','PSI-47') GROUP BY investigation, source_table"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-47",
+              "doi": "10.60555/ztgj-d202",
+              "table": "PSI-47_Experimental table_DAFT.csv",
+              "columns": [
+                "Sample Material"
+              ],
+              "rows": [
+                1,
+                2
+              ]
+            },
+            {
+              "investigation": "PSI-101",
+              "doi": "10.60555/2np7-jv14",
+              "table": "PSI-101_Experimental table_SAME-R.csv",
+              "columns": [
+                "Sample Type"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106,
+                107,
+                108,
+                109
+              ]
+            },
+            {
+              "investigation": "PSI-102",
+              "doi": "10.60555/gd4k-8h62",
+              "table": "PSI-102_Experimental table_SAME.csv",
+              "columns": [
+                "Sample Material"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+              ]
+            }
+          ],
+          "n_tests": 119,
+          "assumptions": [
+            "Each row of a PSI experimental table counts as one test.",
+            "Material names are taken exactly as written in each table; Silicone in SAME-R and Silicone Rubber in SAME are kept as separate labels because the tables name them differently."
+          ],
+          "limitations": [
+            "This counts tests only; it says nothing about detector performance, smoke particle sizes or which material is more hazardous.",
+            "The SAME and SAME-R tables give no oxygen level or pressure, so these tests cannot be compared with lunar base or rover atmospheres.",
+            "Some SAME rows only say they repeat the conditions of earlier rows; the snapshot keeps their material but not copied conditions.",
+            "Only the experimental tables in the PSI snapshot are counted; tests described only in papers, or in other smoke studies such as the PSI-115 ground study, are not included."
+          ],
+          "warnings": [
+            "DAFT tests used dust, not smoke: they should not be counted as smoke tests."
+          ],
+          "environments": [],
+          "tier": 1,
+          "pillar": "detection",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Grouped bars of the number of tests per material for SAME-R and SAME, with DAFT dust tests shown separately."
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": "Want a visual? I can draw a bar chart of how many tests each material had in SAME-R and SAME, with the DAFT dust tests shown apart."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T08:12:32Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-012",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C5",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "8924b8554034a771af119d93d28207e45354e9ce7e68cf93039bce438b486e0c",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:33:56Z",
+        "finding": {
+          "id": "F-012",
+          "version": 1,
+          "question": "What is the highest oxygen level at which any solid material was burned in PSI, and in which investigation?",
+          "status": "has_data",
+          "claim": "The highest oxygen level recorded for any solid-fuel test in PSI is 22.2% O2, in BASS-II (PSI-25), just above Saffire-II (PSI-99) at 22.1% and Saffire-I (PSI-98) at 21.7%.",
+          "summary_student": "Among all PSI experiments that burned solid materials such as plastic sheets, rods and fabrics, the most oxygen-rich air used was 22.2% oxygen, in the BASS-II experiment. That is only a little more oxygen than normal Earth air, so PSI does not show how these solids burn in much richer air.",
+          "summary_professional": "Across solid-phase tests with a stated O2 value, the maximum is 22.2% O2 by volume (calibrated initial O2) in BASS-II (PSI-25), on PMMA films, slabs and rods and Nomex, all in microgravity. The per-investigation maxima of the other solid-fuel investigations with O2 data are 22.1% O2 for Saffire-II (PSI-99, approximate, derived from measured CO2 production) and 21.7% O2 for Saffire-I (PSI-98). The finding rests on n = 22 tests at those maxima; BASS (PSI-26) and Saffire-III (PSI-100) report no O2 value and are not included.",
+          "values": {
+            "psi25_solid_o2_max": {
+              "value": 22.2,
+              "unit": "% O2"
+            },
+            "psi99_solid_o2_max": {
+              "value": 22.1,
+              "unit": "% O2"
+            },
+            "psi98_solid_o2_max": {
+              "value": 21.7,
+              "unit": "% O2"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "WITH s AS (SELECT *, max(o2_pct_max) OVER (PARTITION BY investigation, source_table) AS inv_max FROM tests WHERE phase = 'solid' AND o2_pct_max IS NOT NULL) SELECT lower(replace(investigation, '-', '')) || '_solid_o2_max' AS name, max(o2_pct_max) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) AS source_columns FROM s WHERE o2_pct_max = inv_max GROUP BY investigation, source_table ORDER BY value DESC"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-25",
+              "doi": "10.60555/4qc4-de67",
+              "table": "PSI-25_Experimental table_BASS-II.csv",
+              "columns": [
+                "Calibrated initial O2 % by vol"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                7,
+                12,
+                23,
+                27,
+                28,
+                31,
+                40,
+                47,
+                48
+              ]
+            },
+            {
+              "investigation": "PSI-98",
+              "doi": "10.60555/0t15-1z43",
+              "table": "PSI-98_Experimental table_SAFFIRE-1.csv",
+              "columns": [
+                "Percent O2"
+              ],
+              "rows": [
+                1
+              ]
+            },
+            {
+              "investigation": "PSI-99",
+              "doi": "10.60555/2chp-m469",
+              "table": "PSI-99_Experimental table_SAFFIRE-2.csv",
+              "columns": [
+                "Percent O2 (Note 1)"
+              ],
+              "rows": [
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+              ]
+            }
+          ],
+          "n_tests": 22,
+          "assumptions": [
+            "A test counts as a solid-material burn when its phase in the snapshot is solid; the test outcome (ignition, spread or extinction) was not filtered.",
+            "Oxygen is the value in the table's O2 column (BASS-II: calibrated initial O2 % by vol; Saffire-II: O2 derived from measured CO2 production), with volume and mole fraction treated as equal.",
+            "For rows given as a range, the upper end of the range is used."
+          ],
+          "limitations": [
+            "Covers only the solid-fuel investigations that state O2: BASS-II (PSI-25), Saffire-II (PSI-99) and Saffire-I (PSI-98). BASS (PSI-26) and Saffire-III (PSI-100) give no O2 value, so a higher level in those tests cannot be ruled out from the tables.",
+            "Gas-burner tests are excluded even when they emulate burning solids: ACME BRE (PSI-20) is a gas-phase burner, so its oxygen levels are not solid-material burns.",
+            "All of these solid tests were in microgravity and the tables give no pressure, so the finding says nothing about solid flammability at other gravity levels, at reduced pressure, or in oxygen-enriched cabin atmospheres.",
+            "It does not say whether each test ignited, spread or extinguished; it only reports the oxygen level the test was run at."
+          ],
+          "warnings": [],
+          "environments": [],
+          "tier": 1,
+          "pillar": "prevention",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Bars of the highest O2 level tested with solid fuels in BASS-II, Saffire-II and Saffire-I, side by side."
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": "Want a visual? I can draw a chart comparing the highest oxygen level used with solid fuels in BASS-II, Saffire-II and Saffire-I."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T08:12:43Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-013",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C5",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "686e4ce390aeb7fdbcefb56b242fad07909548bbfe0a389a3ba0a2bbbd3ed27c",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:34:12Z",
+        "finding": {
+          "id": "F-013",
+          "version": 2,
+          "question": "Is Nomex fabric safe to use inside a lunar habitat at 34% oxygen?",
+          "status": "has_data",
+          "claim": "PSI cannot say whether Nomex is safe at 34% O2: of the 10 Nomex tests, the ones that state oxygen were run between 21.0 and 22.2% O2, all below 34%, and none states pressure or partial gravity.",
+          "summary_student": "NASA burned Nomex samples in space 10 times across BASS-II, BASS and Saffire-II, but every test that recorded its oxygen level used air close to normal Earth air, between 21.0 and 22.2% oxygen. No Nomex test was run at 34% oxygen, at reduced habitat pressure or in lunar gravity, so this data cannot tell you whether Nomex is safe or unsafe in a lunar habitat.",
+          "summary_professional": "The PSI tests table holds 10 microgravity Nomex tests: 3 in PSI-25 (BASS-II), 6 in PSI-26 (BASS) and 1 in PSI-99 (Saffire-II, combined PMMA and Nomex sample). PSI-25 Nomex tests span 21.0 to 22.2% O2 (calibrated initial O2) and the PSI-99 test is at 22.1% O2 (approximate, derived from CO2 production); all 3 PSI-25 and the 1 PSI-99 tests with stated O2 are below the 34% O2 threshold of the question, while the 6 PSI-26 tests do not state O2. No Nomex row states ambient pressure or a test outcome, so the 34% O2 lunar-habitat condition lies outside the tested range.",
+          "values": {
+            "psi25_nomex_tests": {
+              "value": 3.0,
+              "unit": "tests"
+            },
+            "psi26_nomex_tests": {
+              "value": 6.0,
+              "unit": "tests"
+            },
+            "psi99_nomex_tests": {
+              "value": 1.0,
+              "unit": "tests"
+            },
+            "psi25_nomex_o2_min": {
+              "value": 21.0,
+              "unit": "% O2"
+            },
+            "psi99_nomex_o2_min": {
+              "value": 22.1,
+              "unit": "% O2"
+            },
+            "psi25_nomex_o2_max": {
+              "value": 22.2,
+              "unit": "% O2"
+            },
+            "psi99_nomex_o2_max": {
+              "value": 22.1,
+              "unit": "% O2"
+            },
+            "psi25_nomex_tests_below_threshold": {
+              "value": 3.0,
+              "unit": "tests"
+            },
+            "psi99_nomex_tests_below_threshold": {
+              "value": 1.0,
+              "unit": "tests"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "SELECT lower(replace(investigation, '-', '')) || '_nomex_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.fuel')) AS source_columns FROM tests WHERE lower(fuel) LIKE '%nomex%' GROUP BY investigation, source_table UNION ALL SELECT lower(replace(investigation, '-', '')) || '_nomex_o2_min' AS name, min(o2_pct_min) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_min')) AS source_columns FROM tests WHERE lower(fuel) LIKE '%nomex%' AND o2_pct_min IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT lower(replace(investigation, '-', '')) || '_nomex_o2_max' AS name, max(o2_pct_max) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) AS source_columns FROM tests WHERE lower(fuel) LIKE '%nomex%' AND o2_pct_max IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT lower(replace(investigation, '-', '')) || '_nomex_tests_below_threshold' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) AS source_columns FROM tests WHERE lower(fuel) LIKE '%nomex%' AND o2_pct_max IS NOT NULL AND o2_pct_max < 34 GROUP BY investigation, source_table"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-25",
+              "doi": "10.60555/4qc4-de67",
+              "table": "PSI-25_Experimental table_BASS-II.csv",
+              "columns": [
+                "Calibrated initial O2 % by vol",
+                "Fuel Sample Material"
+              ],
+              "rows": [
+                23,
+                24,
+                25
+              ]
+            },
+            {
+              "investigation": "PSI-26",
+              "doi": "10.60555/58h4-dy80",
+              "table": "PSI-26_Experimental table_BASS.csv",
+              "columns": [
+                "Fuel Sample Material"
+              ],
+              "rows": [
+                14,
+                24,
+                25,
+                39,
+                57,
+                58
+              ]
+            },
+            {
+              "investigation": "PSI-99",
+              "doi": "10.60555/2chp-m469",
+              "table": "PSI-99_Experimental table_SAFFIRE-2.csv",
+              "columns": [
+                "Material",
+                "Percent O2 (Note 1)"
+              ],
+              "rows": [
+                7
+              ]
+            }
+          ],
+          "n_tests": 10,
+          "assumptions": [
+            "Every row whose fuel name contains Nomex was counted as a Nomex test, including the Nomex blend and Nomex III samples of BASS and the combined PMMA and Nomex sample of Saffire-II (PSI-99).",
+            "PSI-25 oxygen is read from the Calibrated initial O2 % by vol column; PSI-99 oxygen is the approximate Percent O2 (Note 1) value, which the table says is derived from measured CO2 production.",
+            "The 34% O2 level is taken from the question as the lunar habitat condition to compare against."
+          ],
+          "limitations": [
+            "No Nomex test in PSI reached 34% O2, so these data cannot show how Nomex burns, or whether it burns at all, at that oxygen level; no test there means no data, not safe or unsafe.",
+            "The 6 PSI-26 (BASS) Nomex tests do not state their oxygen level, so they cannot be placed relative to 34% O2.",
+            "No Nomex row states ambient pressure, so the effect of a reduced habitat pressure is not covered.",
+            "All Nomex tests were in microgravity; there is no Nomex test in lunar or other partial gravity in PSI.",
+            "The Nomex rows carry no outcome field (such as extinction or sustained burning), so this finding counts tests and oxygen levels only and does not report flammability results."
+          ],
+          "warnings": [
+            "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+          ],
+          "environments": [
+            "lunar_base"
+          ],
+          "tier": 1,
+          "pillar": "prevention",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Oxygen levels of each Nomex test in BASS-II and Saffire-II as points per investigation, with a dashed line at the 34% O2 lunar habitat level of the question and a note that the BASS Nomex tests state no O2."
+            },
+            "graph": {
+              "available": true,
+              "idea": "Proof graph linking this finding to BASS-II, BASS and Saffire-II, their test tables and DOIs, and the shared Nomex fuel between them."
+            },
+            "footnote": "Want a visual? I can draw a chart of the oxygen levels of every Nomex test against the 34% O2 habitat level, or a graph linking the three investigations that tested Nomex."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T08:21:58Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-014",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C5",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "96d51937ee0f48b73784131a82df0f979da1179ee1ce606ebb014bb6c8078e1b",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:34:23Z",
+        "finding": {
+          "id": "F-014",
+          "version": 1,
+          "question": "Which solid materials were tested in the Saffire experiments, and at what oxygen levels?",
+          "status": "has_data",
+          "claim": "The Saffire experiments burned SIBAL fabric (Saffire-I and Saffire-III) and silicone, cotton-fiberglass SIBAL, PMMA, and PMMA with Nomex (Saffire-II), all near normal air, between 21.5 and 22.1 % O2, with no O2 reported for Saffire-III.",
+          "summary_student": "Saffire-I burned a cotton-fiberglass fabric called SIBAL in air with 21.5 to 21.7 % oxygen, and Saffire-III burned the same fabric but its table does not give the oxygen level. Saffire-II burned several smaller samples (silicone, SIBAL, PMMA plastic, and PMMA with Nomex) at 21.5 to 22.1 % oxygen. So every Saffire burn with a known oxygen level was close to ordinary air, not the oxygen-rich air planned for a lunar base.",
+          "summary_professional": "Across the 13 Saffire test rows in PSI: PSI-98 (Saffire-I) has 2 SIBAL fabric tests at 21.5 to 21.7 % O2; PSI-100 (Saffire-III) has 2 SIBAL fabric tests with no O2 in the table. PSI-99 (Saffire-II) has silicone (n = 4, 21.5 to 22.1 % O2), cotton-fiberglass SIBAL (n = 1, 22.1 % O2), PMMA (n = 1, 22.0 to 22.1 % O2), PMMA and Nomex (n = 1, 22.1 % O2), plus 2 rows with an empty material cell at 21.9 to 22.1 % O2. Saffire-II O2 values are marked approximate and were derived from measured CO2 production (table Note 1); no Saffire table gives pressure.",
+          "values": {
+            "psi100_sibal_fabric_n_tests": {
+              "value": 2.0,
+              "unit": "tests"
+            },
+            "psi98_sibal_fabric_n_tests": {
+              "value": 2.0,
+              "unit": "tests"
+            },
+            "psi98_sibal_fabric_o2_max": {
+              "value": 21.7,
+              "unit": "% O2"
+            },
+            "psi98_sibal_fabric_o2_min": {
+              "value": 21.5,
+              "unit": "% O2"
+            },
+            "psi99_cotton_fiberglass_sibal_n_tests": {
+              "value": 1.0,
+              "unit": "tests"
+            },
+            "psi99_cotton_fiberglass_sibal_o2_max": {
+              "value": 22.1,
+              "unit": "% O2"
+            },
+            "psi99_cotton_fiberglass_sibal_o2_min": {
+              "value": 22.1,
+              "unit": "% O2"
+            },
+            "psi99_material_cell_empty_n_tests": {
+              "value": 2.0,
+              "unit": "tests"
+            },
+            "psi99_material_cell_empty_o2_max": {
+              "value": 22.1,
+              "unit": "% O2"
+            },
+            "psi99_material_cell_empty_o2_min": {
+              "value": 21.9,
+              "unit": "% O2"
+            },
+            "psi99_pmma_n_tests": {
+              "value": 1.0,
+              "unit": "tests"
+            },
+            "psi99_pmma_nomex_n_tests": {
+              "value": 1.0,
+              "unit": "tests"
+            },
+            "psi99_pmma_nomex_o2_max": {
+              "value": 22.1,
+              "unit": "% O2"
+            },
+            "psi99_pmma_nomex_o2_min": {
+              "value": 22.1,
+              "unit": "% O2"
+            },
+            "psi99_pmma_o2_max": {
+              "value": 22.1,
+              "unit": "% O2"
+            },
+            "psi99_pmma_o2_min": {
+              "value": 22.0,
+              "unit": "% O2"
+            },
+            "psi99_silicone_n_tests": {
+              "value": 4.0,
+              "unit": "tests"
+            },
+            "psi99_silicone_o2_max": {
+              "value": 22.1,
+              "unit": "% O2"
+            },
+            "psi99_silicone_o2_min": {
+              "value": 21.5,
+              "unit": "% O2"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "WITH t AS (SELECT investigation, source_table, source_row, o2_pct_min, o2_pct_max, field_sources, lower(replace(investigation, '-', '')) || '_' || trim(regexp_replace(lower(coalesce(fuel, 'material cell empty')), '[^a-z]+', '_', 'g'), '_') AS key FROM tests WHERE investigation IN ('PSI-98', 'PSI-99', 'PSI-100') AND phase = 'solid') SELECT key || '_o2_min' AS name, min(o2_pct_min) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_min')) AS source_columns FROM t WHERE o2_pct_min IS NOT NULL GROUP BY key, investigation, source_table UNION ALL SELECT key || '_o2_max' AS name, max(o2_pct_max) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) AS source_columns FROM t WHERE o2_pct_max IS NOT NULL GROUP BY key, investigation, source_table UNION ALL SELECT key || '_n_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT coalesce(json_extract_string(field_sources, '$.fuel'), json_extract_string(field_sources, '$.o2_pct_min'))) AS source_columns FROM t GROUP BY key, investigation, source_table ORDER BY name"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-98",
+              "doi": "10.60555/0t15-1z43",
+              "table": "PSI-98_Experimental table_SAFFIRE-1.csv",
+              "columns": [
+                "Material",
+                "Percent O2"
+              ],
+              "rows": [
+                1,
+                2
+              ]
+            },
+            {
+              "investigation": "PSI-99",
+              "doi": "10.60555/2chp-m469",
+              "table": "PSI-99_Experimental table_SAFFIRE-2.csv",
+              "columns": [
+                "Material",
+                "Percent O2 (Note 1)"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            },
+            {
+              "investigation": "PSI-100",
+              "doi": "10.60555/040q-4h36",
+              "table": "PSI-100_Experimental table_SAFFIRE-3.csv",
+              "columns": [
+                "Material"
+              ],
+              "rows": [
+                1,
+                2
+              ]
+            }
+          ],
+          "n_tests": 13,
+          "assumptions": [
+            "Material names are taken as written in the PSI tables; SIBAL fabric (Saffire-I and Saffire-III) and cotton-fiberglass SIBAL (Saffire-II) are listed separately because the tables name them differently.",
+            "Each table row is treated as one test, and the O2 range of a material spans the lowest and highest values of its rows, including range cells and approximate (~) cells."
+          ],
+          "limitations": [
+            "The 2 Saffire-II rows with an empty material cell are not assigned to any material; the cell may be a merged cell in the source, but this finding does not guess which material they are.",
+            "Saffire-III does not report O2, so this finding says nothing about its oxygen level.",
+            "No Saffire table gives pressure, so the results cannot be compared with reduced-pressure habitat atmospheres.",
+            "All Saffire burns were in microgravity near normal air; the finding does not cover enriched oxygen, partial gravity, or other investigations such as BASS or BASS-II.",
+            "Only the PSI-98, PSI-99 and PSI-100 tables in the snapshot are covered; later Saffire flights or published results outside PSI are not included."
+          ],
+          "warnings": [
+            "Saffire-II O2 values are approximate and derived from measured CO2 production, not measured directly (table Note 1)."
+          ],
+          "environments": [],
+          "tier": 1,
+          "pillar": "prevention",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Range bars of the O2 levels tested for each Saffire material, grouped by investigation, with the number of tests on each bar and Saffire-III marked as O2 not reported."
+            },
+            "graph": {
+              "available": true,
+              "idea": "Saffire-I, Saffire-II and Saffire-III linked by shared Saffire hardware and the shared SIBAL fuel, each pointing to its PSI table."
+            },
+            "footnote": "Want a visual? I can draw a chart of the O2 range tested for each Saffire material, or a graph of how the three Saffire investigations share hardware and fuel."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T08:12:57Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-016",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "7db3285935ee3307f8804a9a49d66c76b9041fd02620f35b0c6cd5eae8e9b525",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:34:32Z",
+        "finding": {
+          "id": "F-016",
+          "version": 2,
+          "question": "How many tests burned Kapton, and in which investigations?",
+          "status": "has_data",
+          "claim": "30 PSI tests used Kapton as the sample material: 29 in PSI-101 (SAME-R) and 1 in PSI-102 (SAME), both smoke tests in microgravity.",
+          "summary_student": "Kapton shows up as the test material in 30 PSI tests. Almost all of them, 29, are in SAME-R (PSI-101) and 1 is in SAME (PSI-102). Both experiments studied the smoke a heated material gives off so that smoke detectors can be tested, not open flames.",
+          "summary_professional": "Rows whose fuel/sample field reads Kapton: n = 30 tests, of which 29 are in PSI-101 (SAME-R, Experimental table_SAME-R.csv) and 1 in PSI-102 (SAME, Experimental table_SAME.csv). All rows are classified as phase smoke under microgravity, read from the Sample Type column. Neither table reports O2 or pressure, and no outcome is recorded for these rows.",
+          "values": {
+            "psi101_kapton_tests": {
+              "value": 29,
+              "unit": "tests"
+            },
+            "psi102_kapton_tests": {
+              "value": 1,
+              "unit": "tests"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "SELECT lower(replace(investigation, '-', '')) || '_kapton_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.fuel')) AS source_columns FROM tests WHERE fuel ILIKE '%kapton%' GROUP BY investigation, source_table ORDER BY investigation"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-101",
+              "doi": "10.60555/2np7-jv14",
+              "table": "PSI-101_Experimental table_SAME-R.csv",
+              "columns": [
+                "Sample Type"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29
+              ]
+            },
+            {
+              "investigation": "PSI-102",
+              "doi": "10.60555/gd4k-8h62",
+              "table": "PSI-102_Experimental table_SAME.csv",
+              "columns": [
+                "Sample Material"
+              ],
+              "rows": [
+                5
+              ]
+            }
+          ],
+          "n_tests": 30,
+          "assumptions": [
+            "A test is counted when its fuel or sample field, as written in the PSI table, contains the word Kapton (case-insensitive).",
+            "The question's word burned is read as tests that used Kapton as the sample; the tables classify these rows as smoke tests, not flame tests."
+          ],
+          "limitations": [
+            "Covers only rows whose fuel or sample field names Kapton; rows that describe the same material with a different name are not counted.",
+            "The SAME and SAME-R tables give no O2 level and no pressure, so this finding says nothing about how Kapton behaves at any particular oxygen level or pressure, including the lunar base or pressurized rover atmospheres.",
+            "No outcome is recorded for these rows, so the finding does not say whether Kapton ignited, how much smoke it produced, or whether it is safe or unsafe.",
+            "All counted tests are in microgravity; the finding covers no Earth-gravity or partial-gravity Kapton tests."
+          ],
+          "warnings": [],
+          "environments": [],
+          "tier": 1,
+          "pillar": "detection",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Bar chart of the number of Kapton tests in PSI-101 (SAME-R) and PSI-102 (SAME)."
+            },
+            "graph": {
+              "available": true,
+              "idea": "Proof graph linking the finding to PSI-101 (SAME-R) and PSI-102 (SAME), their source tables, and the shared Kapton sample material."
+            },
+            "footnote": "Want a visual? I can draw a bar chart comparing the Kapton test counts in SAME-R and SAME, or a graph linking the two investigations through their shared Kapton sample."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T08:49:04Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-017",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C5",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "bcc799d385c03cf9cee84c505248d844e4aae6d28157783e4a8a943ac8d4925e",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:34:42Z",
+        "finding": {
+          "id": "F-017",
+          "version": 2,
+          "question": "What was the lowest pressure tested in FLEX-2, in psi?",
+          "status": "has_data",
+          "claim": "The lowest ambient pressure listed in the FLEX-2 (PSI-68) condition matrix is 7.34795 psi, converted from the 0.5 atm given in the table.",
+          "summary_student": "FLEX-2 burned fuel droplets on the space station at several air pressures. The lowest pressure in its table is 0.5 atm, which is 7.34795 psi. The psi value was converted from atm by the calculation script, not measured in psi.",
+          "summary_professional": "Across the 8 condition-matrix rows of the FLEX-2 (PSI-68) experimental table, the minimum of the Ambient Pressure (atm) column is 0.5 atm, equal to 7.34795 psi. The psi value was converted from atm in the calculation, using the same atm-to-psi factor that coverage_by_environment uses. Every one of the 8 rows (one per fuel or fuel mixture) lists this same lowest pressure.",
+          "values": {
+            "flex2_pressure_min_atm": {
+              "value": 0.5,
+              "unit": "atm"
+            },
+            "flex2_pressure_min_psi": {
+              "value": 7.34795,
+              "unit": "psi"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "SELECT 'flex2_pressure_min_atm' AS name, min(pressure_atm_min) AS value, 'atm' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.pressure_atm_min')) AS source_columns FROM tests WHERE investigation = 'PSI-68' AND pressure_atm_min IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'flex2_pressure_min_psi' AS name, min(pressure_atm_min) * 14.6959 AS value, 'psi' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.pressure_atm_min')) AS source_columns FROM tests WHERE investigation = 'PSI-68' AND pressure_atm_min IS NOT NULL GROUP BY investigation, source_table"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-68",
+              "doi": "10.60555/byp8-h018",
+              "table": "PSI-68_Experimental table_Flex2.csv",
+              "columns": [
+                "Ambient Pressure (atm)"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+              ]
+            }
+          ],
+          "n_tests": 8,
+          "assumptions": [
+            "The pressure in PSI's table is in atm, as its column header states, and the psi value was converted from atm in the calculation script.",
+            "The lowest value of each row's listed pressures is the lowest pressure FLEX-2 tested for that fuel."
+          ],
+          "limitations": [
+            "The FLEX-2 rows are condition-matrix rows that list the tested values, not individual tests, so n counts table rows, not burns.",
+            "The table does not say which droplets burned or extinguished at the lowest pressure, nor at which oxygen level each pressure was tested.",
+            "This covers only FLEX-2 (PSI-68) in microgravity; it says nothing about other investigations, other gravity levels or pressures outside the matrix."
+          ],
+          "warnings": [],
+          "environments": [],
+          "tier": 1,
+          "pillar": null,
+          "visual_offer": {
+            "chart": {
+              "available": false,
+              "idea": null
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": null
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T08:49:00Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-018",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "44942aa7c227f03af58c4fb4d7dd3d04b19695050a41c862abc934a17c2b78fd",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:34:52Z",
+        "finding": {
+          "id": "F-018",
+          "version": 1,
+          "question": "What is the best fire extinguisher for a Mars base?",
+          "status": "has_data",
+          "claim": "PSI does not test or rank fire extinguishers, so it cannot name the best one for a Mars base; the closest suppression data is FLEX (PSI-69), where flames ended in extinction in 88 of 123 droplet tests in N2+CO2 atmospheres, 40 of 50 in N2+He and 58 of 101 in N2 only.",
+          "summary_student": "None of NASA's PSI combustion experiments compares fire extinguishers, so the data cannot say which one is best for a Mars base. The closest evidence is the FLEX experiment on the space station, which burned single fuel droplets in air mixed with carbon dioxide or helium to see when flames go out. Flames went out in 88 of 123 tests with added CO2, 40 of 50 with added He, and 58 of 101 with N2 only, but these numbers reflect how the tests were planned, not which gas is a better extinguisher.",
+          "summary_professional": "No PSI investigation evaluates extinguisher hardware or agents in an operational configuration, and no Mars-base atmosphere is sourced, so a best-extinguisher ranking is not supported. FLEX (PSI-69, microgravity, droplet phase) is the only investigation classified under suppression; its test-end column records extinction in 88 of 123 N2+CO2 tests, 40 of 50 N2+He tests and 58 of 101 N2-only tests (n = 274 tests with a stated diluent). Extinction counts are not normalized for O2 level, pressure, fuel or droplet size, and N2-only extinctions show that extinction also occurs without a suppressant, so these counts are not a measure of agent effectiveness.",
+          "values": {
+            "flex_n2_extinction_tests": {
+              "value": 58,
+              "unit": "tests"
+            },
+            "flex_n2_he_extinction_tests": {
+              "value": 40,
+              "unit": "tests"
+            },
+            "flex_n2_co2_extinction_tests": {
+              "value": 88,
+              "unit": "tests"
+            },
+            "flex_n2_all_tests": {
+              "value": 101,
+              "unit": "tests"
+            },
+            "flex_n2_he_all_tests": {
+              "value": 50,
+              "unit": "tests"
+            },
+            "flex_n2_co2_all_tests": {
+              "value": 123,
+              "unit": "tests"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "SELECT 'flex_' || lower(replace(diluent, '+', '_')) || '_extinction_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.outcome')) || list(DISTINCT json_extract_string(field_sources, '$.diluent')) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND outcome = 'extinction' GROUP BY investigation, source_table, diluent UNION ALL SELECT 'flex_' || lower(replace(diluent, '+', '_')) || '_all_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.diluent')) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND diluent IS NOT NULL GROUP BY investigation, source_table, diluent"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-69",
+              "doi": "10.60555/mbq8-0451",
+              "table": "PSI-69_Experimental table_FLEX.csv",
+              "columns": [
+                "CO initial ambient composition; mole fraction",
+                "He initial ambient composition; mole fraction",
+                "N initial ambient composition; mole fraction",
+                "Test end"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119,
+                120,
+                121,
+                122,
+                123,
+                124,
+                125,
+                126,
+                127,
+                128,
+                129,
+                130,
+                131,
+                132,
+                133,
+                134,
+                135,
+                136,
+                137,
+                138,
+                139,
+                140,
+                141,
+                142,
+                143,
+                144,
+                145,
+                146,
+                147,
+                148,
+                149,
+                150,
+                151,
+                152,
+                153,
+                154,
+                155,
+                156,
+                157,
+                158,
+                159,
+                160,
+                161,
+                162,
+                163,
+                164,
+                165,
+                166,
+                167,
+                168,
+                169,
+                170,
+                171,
+                172,
+                173,
+                174,
+                175,
+                176,
+                177,
+                178,
+                179,
+                180,
+                181,
+                182,
+                183,
+                184,
+                185,
+                186,
+                187,
+                188,
+                189,
+                190,
+                191,
+                192,
+                193,
+                194,
+                195,
+                196,
+                197,
+                198,
+                199,
+                200,
+                201,
+                202,
+                203,
+                204,
+                205,
+                206,
+                207,
+                208,
+                209,
+                210,
+                211,
+                212,
+                213,
+                214,
+                215,
+                216,
+                217,
+                218,
+                219,
+                220,
+                221,
+                222,
+                223,
+                224,
+                225,
+                226,
+                227,
+                228,
+                229,
+                230,
+                231,
+                232,
+                233,
+                234,
+                235,
+                236,
+                237,
+                238,
+                239,
+                240,
+                241,
+                242,
+                243,
+                244,
+                245,
+                246,
+                247,
+                248,
+                249,
+                250,
+                251,
+                252,
+                253,
+                254,
+                255,
+                256,
+                257,
+                258,
+                259,
+                260,
+                261,
+                262,
+                263,
+                264,
+                265,
+                266,
+                267,
+                268,
+                269,
+                270,
+                271,
+                272,
+                273,
+                274
+              ]
+            }
+          ],
+          "n_tests": 274,
+          "assumptions": [
+            "The FLEX 'Test end' value 'extinction' is taken as written in the PSI table: the flame went out before the droplet was consumed.",
+            "Diluent groups are read from the FLEX initial ambient composition columns (N2, He, CO2 mole fractions)."
+          ],
+          "limitations": [
+            "PSI has no test of fire extinguishers (portable units, water mist, foam or fixed systems), so no extinguisher can be ranked from this data.",
+            "The counts depend on how FLEX chose its test matrix; a higher extinction count for a diluent does not mean that diluent is a better suppressant.",
+            "Counts are not adjusted for O2 level, pressure, fuel or droplet size; comparing diluents fairly would need matched conditions.",
+            "FLEX covers liquid fuel droplets only; it says nothing about burning solids (cabin materials, wiring), which are the main fire load in a habitat.",
+            "All FLEX tests are in microgravity; there is no Mars-gravity data, and the Mars base atmosphere is not sourced in this project, so FLEX conditions cannot be matched to it.",
+            "Other investigations (for example BASS and BASS-II on solids) are not included in these counts."
+          ],
+          "warnings": [
+            "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+          ],
+          "environments": [
+            "mars_base"
+          ],
+          "tier": 1,
+          "pillar": "suppression",
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Stacked bars per FLEX diluent group (N2, N2+He, N2+CO2) showing tests that ended in extinction against all tests in that group."
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": "Want a visual? I can draw a bar chart of FLEX extinction tests against all tests for each diluent group (N2, N2+He, N2+CO2)."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T08:45:21Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-019",
+        "finding_version": 1,
+        "grade": "rejected",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "3ff1dec34d7bd202d34df3e6060d9c3a707dc3f55b9f6508e7c104bb056cbc99",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:35:02Z",
+        "finding": {
+          "id": "F-019",
+          "version": 1,
+          "question": "Would a PMMA fire spread faster on the Moon than on the International Space Station?",
+          "status": "no_data",
+          "claim": "No PSI test answers this question: every PMMA test in the PSI tables was run in microgravity, and none was run in lunar gravity or in a lunar habitat atmosphere, so PSI data cannot say whether PMMA fire would spread faster on the Moon.",
+          "summary_student": "NASA's PSI data has no PMMA (acrylic plastic) fire tests on the Moon or in Moon-like gravity, and no PMMA tests at all outside microgravity in its test tables. That means the data cannot tell us whether an acrylic fire would spread faster on the Moon than on the space station. This is a gap in the data, not a sign that either place is safe or unsafe.",
+          "summary_professional": "A query over the tests table for PMMA samples with gravity other than microgravity returned no rows; the PMMA tests that exist (BASS PSI-26, BASS-II PSI-25, Saffire-II PSI-99) are all microgravity tests. PSI holds no partial-gravity combustion data, and the normalized tables carry no numeric PMMA flame-spread rate, so neither a lunar spread rate nor a microgravity-to-Earth-gravity bound can be computed from these tables. A comparison would also need a sourced ISS atmosphere, which the project does not yet have.",
+          "values": {},
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "SELECT 'pmma_tests_not_microgravity' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.gravity')) AS source_columns FROM tests WHERE fuel ILIKE '%PMMA%' AND gravity <> 'microgravity' GROUP BY investigation, source_table"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [],
+          "n_tests": 0,
+          "assumptions": [
+            "PMMA tests were identified by the text PMMA in the fuel column, as written in the source tables.",
+            "The International Space Station is represented by the microgravity tests; its cabin atmosphere is not sourced in _config/environments.md and was not used."
+          ],
+          "limitations": [
+            "PSI has no partial-gravity combustion data, so no lunar-gravity spread rate exists to compare with microgravity.",
+            "The normalized tests table has no numeric flame-spread-rate column for PMMA; Saffire-II gives only qualitative spread notes in its raw cells, so spread rates cannot be compared even within microgravity.",
+            "There are no Earth-gravity PMMA rows in the tests table, so the microgravity and Earth-gravity bounds suggested by the challenge cannot be built for PMMA from these tables.",
+            "The lunar habitat atmosphere (higher oxygen, lower pressure) differs from the ISS cabin, and pressure is not given in the PMMA tables, so the effect of atmosphere on spread cannot be separated from the effect of gravity.",
+            "Published papers on these investigations may report PMMA spread rates; this finding covers only the PSI tables in the snapshot."
+          ],
+          "warnings": [
+            "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+          ],
+          "environments": [
+            "lunar_base",
+            "space_station"
+          ],
+          "tier": null,
+          "pillar": "prevention",
+          "visual_offer": {
+            "chart": {
+              "available": false,
+              "idea": null
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": null
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T08:45:22Z"
+          }
+        }
+      },
+      {
+        "finding_id": "F-020",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "60476c6ef35fafe6399b9f8c50e0145670cac8d405ef73df42c6944594adde94",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:35:12Z",
+        "finding": {
+          "id": "F-020",
+          "version": 1,
+          "question": "Which investigation tested the widest range of air flow speeds, and how wide was that range?",
+          "status": "has_data",
+          "claim": "SPICE (PSI-107) tested the widest range of air flow speeds in the PSI tables, from 0.66 to 85.28 cm/s, a range 84.62 cm/s wide.",
+          "summary_student": "Among the PSI experiments whose tables give an air speed for each test, SPICE covered by far the widest span: its slowest air flow was 0.66 cm/s and its fastest was 85.28 cm/s, a spread of 84.62 cm/s. The next widest were the smoke-detection experiments SAME-R (8.1 cm/s wide) and SAME (5.0 cm/s wide).",
+          "summary_professional": "Of the investigations with a per-test flow velocity in the snapshot (n = 549 tests across PSI-107, PSI-101 and PSI-102), SPICE (PSI-107, column Air Rate (cm/s)) spans 0.66 to 85.28 cm/s, a width of 84.62 cm/s. SAME-R (PSI-101, Inlet velocity (cm/s)) spans 0.0 to 8.1 cm/s (width 8.1 cm/s) and SAME (PSI-102, Air Flow (cm/s)) spans 5.0 to 10.0 cm/s (width 5.0 cm/s). Saffire-I, Saffire-II and Saffire-III each report a single flow value per table and therefore have no range.",
+          "values": {
+            "psi102_flow_range_width": {
+              "value": 5.0,
+              "unit": "cm/s"
+            },
+            "psi101_flow_range_width": {
+              "value": 8.1,
+              "unit": "cm/s"
+            },
+            "psi107_flow_range_width": {
+              "value": 84.62,
+              "unit": "cm/s"
+            },
+            "psi102_flow_min": {
+              "value": 5.0,
+              "unit": "cm/s"
+            },
+            "psi101_flow_min": {
+              "value": 0.0,
+              "unit": "cm/s"
+            },
+            "psi107_flow_min": {
+              "value": 0.66,
+              "unit": "cm/s"
+            },
+            "psi102_flow_max": {
+              "value": 10.0,
+              "unit": "cm/s"
+            },
+            "psi101_flow_max": {
+              "value": 8.1,
+              "unit": "cm/s"
+            },
+            "psi107_flow_max": {
+              "value": 85.28,
+              "unit": "cm/s"
+            }
+          },
+          "method": {
+            "script": "scripts/functions.py",
+            "function": "sql_query",
+            "params": {
+              "sql": "WITH g AS (SELECT investigation, source_table, min(flow_cm_s) AS lo, max(flow_cm_s) AS hi, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.flow_cm_s')) AS source_columns FROM tests WHERE flow_cm_s IS NOT NULL AND scope = 'psi' GROUP BY investigation, source_table HAVING max(flow_cm_s) > min(flow_cm_s)) SELECT lower(replace(investigation, '-', '')) || '_flow_range_width' AS name, hi - lo AS value, 'cm/s' AS unit, investigation, source_table, source_rows, source_columns FROM g UNION ALL SELECT lower(replace(investigation, '-', '')) || '_flow_min', lo, 'cm/s', investigation, source_table, source_rows, source_columns FROM g UNION ALL SELECT lower(replace(investigation, '-', '')) || '_flow_max', hi, 'cm/s', investigation, source_table, source_rows, source_columns FROM g"
+            },
+            "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+          },
+          "evidence": [
+            {
+              "investigation": "PSI-101",
+              "doi": "10.60555/2np7-jv14",
+              "table": "PSI-101_Experimental table_SAME-R.csv",
+              "columns": [
+                "Inlet velocity (cm/s)"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106,
+                107,
+                108,
+                109
+              ]
+            },
+            {
+              "investigation": "PSI-102",
+              "doi": "10.60555/gd4k-8h62",
+              "table": "PSI-102_Experimental table_SAME.csv",
+              "columns": [
+                "Air Flow (cm/s)"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4
+              ]
+            },
+            {
+              "investigation": "PSI-107",
+              "doi": "10.60555/9kbh-e962",
+              "table": "PSI-107_Experimental table_Spice.csv",
+              "columns": [
+                "Air Rate (cm/s)"
+              ],
+              "rows": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                45,
+                46,
+                47,
+                49,
+                50,
+                51,
+                53,
+                54,
+                55,
+                57,
+                58,
+                59,
+                61,
+                62,
+                63,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84,
+                85,
+                86,
+                87,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97,
+                98,
+                99,
+                100,
+                103,
+                104,
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119,
+                120,
+                121,
+                122,
+                123,
+                124,
+                125,
+                126,
+                127,
+                128,
+                129,
+                130,
+                131,
+                132,
+                133,
+                134,
+                135,
+                136,
+                137,
+                138,
+                139,
+                140,
+                141,
+                142,
+                143,
+                144,
+                145,
+                146,
+                147,
+                148,
+                149,
+                150,
+                151,
+                152,
+                153,
+                154,
+                155,
+                156,
+                157,
+                158,
+                159,
+                160,
+                161,
+                162,
+                163,
+                164,
+                165,
+                166,
+                167,
+                168,
+                169,
+                170,
+                171,
+                172,
+                173,
+                174,
+                175,
+                176,
+                177,
+                178,
+                179,
+                180,
+                181,
+                182,
+                183,
+                184,
+                185,
+                186,
+                187,
+                188,
+                189,
+                190,
+                191,
+                192,
+                193,
+                194,
+                195,
+                196,
+                197,
+                198,
+                199,
+                200,
+                201,
+                202,
+                203,
+                204,
+                205,
+                206,
+                207,
+                208,
+                209,
+                210,
+                211,
+                212,
+                213,
+                214,
+                215,
+                216,
+                217,
+                218,
+                219,
+                220,
+                221,
+                222,
+                223,
+                224,
+                225,
+                226,
+                227,
+                228,
+                229,
+                230,
+                231,
+                232,
+                236,
+                237,
+                238,
+                242,
+                243,
+                244,
+                245,
+                246,
+                247,
+                248,
+                249,
+                250,
+                251,
+                252,
+                253,
+                254,
+                255,
+                256,
+                258,
+                259,
+                260,
+                261,
+                262,
+                264,
+                265,
+                266,
+                267,
+                268,
+                269,
+                270,
+                271,
+                272,
+                273,
+                274,
+                275,
+                276,
+                277,
+                278,
+                279,
+                280,
+                281,
+                282,
+                283,
+                284,
+                285,
+                286,
+                287,
+                288,
+                289,
+                290,
+                291,
+                292,
+                293,
+                294,
+                296,
+                301,
+                302,
+                303,
+                304,
+                305,
+                306,
+                307,
+                308,
+                309,
+                310,
+                311,
+                312,
+                313,
+                314,
+                315,
+                316,
+                317,
+                318,
+                319,
+                320,
+                321,
+                322,
+                323,
+                324,
+                325,
+                326,
+                327,
+                328,
+                329,
+                330,
+                331,
+                332,
+                333,
+                334,
+                335,
+                339,
+                340,
+                341,
+                342,
+                343,
+                344,
+                345,
+                346,
+                347,
+                348,
+                349,
+                350,
+                351,
+                352,
+                353,
+                354,
+                362,
+                363,
+                364,
+                365,
+                366,
+                367,
+                368,
+                369,
+                370,
+                371,
+                372,
+                373,
+                374,
+                375,
+                376,
+                377,
+                378,
+                379,
+                380,
+                381,
+                382,
+                383,
+                384,
+                385,
+                386,
+                387,
+                388,
+                389,
+                390,
+                391,
+                392,
+                393,
+                394,
+                395,
+                396,
+                397,
+                398,
+                399,
+                400,
+                401,
+                402,
+                403,
+                404,
+                405,
+                406,
+                407,
+                408,
+                409,
+                410,
+                411,
+                412,
+                413,
+                414,
+                415,
+                416,
+                417,
+                418,
+                419,
+                420,
+                421,
+                422,
+                423,
+                424,
+                425,
+                426,
+                427,
+                428,
+                429,
+                430,
+                431,
+                432,
+                433,
+                434,
+                435,
+                436,
+                437,
+                438,
+                439,
+                440,
+                441,
+                442,
+                443,
+                444,
+                445,
+                446,
+                447,
+                448,
+                449,
+                450,
+                451,
+                452,
+                453,
+                454,
+                455,
+                456,
+                457,
+                458,
+                459,
+                460,
+                461,
+                462,
+                463,
+                464,
+                465,
+                466,
+                467,
+                468,
+                469
+              ]
+            }
+          ],
+          "n_tests": 549,
+          "assumptions": [
+            "Range width is the highest minus the lowest single-valued flow_cm_s in each investigation's table, as computed by the query.",
+            "SPICE Air Rate and SAME-R Inlet velocity are treated as the same kind of quantity as an air flow speed past the flame or sample."
+          ],
+          "limitations": [
+            "Only rows with a single numeric flow value are counted; FLEX-2 (PSI-68) states its flow velocity only as a text range in its condition matrix, so it is not compared here.",
+            "BASS-II (PSI-25) records flow only as uncalibrated display and flow-restrictor settings, not in cm/s, so its range cannot be compared.",
+            "Some SPICE rows were left empty because their flow cell was blank or outside the physical range; those rows are not part of the range.",
+            "The flows compared come from different setups (gas-jet coflow in SPICE, a smoke duct in SAME and SAME-R), so a wider range does not mean the conditions are interchangeable.",
+            "All flows were tested in microgravity aboard spacecraft; the finding says nothing about partial gravity, pressure effects or crewed-habitat ventilation."
+          ],
+          "warnings": [],
+          "environments": [],
+          "tier": 1,
+          "pillar": null,
+          "visual_offer": {
+            "chart": {
+              "available": true,
+              "idea": "Range bars of the air flow speeds tested by SPICE, SAME-R and SAME, in cm/s."
+            },
+            "graph": {
+              "available": false,
+              "idea": null
+            },
+            "footnote": "Want a visual? I can draw range bars comparing the air flow speeds tested by SPICE, SAME-R and SAME."
+          },
+          "chart": null,
+          "graph": null,
+          "generated_by": {
+            "agent": "calculator",
+            "model": "claude-opus-5-5",
+            "date": "2026-11-15T08:45:39Z"
+          }
+        }
+      }
+    ],
+    "rejected_not_shown": 0
+  }
+}

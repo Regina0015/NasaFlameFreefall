@@ -1,0 +1,18 @@
+{
+  "http_status": 200,
+  "note": "GET /health, no key needed",
+  "body": {
+    "status": "ok",
+    "ollama": {
+      "reachable": true,
+      "model": "gemma4:e4b-it-qat",
+      "model_available": true
+    },
+    "duckdb": true,
+    "psi_tables": 22,
+    "snapshot": true,
+    "findings_stored": 19,
+    "audits_pending": 0,
+    "api_key_set": true
+  }
+}

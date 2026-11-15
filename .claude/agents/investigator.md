@@ -42,8 +42,8 @@ Write `stages/03_investigar/output/drafts/PSI-XX.json` with exactly these fields
 
 - `summary_student`: two or three plain sentences for an undergraduate: what burned, where, and why it matters for fire safety. No jargon.
 - `summary_professional`: two to four sentences for a researcher: fuel, configuration, conditions, what was measured.
-- `pillar.value`: `prevention`, `detection` or `suppression` — the main one.
-- `environments`: the crewed environments the investigation informs (`transit_vehicle`, `space_station`, `lunar_base`, `mars_base`, `pressurized_rover`), each with a reason. An empty list is allowed.
+- `pillar.value`: `prevention`, `detection` or `suppression` — the main one. Use `none` when the record states no fire-safety use (for example its `researchImpacts` is only about engines or Earth); the reason says so and cites that field. Never force a pillar the record does not support.
+- `environments`: the crewed environments the investigation informs (`transit_vehicle`, `space_station`, `lunar_base`, `mars_base`, `pressurized_rover`), each with a reason. An empty list is allowed. Add `transit_vehicle` only when a field of the record talks about spacecraft or future missions, and cite that field; "the tests ran in microgravity" is not enough. `lunar_base`, `mars_base` and `pressurized_rover` need a field that names them, or a tested atmosphere written in the record that falls inside their range in `_config/environments.md` (cite that field); PSI has no partial-gravity combustion data.
 - **Sources:** every item cites at least one source. A source is either a field name of the record that is not empty (`title`, `objective`, `approach`, `hypothesis`, `researchImpacts`, `subResearchArea`, `experimentHardware`, `flightProgram`) or a DOI listed in the record (`doi` or `publications[].doi`).
 - **Numbers:** only numbers that appear in the record's text. Do not compute, convert or round. Prefer words when in doubt.
 - If the record does not say something, write "not stated in PSI" instead of guessing.
