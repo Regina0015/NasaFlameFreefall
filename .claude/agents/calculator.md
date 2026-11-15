@@ -58,6 +58,10 @@ WHERE investigation = 'PSI-99' AND flow_cm_s IS NOT NULL
 GROUP BY investigation, source_table
 ```
 
+The Auditor repeats every `sql_query` and rejects the finding if these are broken:
+- **Units:** counts use `tests`, `rows`, `days` or `test days`; oxygen uses `% O2`; other measures use `atm`, `psi`, `kPa`, `Pa`, `cm/s`, `mm/s`, `m/s`, `mm`, `cm`, `m`, `s`, `ms`, `K`, `ppm`, `W`, `kW`, `g` or `mg`. No other unit (for example not `distinct O2 levels`).
+- **A count equals its rows:** `source_rows` must list exactly the rows counted. Never return a value of 0 with rows listed (for example "rows with an outcome" over a table that has none): say that in `limitations` instead.
+
 Do not write numbers into the SQL other than thresholds taken from the question or from `_config/environments.md`.
 
 ## Step 2: write the text
