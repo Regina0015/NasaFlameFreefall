@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from scripts import findings
+from scripts.cli import utf8_output
 from scripts.make_chart import labels_from_snapshot
 from scripts.paths import FINDINGS_DIR, SNAPSHOT_DIR
 from scripts.write_finding import VALIDATOR
@@ -77,6 +78,7 @@ def build_graph(finding: dict, relations: list[dict], labels: dict[str, str]) ->
 
 
 def main(argv: list[str] | None = None, findings_dir: Path = FINDINGS_DIR, snapshot_dir: Path = SNAPSHOT_DIR) -> int:
+    utf8_output()
     parser = argparse.ArgumentParser(description="Draw the proof graph of a finding.")
     parser.add_argument("finding_id")
     args = parser.parse_args(argv)

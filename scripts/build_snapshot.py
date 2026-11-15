@@ -16,6 +16,7 @@ from pathlib import Path
 
 from scripts import contract
 from scripts.cells import read_table
+from scripts.cli import utf8_output
 from scripts.investigations import derive_relations, facts, load_investigator_records, load_tiers
 from scripts.mappers import MAPPERS
 from scripts.paths import CONFIG_DIR, INVESTIGATOR_OUT, PSI_DIR, SNAPSHOT_DIR
@@ -139,6 +140,7 @@ def build(psi_dir: Path, out_dir: Path, tiers_path: Path = CONFIG_DIR / "tiers.m
 
 
 def main() -> int:
+    utf8_output()
     build(PSI_DIR, SNAPSHOT_DIR)
     print(f"snapshot written to {SNAPSHOT_DIR}")
     return 0

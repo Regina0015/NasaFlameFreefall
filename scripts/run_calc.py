@@ -17,6 +17,7 @@ from pathlib import Path
 import duckdb
 
 from scripts import contract, functions
+from scripts.cli import utf8_output
 from scripts.paths import CALCS_DIR, CONFIG_DIR, SNAPSHOT_DIR, USER_DIR
 from scripts.query import USER_TABLES, open_snapshot
 
@@ -88,6 +89,7 @@ def run(function: str, params: dict, user: str | None = None, snapshot_dir: Path
 
 
 def main(argv: list[str] | None = None) -> int:
+    utf8_output()
     parser = argparse.ArgumentParser(description="Run one catalog calculation and save a calc file.")
     parser.add_argument("function")
     parser.add_argument("--params", default=None, help="JSON object (o2_range, coverage_by_environment)")

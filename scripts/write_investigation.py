@@ -16,6 +16,7 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator
 
+from scripts.cli import utf8_output
 from scripts.investigations import facts, load_tiers
 from scripts.numbers import collect, numbers_in
 from scripts.paths import CONFIG_DIR, INVESTIGATOR_OUT, PSI_DIR, ROOT, SCHEMAS_DIR
@@ -82,6 +83,7 @@ def build_record(record: dict, draft: dict, tiers: dict, now: str) -> tuple[dict
 
 
 def main(argv: list[str] | None = None) -> int:
+    utf8_output()
     ids = argv if argv is not None else sys.argv[1:]
     if not ids:
         print("usage: python -m scripts.write_investigation PSI-25 [PSI-26 ...]", file=sys.stderr)

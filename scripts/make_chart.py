@@ -13,6 +13,7 @@ from pathlib import Path
 import altair as alt
 
 from scripts import findings
+from scripts.cli import utf8_output
 from scripts.functions import investigation_key
 from scripts.numbers import canonical
 from scripts.paths import FINDINGS_DIR, SNAPSHOT_DIR
@@ -121,6 +122,7 @@ def build_chart(finding: dict, labels: dict[str, str]) -> dict:
 
 
 def main(argv: list[str] | None = None, findings_dir: Path = FINDINGS_DIR, snapshot_dir: Path = SNAPSHOT_DIR) -> int:
+    utf8_output()
     parser = argparse.ArgumentParser(description="Draw a Vega-Lite chart for a finding.")
     parser.add_argument("finding_id")
     args = parser.parse_args(argv)

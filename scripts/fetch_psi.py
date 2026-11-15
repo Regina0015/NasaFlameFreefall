@@ -16,6 +16,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+from scripts.cli import utf8_output
 from scripts.paths import PSI_DIR
 
 COMBUSTION_IDS = [
@@ -68,6 +69,7 @@ def _now() -> str:
 
 
 def main() -> int:
+    utf8_output()
     PSI_DIR.mkdir(parents=True, exist_ok=True)
     manifest: list[dict] = []
     failures = 0

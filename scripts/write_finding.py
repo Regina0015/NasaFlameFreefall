@@ -21,6 +21,7 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 
 from scripts import findings
+from scripts.cli import utf8_output
 from scripts.numbers import canonical, collect, numbers_in
 from scripts.paths import CALCS_DIR, FINDINGS_DIR, SCHEMAS_DIR, SNAPSHOT_DIR
 from scripts.run_calc import calc_digest
@@ -126,6 +127,7 @@ def build_finding(calc: dict, text: dict, tiers_by_investigation: dict[str, int 
 
 def main(argv: list[str] | None = None, findings_dir: Path = FINDINGS_DIR, calcs_dir: Path = CALCS_DIR,
          snapshot_dir: Path = SNAPSHOT_DIR) -> int:
+    utf8_output()
     parser = argparse.ArgumentParser(description="Build, check and save a finding.")
     parser.add_argument("--calc", required=True)
     parser.add_argument("--text", required=True)

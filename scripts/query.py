@@ -21,6 +21,7 @@ from pathlib import Path
 import duckdb
 
 from scripts import contract
+from scripts.cli import utf8_output
 from scripts.paths import QUERIES_DIR, SNAPSHOT_DIR, USER_DIR
 
 USER_NAME = re.compile(r"^[a-z0-9_-]{1,32}$")
@@ -119,6 +120,7 @@ def run_query(con: duckdb.DuckDBPyConnection, sql: str, row_cap: int = DEFAULT_R
 
 
 def main(argv: list[str] | None = None) -> int:
+    utf8_output()
     parser = argparse.ArgumentParser(description="Read-only SQL over the data snapshot.")
     parser.add_argument("sql")
     parser.add_argument("--user", default=None)
