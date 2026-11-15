@@ -51,3 +51,53 @@ test('circle area follows the test count', () => {
   const { radii } = layoutGraph(g.nodes, g.edges)
   assert.ok(radii['PSI-1'] > radii['PSI-2'] && radii['PSI-2'] > radii['PSI-3'])
 })
+
+import { labelLines, placeLabels, shortLabel, fitTransform } from './graph.js'
+
+test('labels prefer the acronym, keep complete names and fall back to the id for long ground-study titles', () => {
+  assert.equal(shortLabel({ id: 'PSI-25', acronym: 'BASS-II', label: 'BASS-II' }), 'BASS-II')
+  assert.equal(shortLabel({ id: 'PSI-60', acronym: '', label: 'Computational and Experimental Analysis of SPICE Data Sets' }), 'PSI-60')
+  assert.deepEqual(labelLines('ACME E-FIELD Flames'), ['ACME E-FIELD', 'Flames'])
+  assert.deepEqual(labelLines('BASS-II'), ['BASS-II'])
+})
+
+test('pillar none is a reviewed result and stays apart from not reviewed yet', () => {
+  const g = buildGraph({ investigations: [{ id: 'PSI-22', pillar: 'none', type: 'flight' }, { id: 'PSI-1', pillar: null, type: 'flight' }], relations: [], testCounts: {} })
+  assert.equal(g.nodes[0].pillar, 'none')
+  assert.equal(g.nodes[1].pillar, 'unreviewed')
+})
+
+test('a dense group is spread out: no two circles overlap and everything stays in the frame', () => {
+  const nodes = []
+  for (let i = 0; i < 24; i += 1) nodes.push({ id: `PSI-${i + 1}`, label: `N${i}`, short: `N${i}`, type: 'flight', tests: i < 8 ? 120 + i * 10 : i * 3, tier: 1, pillar: 'unreviewed' })
+  const edges = []
+  for (let i = 0; i < 8; i += 1) for (let j = i + 1; j < 8; j += 1) edges.push({ id: `${i}|${j}`, from: nodes[i].id, to: nodes[j].id, type: 'same_hardware', source: 'x', lane: 0, lanes: 1 })
+  const { positions, radii, width, height } = layoutGraph(nodes, edges, { width: 1400, height: 900 })
+  for (let i = 0; i < nodes.length; i += 1) {
+    const a = positions[nodes[i].id]
+    assert.ok(a.x >= 0 && a.x <= width && a.y >= 0 && a.y <= height)
+    for (let j = i + 1; j < nodes.length; j += 1) {
+      const b = positions[nodes[j].id]
+      assert.ok(Math.hypot(a.x - b.x, a.y - b.y) >= radii[nodes[i].id] + radii[nodes[j].id] + 20, `${nodes[i].id} overlaps ${nodes[j].id}`)
+    }
+  }
+  assert.deepEqual(layoutGraph(nodes, edges, { width: 1400, height: 900 }).positions, positions)
+})
+
+test('label placement never overlaps and frees up when zoomed in', () => {
+  const nodes = ['A', 'B', 'C', 'D', 'E'].map((id) => ({ id, short: `ACME-${id}-LONG` }))
+  const positions = Object.fromEntries(nodes.map((n, i) => [n.id, { x: 100 + i * 20, y: 100 }]))
+  const radii = Object.fromEntries(nodes.map((n) => [n.id, 8]))
+  const crowded = placeLabels(nodes, positions, radii, 0.5)
+  assert.ok(Object.values(crowded).some((l) => l.hidden))
+  const roomy = placeLabels(nodes, positions, radii, 8)
+  assert.ok(Object.values(roomy).every((l) => !l.hidden))
+  const hiddenId = Object.keys(crowded).find((id) => crowded[id].hidden)
+  assert.equal(placeLabels(nodes, positions, radii, 0.5, { force: [hiddenId] })[hiddenId].hidden, false)
+})
+
+test('fit transform centers the points', () => {
+  const t = fitTransform([{ x: 100, y: 100 }, { x: 500, y: 300 }], { width: 1400, height: 900 })
+  assert.ok(t.k > 1)
+  assert.ok(Math.abs(300 * t.k + t.x - 700) < 1e-6)
+})

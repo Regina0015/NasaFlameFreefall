@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { PILLARS, RELATION_TYPES, buildGraph, isHollow, layoutGraph } from '../lib/graph.js'
+import { PILLARS, RELATION_TYPES, buildGraph, fitTransform, isHollow, isHollowRing, layoutGraph, placeLabels } from '../lib/graph.js'
 import { Segmented } from './ui.jsx'
 
 // Investigation relationship graph (the "Map" view). Nodes are investigations, edges are rows of the
@@ -10,6 +10,7 @@ const PILLAR_LABELS = {
   detection: 'Detection',
   suppression: 'Suppression',
   unreviewed: 'Not reviewed yet',
+  none: 'No fire-safety use stated',
 }
 
 const TIER_LABELS = { 1: 'Tier 1 · direct', 2: 'Tier 2 · supporting', null: 'Tier not set' }
@@ -27,18 +28,15 @@ const VIEW_OPTIONS = [
 ]
 
 const W = 1400
-const H = 900
+const H = 700
 const K_MIN = 0.6
 const K_MAX = 4
 const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi)
-// On a phone the whole graph would be too small to read, so it opens zoomed in; Reset view returns here.
-const home = () => {
-  const narrow = typeof window !== 'undefined' && window.matchMedia('(max-width: 760px)').matches
-  const k = narrow ? 2.1 : 1
-  return { k, x: (W / 2) * (1 - k), y: (H / 2) * (1 - k) }
-}
+// The default view fits every investigation in the frame, on a phone as well; Reset returns here and Fit graph
+// fits only the investigations the filters leave shown.
+const NEUTRAL = { k: 1, x: 0, y: 0 }
 const fmt = (n) => n.toLocaleString('en-US')
-const pillarColor = (pillar) => (pillar === 'unreviewed' ? 'var(--text-faint)' : `var(--pillar-${pillar})`)
+const pillarColor = (pillar) => (pillar === 'unreviewed' || pillar === 'none' ? 'var(--text-faint)' : `var(--pillar-${pillar})`)
 const tierKey = (tier) => (tier === 1 || tier === 2 ? String(tier) : 'none')
 
 // A short sample line for the legend and the relation filters.
@@ -68,7 +66,7 @@ function curvePath(a, b, ra, rb, lane, lanes, arrow) {
     return { x: p.x + (vx / m) * r, y: p.y + (vy / m) * r }
   }
   const p1 = toward(a, ra + 2, { x: cx, y: cy })
-  const p2 = toward(b, rb + (arrow ? 7 : 2), { x: cx, y: cy })
+  const p2 = toward(b, rb + (arrow ? 5 : 2), { x: cx, y: cy })
   return `M${p1.x.toFixed(1)} ${p1.y.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`
 }
 
@@ -94,9 +92,11 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
   const [tier, setTier] = useState('all')
   const [selected, setSelected] = useState(null)
   const [hover, setHover] = useState(null)
-  const [transform, setTransform] = useState(home)
+  const [transform, setTransform] = useState(NEUTRAL)
   const [checkedAt, setCheckedAt] = useState(null)
   const [pxScale, setPxScale] = useState(0.6) // screen pixels per graph unit, so labels keep a readable size
+  const [fullscreen, setFullscreen] = useState(false)
+  const frameRef = useRef(null)
   const svgRef = useRef(null)
   const detailsHeading = useRef(null)
   const drag = useRef(null)
@@ -115,9 +115,20 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
     return () => observer.disconnect()
   }, [display, graph])
 
+  // The first view fits the whole graph; the layout is computed once and the picture then stays still.
   useEffect(() => {
-    if (resetSignal) setTransform(home())
-  }, [resetSignal])
+    if (layout && graph) setTransform(fitTransform(graph.nodes.map((n) => layout.positions[n.id]), { width: W, height: H, margin: 80 }))
+  }, [layout, graph])
+
+  useEffect(() => {
+    if (resetSignal && layout && graph) setTransform(fitTransform(graph.nodes.map((n) => layout.positions[n.id]), { width: W, height: H, margin: 80 }))
+  }, [resetSignal]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const onChange = () => setFullscreen(document.fullscreenElement === frameRef.current)
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
 
   // Another part of the dashboard can ask the map to open one investigation (focus = { id, n }).
   useEffect(() => {
@@ -138,6 +149,25 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
   const shownEdges = useMemo(
     () => (graph ? graph.edges.filter((e) => types.has(e.type) && shownIds.has(e.from) && shownIds.has(e.to)) : []),
     [graph, types, shownIds],
+  )
+
+  // Hover or keyboard focus highlights a node's immediate connections; a selection keeps them highlighted and dims the
+  // rest without hiding it. Nothing is removed from the graph.
+  const activeId = hover?.kind === 'node' ? hover.id : selected
+  const linked = useMemo(() => {
+    const set = new Set()
+    if (!graph || !activeId) return set
+    for (const e of graph.edges) {
+      if (e.from === activeId) set.add(e.to)
+      else if (e.to === activeId) set.add(e.from)
+    }
+    return set
+  }, [graph, activeId])
+
+  const pxPerUnit = pxScale * transform.k
+  const labels = useMemo(
+    () => (graph && layout ? placeLabels(graph.nodes, layout.positions, layout.radii, pxPerUnit, { force: [selected, hover?.kind === 'node' ? hover.id : null].filter(Boolean) }) : {}),
+    [graph, layout, pxPerUnit, selected, hover],
   )
 
   const neighbors = useMemo(() => {
@@ -170,7 +200,19 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
       return { k, x: W / 2 - (W / 2 - t.x) * ratio, y: H / 2 - (H / 2 - t.y) * ratio }
     })
   const panBy = (dx, dy) => setTransform((t) => ({ ...t, x: t.x + dx, y: t.y + dy }))
-  const resetView = () => setTransform(home())
+  const resetView = () => {
+    if (layout && graph) setTransform(fitTransform(graph.nodes.map((n) => layout.positions[n.id]), { width: W, height: H, margin: 80 }))
+  }
+  const fitView = () => {
+    const points = shownNodes.map((n) => layout.positions[n.id]).filter(Boolean)
+    setTransform(fitTransform(points, { width: W, height: H, margin: 90 }))
+  }
+  const toggleFullscreen = () => {
+    const frame = frameRef.current
+    if (!frame) return
+    if (document.fullscreenElement) document.exitFullscreen?.()
+    else frame.requestFullscreen?.().catch(() => {})
+  }
 
   const onPointerDown = (event) => {
     if (event.target.closest('.mp-node, .mp-hit')) return
@@ -311,6 +353,7 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
               </option>
             ))}
             <option value="unreviewed">{PILLAR_LABELS.unreviewed}</option>
+            <option value="none">{PILLAR_LABELS.none}</option>
           </select>
         </label>
 
@@ -335,19 +378,6 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
           ))}
         </fieldset>
 
-        {display === 'graph' && (
-          <div className="mp-zoom" role="group" aria-label="Zoom and pan">
-            <button type="button" className="hv-btn hv-icon" aria-label="Zoom in" onClick={() => zoomBy(1.25)}>
-              +
-            </button>
-            <button type="button" className="hv-btn hv-icon" aria-label="Zoom out" onClick={() => zoomBy(0.8)}>
-              −
-            </button>
-            <button type="button" className="hv-btn" onClick={resetView}>
-              Reset view
-            </button>
-          </div>
-        )}
       </div>
 
       <p className="mp-count" role="status">
@@ -359,7 +389,9 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
         <div className="mp-main">
           {display === 'graph' ? (
             <div
+              ref={frameRef}
               className="mp-graph"
+              data-fullscreen={fullscreen || undefined}
               tabIndex={0}
               role="group"
               aria-label="Investigation relationship graph. Arrow keys pan, plus and minus zoom, zero resets. Press Tab to reach each investigation."
@@ -375,7 +407,7 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
                 onPointerCancel={onPointerUp}
                 onWheel={onWheel}
               >
-                <g transform={`translate(${transform.x} ${transform.y}) scale(${transform.k})`}>
+                <g className="mp-enter" transform={`translate(${transform.x} ${transform.y}) scale(${transform.k})`}>
                   {graph.edges
                     .filter((e) => types.has(e.type))
                     .map((e) => {
@@ -384,7 +416,7 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
                       const arrow = e.type === 'reuses_flight_data'
                       const d = curvePath(a, b, layout.radii[e.from], layout.radii[e.to], e.lane, e.lanes, arrow)
                       const active = shownIds.has(e.from) && shownIds.has(e.to)
-                      const touches = selected && (e.from === selected || e.to === selected)
+                      const touches = activeId && (e.from === activeId || e.to === activeId)
                       return (
                         <g key={e.id}>
                           <path
@@ -392,6 +424,7 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
                             className={`mp-edge mp-edge-${e.type}`}
                             data-dim={!active || undefined}
                             data-strong={touches || undefined}
+                            data-faded={(activeId && !touches) || undefined}
                             markerEnd={arrow ? 'url(#mp-arrow-head)' : undefined}
                           />
                           <path
@@ -407,22 +440,28 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
                   {graph.nodes.map((n) => {
                     const p = layout.positions[n.id]
                     const r = layout.radii[n.id]
-                    const hollow = isHollow(n)
+                    const hollow = isHollowRing(n)
+                    const ground = isHollow(n)
                     const dim = !shownIds.has(n.id)
+                    const faded = activeId && n.id !== activeId && !linked.has(n.id)
                     const ring = n.tier === 1 ? 4 : 1.5
+                    const label = labels[n.id]
+                    const fu = 12 / pxPerUnit
                     return (
                       <g
                         key={n.id}
                         id={`mp-node-${n.id}`}
                         className="mp-node"
                         data-dim={dim || undefined}
+                        data-faded={faded || undefined}
+                        data-linked={linked.has(n.id) || undefined}
                         data-selected={selected === n.id || undefined}
                         transform={`translate(${p.x} ${p.y})`}
                         tabIndex={0}
                         role="button"
                         aria-pressed={selected === n.id}
-                        aria-label={`${n.label}. ${PILLAR_LABELS[n.pillar]}. ${TIER_LABELS[n.tier]}. ${
-                          n.tests ? `${fmt(n.tests)} tests` : hollow ? 'Ground study, no tests of its own' : 'No test rows'
+                        aria-label={`${n.title && n.title !== n.label ? n.title : n.label}${n.short !== n.label ? ` (${n.short})` : ''}. ${PILLAR_LABELS[n.pillar]}. ${TIER_LABELS[n.tier]}. ${
+                          n.tests ? `${fmt(n.tests)} tests` : ground ? 'Ground study, no tests of its own' : 'No test rows'
                         }.${dim ? ' Hidden by the filters.' : ''} Press Enter for details.`}
                         onClick={() => select(n.id)}
                         onKeyDown={(event) => {
@@ -445,19 +484,43 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
                           strokeWidth={ring}
                           strokeDasharray={n.tier === null ? '3 3' : undefined}
                         />
-                        <text className="mp-label" y={r + 15 / (pxScale * transform.k)} textAnchor="middle" style={{ fontSize: 12 / (pxScale * transform.k), strokeWidth: 3 / (pxScale * transform.k) }}>
-                          {n.short}
-                        </text>
+                        {label && !label.hidden && (
+                          <text className="mp-label" textAnchor={label.anchor} style={{ fontSize: fu, strokeWidth: 3 / pxPerUnit }}>
+                            {label.lines.map((line, i) => (
+                              <tspan key={i} x={label.x - p.x} y={label.y - p.y + fu * (0.92 + i * 1.15)}>
+                                {line}
+                              </tspan>
+                            ))}
+                          </text>
+                        )}
                       </g>
                     )
                   })}
                 </g>
                 <defs>
-                  <marker id="mp-arrow-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                  <marker id="mp-arrow-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
                     <path className="mp-arrow" d="M0 0 L10 5 L0 10 Z" />
                   </marker>
                 </defs>
               </svg>
+
+              <div className="mp-controls" role="group" aria-label="Zoom and view controls">
+                <button type="button" className="mp-ctl" aria-label="Zoom in" title="Zoom in" onClick={() => zoomBy(1.25)}>
+                  +
+                </button>
+                <button type="button" className="mp-ctl" aria-label="Zoom out" title="Zoom out" onClick={() => zoomBy(0.8)}>
+                  −
+                </button>
+                <button type="button" className="mp-ctl mp-ctl-text" onClick={fitView} title="Fit the shown investigations in the frame">
+                  Fit graph
+                </button>
+                <button type="button" className="mp-ctl mp-ctl-text" onClick={resetView} title="Return to the default view that fits every investigation">
+                  Reset
+                </button>
+                <button type="button" className="mp-ctl mp-ctl-text" aria-pressed={fullscreen} onClick={toggleFullscreen}>
+                  {fullscreen ? 'Exit full screen' : 'Full screen'}
+                </button>
+              </div>
 
               {hover && (
                 <div className="mp-tip" aria-hidden="true">
@@ -467,6 +530,7 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
                       return n ? (
                         <>
                           <b>{n.label}</b>
+                          {n.title && n.title !== n.label && <span>{n.title}</span>}
                           <span>
                             {PILLAR_LABELS[n.pillar]} · {TIER_LABELS[n.tier]} · {n.tests ? `${fmt(n.tests)} tests` : 'no test rows'}
                           </span>
@@ -554,12 +618,17 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
             <div>
               <h3>Pillar (color)</h3>
               <ul>
-                {[...PILLARS, 'unreviewed'].map((p) => (
+                {[...PILLARS, 'unreviewed', 'none'].map((p) => (
                   <li key={p}>
                     <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
-                      <circle cx="7" cy="7" r="6" fill={pillarColor(p)} stroke="var(--text)" strokeWidth="1" />
+                      {p === 'none' ? (
+                        <circle cx="7" cy="7" r="5.5" fill="none" stroke="var(--text-faint)" strokeWidth="1.6" />
+                      ) : (
+                        <circle cx="7" cy="7" r="6" fill={pillarColor(p)} stroke="var(--text)" strokeWidth="1" />
+                      )}
                     </svg>
                     {PILLAR_LABELS[p]}
+                    {p === 'none' && ' (hollow ring)'}
                   </li>
                 ))}
               </ul>
@@ -595,7 +664,7 @@ export default function MapView({ evidence, view, resetSignal = 0, focus = null 
                   <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
                     <circle cx="7" cy="7" r="5" fill="none" stroke="var(--text-faint)" strokeWidth="1.5" />
                   </svg>
-                  Small hollow circle: ground study with no test rows of its own
+                  Small hollow circle: ground study with no test rows of its own. Labels show the acronym or the PSI id; hover or focus shows the full title. Distance on the page has no scientific meaning.
                 </li>
               </ul>
             </div>

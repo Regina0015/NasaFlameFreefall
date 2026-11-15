@@ -4,6 +4,7 @@
 import { systemPrompt, isEnglish, ENGLISH_ONLY, NUDGE_TOOL, NUDGE_ANSWER } from './prompt.js'
 import { checkNumbers } from './checkNumbers.js'
 import { buildActions } from './references.js'
+import { buildStructured } from '../src/lib/structured.js'
 
 // Same text as LUNAR_WARNING in scripts/write_finding.py.
 export const PARTIAL_GRAVITY_WARNING =
@@ -62,6 +63,7 @@ const emptyReply = (config, answer) => ({
   warnings: [],
   tools: [],
   actions: [],
+  structured: [],
   notes: [],
   findings: [],
   preliminary: false,
@@ -127,6 +129,8 @@ export async function respond({ messages, view }, { config, tools, call = callOl
     tools: used,
     // Optional dashboard actions, built by code from the tool calls and results (never from the answer text).
     actions: buildActions(used, results),
+    // Additive: validated tool values for drawing (see src/lib/structured.js). Older clients ignore it.
+    structured: buildStructured(used, results),
     notes: [...new Set(results.map((r) => r.note).filter(Boolean))],
     // Every finding the model saw, with its grade: no claim is shown without one (_config/audiences.md).
     findings: [...new Map(results.flatMap((r) => r.findings ?? []).map((f) => [f.id, { id: f.id, grade: f.grade, failed_checks: f.failed_checks ?? [] }])).values()],

@@ -6,6 +6,7 @@ import './styles/app.css'
 import './styles/login.css'
 import './styles/workspace.css'
 import './styles/overview.css'
+import './styles/response.css'
 import './estilos.css'
 
 createRoot(document.getElementById('root')).render(

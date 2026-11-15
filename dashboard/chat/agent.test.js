@@ -201,3 +201,22 @@ test('actions: a rejected (non-English) question has none', async () => {
   const r = await respond({ messages: [{ role: 'user', content: 'cual es la presion para los combustibles solidos?' }] }, { config, tools, call: async () => ({}) })
   assert.deepEqual(r.actions, [])
 })
+
+test('respond: adds a validated structured field built from tool output, and drops what does not fit', async () => {
+  const { tools } = fakeTools({
+    query_tests: { filters: { phase: 'solid', o2_min_pct: 30 }, n_tests: 0, groups: [], groups_not_shown: 0, no_data: false, none_match: true, summary: 's', source: 'snapshot', note: 'n', before_numeric_filters: { n_tests: 138, o2_pct_tested: { min: 13.6, max: 22.2 }, pressure_psi_tested: null, excluded_no_o2_value: 12, excluded_no_pressure_value: 0 } },
+    get_findings: { findings: [{ id: 'not-an-id', grade: 'A' }] },
+  })
+  let n = 0
+  const call = async () => {
+    n += 1
+    if (n === 1) return { message: { tool_calls: [{ function: { name: 'query_tests', arguments: { phase: 'solid', o2_min_pct: 30 } } }, { function: { name: 'get_findings', arguments: {} } }] } }
+    return { message: { content: 'None of 138 solid tests reached 30%.' } }
+  }
+  const r = await respond({ messages: [{ role: 'user', content: 'Did any solid test reach 30% oxygen?' }] }, { config, tools, call })
+  assert.equal(r.structured.length, 2)
+  assert.deepEqual(r.structured[1].findings, []) // a malformed finding id is dropped
+  assert.equal(r.structured[0].kind, 'tests')
+  assert.equal(r.structured[0].none_match, true)
+  assert.equal(r.structured[0].before.n_tests, 138)
+})

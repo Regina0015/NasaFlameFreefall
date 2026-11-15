@@ -1,0 +1,545 @@
+/* Research history, answer layouts and the bottom question bar. Loaded after overview.css.
+   Scientific content sits on solid surfaces; only the question bar is glass. */
+
+/* The dock: normal flow below the scrolling workspace, so it reserves its own height. */
+
+.ws-dock {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2) var(--space-5) max(var(--space-3), env(safe-area-inset-bottom));
+  /* A soft fade, not a slab: the content above stays visible behind the glass edge. */
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg) 70%, transparent) 40%);
+}
+
+.ws-dock .rs {
+  width: min(100%, 52rem);
+}
+
+.ws-dock .rs-form {
+  background:
+    linear-gradient(180deg, var(--glass-highlight), transparent 38%),
+    var(--glass-bg);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.ws-dock .rs-form textarea {
+  background: var(--surface-inset);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ws-dock .rs-form {
+    background: var(--glass-solid);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .ws-dock .rs-form {
+    background: var(--glass-solid);
+  }
+}
+
+@media (max-width: 760px) {
+  .ws-dock {
+    padding-inline: var(--space-3);
+  }
+}
+
+/* History */
+
+.rr-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rr-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.rt-list {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.rt-new {
+  position: sticky;
+  bottom: var(--space-2);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.rt-new .btn {
+  pointer-events: auto;
+  box-shadow: var(--shadow);
+}
+
+/* One turn */
+
+.rt {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  min-width: 0;
+  scroll-margin-top: var(--space-2);
+}
+
+.rt-eyebrow {
+  margin: 0;
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.rt-question {
+  margin: 0;
+  font-size: var(--text-xl);
+  line-height: 1.25;
+}
+
+.rt h4 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.rt h5 {
+  margin: var(--space-3) 0 0;
+  font-size: 1rem;
+}
+
+.rt p {
+  max-width: 68ch;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.rt-state,
+.rt-answer,
+.rt-meaning,
+.rt-warnings {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.rt-answer-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.rt .rt-status-note {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.rt-meaning {
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--accent);
+  background: var(--surface-inset);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.rt-warnings {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--notice);
+  border-radius: var(--radius-md);
+  background: var(--notice-soft);
+}
+
+.rt-more summary,
+.rt-explore > summary,
+.rt-details > details > summary,
+.av-table > summary {
+  cursor: pointer;
+  min-height: 2.25rem;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+.rt-explore {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-4);
+}
+
+.rt-explore[open] {
+  padding-bottom: var(--space-4);
+}
+
+.rt-details {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.rt-details > details {
+  border-top: 1px solid var(--border);
+  padding-block: var(--space-1);
+}
+
+.rt-details > details > :not(summary) {
+  margin-top: var(--space-2);
+}
+
+/* Supporting values */
+
+.rt-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.rt-stat {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.rt-stat dt {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.rt-stat dd {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Professional scope strip */
+
+.rt-scope {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+}
+
+.rt-scope dt {
+  font-size: var(--text-xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.rt-scope dd {
+  margin: 0;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.rt-glossary {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.rt-glossary dt {
+  font-weight: 600;
+}
+
+.rt-glossary dd {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+/* Single value and no-data statement */
+
+.rt-big {
+  padding: var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+}
+
+.rt-big p {
+  margin: 0;
+}
+
+.rt .rt-big-value {
+  font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.rt .rt-big-value span {
+  font-size: 0.55em;
+  color: var(--text-muted);
+}
+
+.rt .rt-big-label,
+.rt .rt-big-note {
+  color: var(--text-muted);
+}
+
+.rt-big-nodata {
+  border-style: dashed;
+}
+
+.rt-big-nodata .rt-big-value {
+  color: var(--text-muted);
+}
+
+/* Visuals */
+
+.av {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+}
+
+.av-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.av-row {
+  display: grid;
+  grid-template-columns: minmax(6rem, 11rem) minmax(0, 1fr) minmax(7rem, auto);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.av-label {
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.av-value {
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.av-track {
+  position: relative;
+  height: 0.9rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.av-track[data-nodata] {
+  background: repeating-linear-gradient(135deg, transparent 0 5px, var(--border-strong) 5px 6px);
+  border: 1px dashed var(--border-strong);
+}
+
+.av-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.av-fill-soft {
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.av-fill-strong {
+  background: var(--accent);
+}
+
+.av-span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.av-axis {
+  display: grid;
+  grid-template-columns: minmax(6rem, 11rem) 1fr 1fr minmax(7rem, auto);
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+
+.av-axis span:nth-child(1) {
+  grid-column: 2;
+  text-align: left;
+}
+
+.av-axis span:nth-child(2) {
+  text-align: center;
+}
+
+.av-axis span:nth-child(3) {
+  text-align: right;
+}
+
+.rt .av-legend {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.av-key {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.6rem;
+  border-radius: 999px;
+  margin-inline: 0.25rem 0.1rem;
+  vertical-align: middle;
+}
+
+.rt .av-caption {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  max-width: 68ch;
+}
+
+.av-table-scroll {
+  overflow-x: auto;
+  margin-top: var(--space-2);
+}
+
+.av-table table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 28rem;
+  font-size: 0.95rem;
+}
+
+.av-table th,
+.av-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.av-table td[data-nodata] {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+@media (max-width: 640px) {
+  .rt {
+    padding: var(--space-4);
+  }
+
+  .av-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .av-axis {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .av-axis span:nth-child(1) {
+    grid-column: auto;
+  }
+}
+
+/* Question bar: the blocker explanation shown when Send is tried while the assistant is unavailable */
+
+.rs-blocked {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--notice);
+  border-radius: var(--radius-md);
+  background: var(--notice-soft);
+  font-size: var(--text-sm);
+}
+
+.rt-block-code {
+  display: block;
+  margin-top: var(--space-1);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.rt-finding-details {
+  margin-block: var(--space-2);
+}
+
+.rt-finding-details > summary {
+  cursor: pointer;
+  min-height: 2.25rem;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+/* Professional: a main analysis column and a side column for conditions, method, provenance and audit. */
+
+.rt-pro-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.rt-pro-main,
+.rt-pro-side {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.rt-pro-side {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+}
+
+.rt-pro-side .rt-scope {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+@media (min-width: 1100px) {
+  .rt-pro-grid {
+    grid-template-columns: minmax(0, 1fr) 21rem;
+  }
+}
+
+/* Student: terms are shown in the reading flow, not hidden. */
+
+.rt-guide {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.rt-student .av-caption {
+  font-size: 1rem;
+  color: var(--text);
+}

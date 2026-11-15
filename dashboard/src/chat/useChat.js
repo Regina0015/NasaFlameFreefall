@@ -34,6 +34,9 @@ export function useChat(view) {
   const [busy, setBusy] = useState(false)
   const [seconds, setSeconds] = useState(0)
   const [seen, setSeen] = useState(0) // how many messages the person has had the chance to read
+  // The question being written. It lives with the conversation, so it survives Retry, status checks, workspace
+  // changes and profile switches, and is cleared only when a submission is accepted.
+  const [draft, setDraft] = useState('')
   const abort = useRef(null)
   const sequence = useRef(0)
   const messagesRef = useRef(messages)
@@ -144,5 +147,5 @@ export function useChat(view) {
   const markSeen = useCallback(() => setSeen(messagesRef.current.length), [])
   const unseen = Math.max(0, messages.filter((m) => m.role === 'assistant').length - messages.slice(0, seen).filter((m) => m.role === 'assistant').length)
 
-  return { status, checking, messages, turns, busy, seconds, unseen, ask, retry, stop, clear, recheck, markSeen }
+  return { status, checking, messages, turns, busy, seconds, unseen, draft, setDraft, ask, retry, stop, clear, recheck, markSeen }
 }
