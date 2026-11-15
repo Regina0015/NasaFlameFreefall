@@ -33,6 +33,17 @@ class Bass2Test(unittest.TestCase):
 class FlexTest(unittest.TestCase):
     FILE = "PSI-69_Experimental table_FLEX.csv"
 
+    def test_flex_diluent_sources_are_separate_columns(self):
+        for n in range(1, 400):
+            r = map_row(self.FILE, n)
+            if "+" in (r["diluent"] or ""):
+                break
+        else:
+            self.fail("no FLEX row with two diluent gases")
+        sources = json.loads(r["field_sources"])["diluent"]
+        self.assertEqual(len(sources.split(" | ")), len(r["diluent"].split("+")))
+        self.assertNotIn(", ", sources)
+
     def test_flex_row1(self):
         r = map_row(self.FILE, 1)
         self.assertEqual((r["fuel"], r["o2_pct_min"], r["diluent"]), ("Methanol", 21.0, "N2"))

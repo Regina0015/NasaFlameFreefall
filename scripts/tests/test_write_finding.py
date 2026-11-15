@@ -145,6 +145,24 @@ class LoadCalcAndCliTest(unittest.TestCase):
         self.assertIn('number "23" in claim', out.getvalue())
         self.assertFalse((findings / "F-002.json").exists())
 
+    def test_cli_replace_saves_a_new_version_of_the_same_id(self):
+        text_path = self.root / "text.json"
+        text_path.write_text(json.dumps(TEXT), encoding="utf-8")
+        findings = self.root / "findings"
+        args = ["--calc", str(self.calc_path), "--text", str(text_path), "--model", "claude-opus-5-5"]
+        dirs = dict(findings_dir=findings, calcs_dir=self.calcs, snapshot_dir=self.snap)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main(args, **dirs), 0)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(main(args + ["--replace", "F-001"], **dirs), 0)
+            self.assertEqual(main(args + ["--replace", "F-009"], **dirs), 1)
+        self.assertIn("saved F-001", out.getvalue())
+        self.assertIn("F-009 not found", out.getvalue())
+        self.assertEqual(load("F-001", findings)["version"], 2)
+        self.assertTrue((findings / "history" / "F-001.v1.json").exists())
+        self.assertFalse((findings / "F-002.json").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

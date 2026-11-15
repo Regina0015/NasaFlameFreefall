@@ -132,12 +132,14 @@ def main(argv: list[str] | None = None, findings_dir: Path = FINDINGS_DIR, calcs
     parser.add_argument("--calc", required=True)
     parser.add_argument("--text", required=True)
     parser.add_argument("--model", required=True)
+    parser.add_argument("--replace", metavar="F-NNN", help="save as the next version of this finding (data or evidence changed)")
     args = parser.parse_args(argv)
     try:
         calc = load_calc(Path(args.calc), calcs_dir)
         text = json.loads(Path(args.text).read_text(encoding="utf-8"))
         tiers = tiers_from_snapshot(snapshot_dir)
-        fid = findings.next_id(findings_dir)
+        old = findings.load(args.replace, findings_dir) if args.replace else None
+        fid = old["id"] if old else findings.next_id(findings_dir)
     except (ValueError, OSError) as error:
         print(f"problems:\n- {error}")
         return 1
@@ -148,6 +150,8 @@ def main(argv: list[str] | None = None, findings_dir: Path = FINDINGS_DIR, calcs
         for problem in problems:
             print(f"- {problem}")
         return 1
+    if old:
+        finding["version"] = findings.bump_version(old, now, findings_dir)["version"]
     path = findings.save(finding, findings_dir)
     print(f"saved {fid}: {path}")
     return 0

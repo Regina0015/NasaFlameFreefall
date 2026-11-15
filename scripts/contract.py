@@ -7,6 +7,9 @@ export must provide the same column names (order and extra columns do not matter
 """
 from typing import NamedTuple
 
+# Joins the original column names when one field is read from several columns.
+SOURCE_SEPARATOR = " | "
+
 
 class Column(NamedTuple):
     name: str
@@ -33,7 +36,7 @@ TESTS: list[Column] = [
     Column("outcome", "VARCHAR", "", "Result of the test as the table states it (e.g. extinction), lowercased; empty if none"),
     Column("other", "VARCHAR", "", "JSON object: other measured or controlled values, keyed by original column name"),
     Column("raw", "VARCHAR", "", "JSON object: every original cell of the row, keyed by original column name"),
-    Column("field_sources", "VARCHAR", "", "JSON object: normalized field name -> original column name it was read from"),
+    Column("field_sources", "VARCHAR", "", "JSON object: normalized field name -> original column name it was read from (several are joined with ' | ')"),
     Column("problems", "VARCHAR", "", "Cleaning notes for this row, joined with '; '"),
     Column("scope", "VARCHAR", "", "psi for NASA data; user:<name> for a user's dataset"),
 ]

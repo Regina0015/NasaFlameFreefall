@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.functions import coverage_by_environment, o2_range, sql_values
+from scripts.functions import _group_rows, coverage_by_environment, o2_range, sql_values
 from scripts.paths import CONFIG_DIR, SNAPSHOT_DIR
 from scripts.query import QueryRejected, open_snapshot
 from scripts.run_calc import run
@@ -44,8 +44,20 @@ class O2RangeTest(FixtureCase):
         self.assertEqual(c["method"]["params"], {"investigations": ["PSI-25"], "threshold_pct": 21.5})
         self.assertEqual(c["values"]["psi25_o2_min"]["unit"], "% O2")
         self.assertEqual(c["values"]["psi25_n_at_or_above"], {"value": 1, "unit": "tests"})
+        rows = [r for (r,) in self.con.execute(
+            "SELECT DISTINCT source_row FROM tests WHERE investigation = 'PSI-25' ORDER BY 1").fetchall()]
         self.assertEqual(c["evidence"], [{"investigation": "PSI-25", "doi": "10.60555/4qc4-de67", "table": BASS2_TABLE,
-                                          "columns": [BASS2_O2], "rows": "all"}])
+                                          "columns": [BASS2_O2], "rows": rows}])
+
+    def test_joined_field_sources_become_separate_columns(self):
+        groups = _group_rows([("PSI-69", "t.csv", 1, json.dumps({"diluent": "N2 col | CO2 col"}))], ("diluent",))
+        self.assertEqual(groups[("PSI-69", "t.csv")]["columns"], {"N2 col", "CO2 col"})
+
+    def test_sql_values_splits_joined_source_columns(self):
+        c = sql_values(self.con, "SELECT 'x' AS name, 1.0 AS value, 'u' AS unit, investigation, source_table, "
+                                 "[source_row] AS source_rows, ['A | B', 'C'] AS source_columns FROM tests "
+                                 "WHERE investigation = 'PSI-25' LIMIT 1")
+        self.assertEqual(c["evidence"][0]["columns"], ["A", "B", "C"])
 
     def test_o2_range_without_oxygen_tests(self):
         c = o2_range(self.con, ["PSI-101"], 30)
@@ -83,7 +95,7 @@ class CoverageTest(FixtureCase):
         self.assertIn("Challenge text", p["source"])
         self.assertEqual(c["n_tests"], 1)
         self.assertEqual([e["investigation"] for e in c["evidence"]], ["PSI-69"])
-        self.assertEqual(c["evidence"][0]["rows"], "all")
+        self.assertTrue(c["evidence"][0]["rows"] and all(isinstance(r, int) for r in c["evidence"][0]["rows"]))
 
     def test_coverage_unknown_environment(self):
         with self.assertRaisesRegex(ValueError, "no sourced atmosphere for space_station"):

@@ -95,7 +95,7 @@ def _gas_fractions(row: _Row, columns: dict[str, str]) -> None:
             names.append(gas)
     row.data["diluent"] = "+".join(names) or None
     if names:
-        row.sources["diluent"] = ", ".join(columns[g] for g in names)
+        row.sources["diluent"] = contract.SOURCE_SEPARATOR.join(columns[g] for g in names)
 
 
 def bass2(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:

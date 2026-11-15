@@ -13,6 +13,7 @@ from pathlib import Path
 
 import duckdb
 
+from scripts.contract import SOURCE_SEPARATOR
 from scripts.mdtable import parse_table
 from scripts.query import check_select_only
 
@@ -66,25 +67,22 @@ def _group_rows(rows, fields) -> dict:
         except json.JSONDecodeError:
             mapping = {}
         if isinstance(mapping, dict):
-            group["columns"].update(mapping[f] for f in fields if isinstance(mapping.get(f), str) and mapping[f])
+            group["columns"].update(c for f in fields if isinstance(mapping.get(f), str)
+                                    for c in mapping[f].split(SOURCE_SEPARATOR) if c)
     return groups
 
 
 def _evidence(con: duckdb.DuckDBPyConnection, groups: dict, order: list[str] | None = None) -> list[dict]:
     if not groups:
         return []
-    totals = {(inv, table): n for inv, table, n in con.execute(
-        "SELECT investigation, source_table, count(DISTINCT source_row) FROM tests GROUP BY 1, 2").fetchall()}
     dois = dict(con.execute("SELECT id, doi FROM investigations").fetchall())
     rank = {inv: i for i, inv in enumerate(order or [])}
     keys = sorted(groups, key=lambda k: (rank.get(k[0], len(rank)), _investigation_order(k[0]), k[1]))
     evidence = []
     for investigation, table in keys:
-        rows = sorted(groups[(investigation, table)]["rows"])
-        everything = totals.get((investigation, table)) == len(rows)
         evidence.append({"investigation": investigation, "doi": dois.get(investigation) or "", "table": table,
                          "columns": sorted(groups[(investigation, table)]["columns"]),
-                         "rows": "all" if everything else rows})
+                         "rows": sorted(groups[(investigation, table)]["rows"])})
     return evidence
 
 
@@ -219,7 +217,7 @@ def sql_values(con: duckdb.DuckDBPyConnection, sql: str) -> dict:
         values[name] = {"value": _sql_value(row["value"], n), "unit": unit}
         group = groups.setdefault((investigation, table), {"rows": set(), "columns": set()})
         group["rows"].update(rows)
-        group["columns"].update(c for c in source_columns if c)
+        group["columns"].update(part for c in source_columns for part in c.split(SOURCE_SEPARATOR) if part)
         pairs.update((table, r) for r in rows)
     formula = "The values returned by the SQL query in params, one row per value, each with the source rows it used."
     return _result("sql_query", {"sql": sql}, formula, values, len(pairs), _evidence(con, groups))
