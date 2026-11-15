@@ -24,6 +24,11 @@ const MODELS = {
 // Direction the camera looks from, relative to the model centre (Y-up).
 const VIEW_DIRECTION = new Vector3(0.75, 0.5, 1).normalize()
 const SPIN_RAD_PER_S = 0.1
+const STEP_RAD = Math.PI / 8
+
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
 
 function cssColor(element, name) {
   return getComputedStyle(element).getPropertyValue(name).trim()
@@ -32,11 +37,21 @@ function cssColor(element, name) {
 /**
  * The conceptual station model. `variant` picks the solid model (primary) or
  * the hologram (glTF LINES). The camera is framed from the model's real bounds.
- * With `interactive`, the viewer can be dragged to orbit.
+ * With `interactive`, the viewer can be dragged to orbit, and rotate buttons give
+ * the same control without dragging. The slow spin can always be paused, and
+ * starts paused when the system asks for reduced motion.
  */
 export default function StationViewer({ variant = 'solid', interactive = false, label }) {
   const hostRef = useRef(null)
   const [status, setStatus] = useState('loading')
+  const [paused, setPaused] = useState(prefersReducedMotion)
+  const pausedRef = useRef(paused)
+  const pivotRef = useRef(null)
+  pausedRef.current = paused
+
+  const step = (direction) => {
+    if (pivotRef.current) pivotRef.current.rotation.y += direction * STEP_RAD
+  }
 
   useEffect(() => {
     const host = hostRef.current
@@ -67,6 +82,7 @@ export default function StationViewer({ variant = 'solid', interactive = false, 
     const camera = new PerspectiveCamera(32, 1, 0.1, 500)
     const pivot = new Group()
     scene.add(pivot)
+    pivotRef.current = pivot
 
     const bounds = new Sphere(new Vector3(), 1)
     let lineMaterials = []
@@ -133,14 +149,13 @@ export default function StationViewer({ variant = 'solid', interactive = false, 
       controls.enableDamping = true
     }
 
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
     let last = performance.now()
     let raf = 0
     function tick(now) {
       raf = requestAnimationFrame(tick)
       const dt = Math.min((now - last) / 1000, 0.1)
       last = now
-      if (!reduceMotion.matches) pivot.rotation.y += dt * SPIN_RAD_PER_S
+      if (!pausedRef.current) pivot.rotation.y += dt * SPIN_RAD_PER_S
       controls?.update()
       renderer.render(scene, camera)
     }
@@ -153,6 +168,7 @@ export default function StationViewer({ variant = 'solid', interactive = false, 
 
     return () => {
       disposed = true
+      pivotRef.current = null
       cancelAnimationFrame(raf)
       resizeObserver.disconnect()
       themeObserver.disconnect()
@@ -176,6 +192,27 @@ export default function StationViewer({ variant = 'solid', interactive = false, 
         role="img"
         aria-label={label ?? 'Conceptual 3D model of a space station'}
       />
+      {status === 'ready' && (
+        <div className="station-controls" role="group" aria-label="Station model rotation">
+          {interactive && (
+            <button type="button" className="station-control" onClick={() => step(-1)} aria-label="Rotate left">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M15 6l-6 6 6 6" />
+              </svg>
+            </button>
+          )}
+          <button type="button" className="station-control station-control-text" onClick={() => setPaused((p) => !p)} aria-pressed={paused}>
+            {paused ? 'Resume rotation' : 'Pause rotation'}
+          </button>
+          {interactive && (
+            <button type="button" className="station-control" onClick={() => step(1)} aria-label="Rotate right">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
       {status === 'loading' && <p className="station-status">Loading station model…</p>}
       {status === 'error' && <p className="station-status">The station model could not be loaded.</p>}
       {status === 'unsupported' && (

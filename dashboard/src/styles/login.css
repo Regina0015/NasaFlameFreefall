@@ -1,0 +1,336 @@
+/* Cinematic login: full-screen Earth scene with a centered frosted-glass panel.
+   The scene is night-sky dark in both themes, so this page pins the dark tokens. */
+
+.cine {
+  --bg: #0a0f15;
+  --bg-raised: #0e141c;
+  --surface: #121a23;
+  --surface-2: #18222d;
+  --surface-inset: rgba(8, 12, 17, 0.55);
+  --border: #2b3a4a;
+  --border-strong: #44586d;
+  --text: #e6edf3;
+  --text-muted: #b2c0cd;
+  --text-faint: #8c9dae;
+  --accent: #53d8ed;
+  --accent-strong: #7fe4f3;
+  --accent-ink: #04222a;
+  --accent-soft: rgba(83, 216, 237, 0.12);
+  --danger: #ff7b72;
+  --danger-soft: rgba(255, 123, 114, 0.12);
+  --notice: #e3b866;
+  --notice-soft: rgba(227, 184, 102, 0.1);
+  --focus: #9aeaf6;
+  color-scheme: dark;
+  color: var(--text);
+
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: var(--space-4) var(--space-5);
+  background: #07090c;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.cine-scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+.earth-scene {
+  position: absolute;
+  inset: 0;
+}
+
+/* Fallback when WebGL is unavailable: a plain disc with a rim, drawn in CSS. */
+.cine[data-fallback] .cine-scene {
+  background:
+    radial-gradient(circle at 38% 36%, #2b4458 0, #13283a 38%, #0a1622 62%, transparent 63%) center / min(70vmin, 36rem) min(70vmin, 36rem) no-repeat,
+    #07090c;
+}
+
+/* Dims the edges and the area behind the panel so the form stays readable. */
+.cine-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 55% at 50% 50%, rgba(7, 9, 12, 0.35), transparent 75%),
+    radial-gradient(120% 100% at 50% 50%, transparent 55%, rgba(7, 9, 12, 0.7));
+}
+
+.cine-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.cine-main {
+  display: grid;
+  place-items: center;
+  padding-block: var(--space-5);
+}
+
+.cine-glass {
+  width: min(100%, 25rem);
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid rgba(190, 220, 245, 0.3);
+  border-radius: 14px;
+  /* Blue-gray glass: the translucency lives in the background only, never on the text. */
+  background:
+    linear-gradient(160deg, rgba(120, 160, 200, 0.16), rgba(120, 160, 200, 0) 45%),
+    linear-gradient(180deg, rgba(28, 42, 58, 0.34), rgba(14, 22, 32, 0.4));
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(150, 200, 235, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 0 22px rgba(120, 170, 215, 0.05);
+  opacity: 0;
+  transform: translateY(12px);
+  visibility: hidden;
+  transition:
+    opacity 700ms var(--ease-out),
+    transform 700ms var(--ease-out),
+    visibility 0s linear 700ms;
+}
+
+.cine[data-revealed='true'] .cine-glass {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* Without blur support, or when the person asks for less transparency, the panel is opaque. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .cine-glass {
+    background: #121a24;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .cine-glass {
+    background: #121a24;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+.cine-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.cine-glass > .segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.cine-glass form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.cine-glass input {
+  background: rgba(6, 10, 15, 0.34);
+  border-color: rgba(190, 215, 240, 0.38);
+}
+
+.cine-glass input:hover {
+  border-color: rgba(190, 215, 240, 0.55);
+}
+
+.cine-glass input:focus-visible {
+  background: rgba(6, 10, 15, 0.55);
+  border-color: var(--accent);
+}
+
+/* Short notice with the longer explanation behind a Details link. */
+.cine-glass .notice-compact {
+  padding: var(--space-2) var(--space-3);
+  gap: var(--space-1);
+  background: rgba(227, 184, 102, 0.08);
+}
+
+.notice-compact strong {
+  font-size: var(--text-sm);
+}
+
+.notice-compact summary {
+  width: fit-content;
+  color: var(--accent);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.notice-compact details p {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.cine-actions {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-4);
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: calc(100vw - 2 * var(--space-5));
+}
+
+.cine-actions .btn {
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+  font-size: var(--text-xs);
+  background: rgba(14, 20, 28, 0.6);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.cine-skip {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  background: rgba(14, 20, 28, 0.7);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: cine-in 600ms var(--ease-out) 600ms both;
+}
+
+.cine-foot {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  max-width: 28rem;
+}
+
+@keyframes cine-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  .cine {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .cine-glass {
+    padding: var(--space-4);
+  }
+
+  .cine-skip {
+    right: var(--space-4);
+    bottom: var(--space-4);
+  }
+
+  .cine-actions {
+    right: var(--space-4);
+    max-width: calc(100vw - 2 * var(--space-4));
+  }
+
+  /* Room below the panel for the fixed Skip/Replay button. */
+  .cine-main {
+    padding-bottom: 6.5rem;
+  }
+
+  /* The skip button is only shown during the intro, when the panel is hidden. */
+  .cine-foot {
+    padding-right: 7rem;
+  }
+
+  .cine[data-revealed='true'] .cine-foot {
+    padding-right: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cine-glass {
+    transform: none;
+    transition: none;
+  }
+
+  .cine-skip {
+    animation: none;
+  }
+}
+
+/* Auth views */
+
+.cine-glass form {
+  gap: var(--space-3);
+}
+
+.cine-glass .fields {
+  gap: var(--space-3);
+}
+
+.cine-hint {
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.field-hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.form-success {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid rgba(83, 216, 237, 0.45);
+  border-radius: var(--radius-md);
+  background: rgba(83, 216, 237, 0.1);
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+.link-button {
+  justify-self: end;
+  padding: var(--space-1) 0;
+  min-height: 1.75rem;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: var(--accent-strong);
+}
+
+.cine-alt {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.cine-stack {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.cine-glass h2:focus {
+  outline: none;
+}
