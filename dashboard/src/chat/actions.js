@@ -32,7 +32,7 @@ export function browserActionFrom(tools) {
       const scenario = SCENARIOS.find((s) => s.id === 'lunar_base')
       if (scenario) {
         return {
-          filters: { phase: '', fuel: '', o2Min: String(scenario.o2Min), pressureMaxPsi: String(scenario.pressureMaxPsi) },
+          filters: { phase: '', fuel: '', o2Min: String(scenario.o2Min), pressureMaxPsi: String(scenario.pressureMaxPsi), excludeBurner: Boolean(scenario.excludeBurner) },
           scenarioId: scenario.id,
           description: `${scenario.label}: at least ${scenario.o2Min}% oxygen and at most ${scenario.pressureMaxPsi} psi`,
         }
@@ -84,7 +84,7 @@ function filtersAction(action) {
     const scenario = SCENARIOS.find((s) => s.id === action.scenario)
     if (!scenario) return null
     return {
-      filters: { phase: '', fuel: '', o2Min: String(scenario.o2Min), pressureMaxPsi: String(scenario.pressureMaxPsi) },
+      filters: { phase: '', fuel: '', o2Min: String(scenario.o2Min), pressureMaxPsi: String(scenario.pressureMaxPsi), excludeBurner: Boolean(scenario.excludeBurner) },
       scenarioId: scenario.id,
       description: `${scenario.label}: at least ${scenario.o2Min}% oxygen and at most ${scenario.pressureMaxPsi} psi`,
     }

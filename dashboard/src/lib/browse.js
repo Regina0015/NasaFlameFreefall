@@ -22,12 +22,19 @@ export function pressureLowPsi(test) {
   return atm === null ? null : atm * PSI_PER_ATM
 }
 
+// The project leaves burner-stream tests out of any comparison with a habitat atmosphere: their oxygen is the burner
+// stream, not the chamber (scripts/functions.py coverage_by_environment). The database marks them in `problems`.
+export function isBurnerStream(test) {
+  return String(test.problems ?? '').includes('burner stream')
+}
+
 export function hasFilters(f) {
-  return Boolean(f.phase || f.fuel.trim() || f.o2Min !== '' || f.pressureMaxPsi !== '')
+  return Boolean(f.phase || f.fuel.trim() || f.o2Min !== '' || f.pressureMaxPsi !== '' || f.excludeBurner)
 }
 
 export function testMatches(test, f) {
   if (f.phase && test.phase !== f.phase) return false
+  if (f.excludeBurner && isBurnerStream(test)) return false
   if (f.fuel.trim() && !(test.fuel ?? '').toLowerCase().includes(f.fuel.trim().toLowerCase())) return false
   if (f.o2Min !== '') {
     const high = o2High(test)

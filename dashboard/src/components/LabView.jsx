@@ -110,6 +110,10 @@ export default function LabView({ evidence, view, labelFor }) {
               <span>Fuel or material</span>
               <input value={lab.fuel} onChange={(e) => set({ fuel: e.target.value })} placeholder="For example PMMA" />
             </label>
+            <label className="mp-check">
+              <input type="checkbox" checked={lab.excludeBurner} onChange={(e) => set({ excludeBurner: e.target.checked })} />
+              <span>Leave out burner-stream tests (documented)</span>
+            </label>
             <button type="button" className="btn btn-ghost btn-compact" disabled={isDefault(lab)} onClick={() => set({ ...OFFICIAL })}>
               Back to the documented reading
             </button>
@@ -117,7 +121,7 @@ export default function LabView({ evidence, view, labelFor }) {
 
           <p className="muted ev-hint">
             Documented reading: a test counts when its highest recorded oxygen is at least {OFFICIAL.o2Min}% and its lowest recorded pressure is at most {OFFICIAL.pressureMaxPsi} psi. The{' '}
-            {scenario.label.toLowerCase()} is sourced from {scenario.source}. A test with no oxygen or no pressure value never counts.
+            {scenario.label.toLowerCase()} is sourced from {scenario.source}. Burner-stream tests are left out because their oxygen is the burner stream, not the chamber. A test with no oxygen or no pressure value never counts.
           </p>
 
           <div className="ev-table-wrap">

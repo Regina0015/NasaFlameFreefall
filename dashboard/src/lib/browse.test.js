@@ -47,3 +47,10 @@ test('fuel options and per-phase coverage come from the loaded rows', () => {
   const solid = coverageByPhase(tests).find((r) => r.phase === 'solid')
   assert.deepEqual([solid.tests, solid.noO2, solid.noPressure], [3, 1, 1])
 })
+
+test('burner-stream tests can be left out, as the project does for atmosphere comparisons', () => {
+  const burner = { investigation: 'C', fuel: 'C2H4', phase: 'gas', o2_pct_min: 85, o2_pct_max: 85, pressure_atm_min: 0.5, problems: 'burner stream; other note' }
+  assert.equal(testMatches(burner, { ...none, o2Min: '30' }), true)
+  assert.equal(testMatches(burner, { ...none, o2Min: '30', excludeBurner: true }), false)
+  assert.equal(hasFilters({ ...none, excludeBurner: true }), true)
+})

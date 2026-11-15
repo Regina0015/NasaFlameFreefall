@@ -27,8 +27,8 @@
   background:
     radial-gradient(52rem 34rem at 78% -8%, var(--stage-glow), transparent 70%),
     radial-gradient(40rem 30rem at -5% 105%, var(--accent-soft), transparent 70%),
-    linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 48px 48px,
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 24px 24px,
     var(--bg);
 }
 
@@ -1687,4 +1687,18 @@
   border-bottom: 1px solid var(--border);
   text-align: left;
   vertical-align: top;
+}
+
+/* Entry transition: the dashboard loads underneath the scene; its content enters when the scene fades. */
+
+.ws[data-entry='pending'] .ws-reveal {
+  animation-play-state: paused;
+}
+
+.ws[data-entry='pending'] .ws-bar {
+  opacity: 0;
+}
+
+.ws[data-entry='reveal'] .ws-bar {
+  animation: ws-in 520ms var(--ease-out) both;
 }

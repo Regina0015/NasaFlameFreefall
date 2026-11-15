@@ -20,6 +20,15 @@ function localFindings(env) {
   return { name: 'local-findings', configureServer: mount, configurePreviewServer: mount }
 }
 
+// Mounts the read-only proxy to the Auditor gateway at /api/auditor. The gateway address and key stay on the server.
+function auditorProxy(env) {
+  const mount = async (server) => {
+    const { createAuditorHandler } = await import('./auditor/server.js')
+    server.middlewares.use('/api/auditor', createAuditorHandler(env))
+  }
+  return { name: 'auditor-proxy', configureServer: mount, configurePreviewServer: mount }
+}
+
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), localChat(loadEnv(mode, process.cwd(), '')), localFindings(loadEnv(mode, process.cwd(), ''))],
+  plugins: [react(), localChat(loadEnv(mode, process.cwd(), '')), localFindings(loadEnv(mode, process.cwd(), '')), auditorProxy(loadEnv(mode, process.cwd(), ''))],
 }))

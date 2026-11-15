@@ -1,4 +1,4 @@
-import { PHASES, PSI_PER_ATM } from './browse.js'
+import { PHASES, PSI_PER_ATM, isBurnerStream } from './browse.js'
 
 // Interpretation lab: "what if the data were read differently?" It recounts LOADED test rows under reading
 // choices the data really supports, next to the project's documented reading. It is a sensitivity check on counts.
@@ -7,14 +7,14 @@ import { PHASES, PSI_PER_ATM } from './browse.js'
 //
 // The documented reading (scripts/functions.py, _config/environments.md): a test reaches the oxygen when its highest
 // recorded oxygen is at least the threshold; it meets the pressure when its lowest recorded pressure is at or below
-// the limit; a test with no oxygen or no pressure never matches. 30% oxygen and 10.2 psi are the lunar base definition.
+// the limit; a test with no oxygen or no pressure never matches; burner-stream tests (marked in `problems`) are left out
+// because their oxygen is the burner stream, not the chamber. 30% oxygen and 10.2 psi are the lunar base definition.
 
-export const OFFICIAL = { o2Min: 30, o2Reading: 'highest', pressureMaxPsi: 10.2, pressureReading: 'lowest', tier: 'all', phase: '', fuel: '' }
+export const OFFICIAL = { o2Min: 30, o2Reading: 'highest', pressureMaxPsi: 10.2, pressureReading: 'lowest', tier: 'all', phase: '', fuel: '', excludeBurner: true }
 
 export const UNAVAILABLE = [
   { label: 'Pressure column: initial, mean or final', need: 'The database keeps only each row’s lowest and highest pressure. The original initial/mean/final columns are not normalized.' },
   { label: 'Oxygen unit: fraction or percent; mole or volume', need: 'Oxygen is stored as a percent, with mole and volume fraction treated as equal. There is no field to separate them.' },
-  { label: 'Include or exclude inverse flames', need: 'No normalized field marks inverse flames.' },
   { label: 'Save a lab result', need: 'There is no place to store lab output, and nothing from the lab is a finding. A result worth keeping must be asked as a real question so it is calculated and audited.' },
 ]
 
@@ -36,6 +36,7 @@ function pressurePsi(test, reading) {
 
 export function reaches(test, choice) {
   if (choice.phase && test.phase !== choice.phase) return false
+  if (choice.excludeBurner && isBurnerStream(test)) return false
   if (choice.fuel && !(test.fuel ?? '').toLowerCase().includes(choice.fuel.toLowerCase())) return false
   const o2 = oxygen(test, choice.o2Reading)
   const psi = pressurePsi(test, choice.pressureReading)
@@ -88,5 +89,6 @@ export function questionFor(lab) {
   if (lab.phase) parts.push(`${lab.phase} fuels`)
   if (lab.fuel) parts.push(`fuel ${lab.fuel}`)
   if (lab.tier === 1) parts.push('Tier 1 investigations only')
+  if (!lab.excludeBurner) parts.push('burner-stream tests included')
   return `How many PSI tests had ${parts.join(', ')}?`
 }

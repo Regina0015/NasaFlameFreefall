@@ -6,7 +6,7 @@ const MAX_PAGES = 60
 const PHASES = ['solid', 'droplet', 'gas', 'smoke']
 
 const TEST_COLUMNS =
-  'test_id,investigation,source_table,source_row,fuel,phase,gravity,o2_pct_min,o2_pct_max,pressure_atm_min,pressure_atm_max,outcome'
+  'test_id,investigation,source_table,source_row,fuel,phase,gravity,o2_pct_min,o2_pct_max,pressure_atm_min,pressure_atm_max,outcome,problems'
 const INVESTIGATION_COLUMNS =
   'id,acronym,label,title,doi,type,platform,hardware,tier,tier_reason,pillar,environments,summary_student,summary_professional'
 const RELATION_COLUMNS = 'id,from_id,to_id,type,source'

@@ -74,7 +74,7 @@ test('the adapters report why each source is unavailable and never invent findin
   const none = await loadFindings({ fetchImpl: async () => new Response('<!doctype html>', { status: 200 }) })
   assert.equal(none.source, null)
   assert.equal(none.items.length, 0)
-  assert.equal(none.attempts.length, 2)
+  assert.equal(none.attempts.length, 3)
   assert.match(none.attempts[0].message, /no findings table/)
   assert.match(none.attempts[1].message, /npm run dev/)
 

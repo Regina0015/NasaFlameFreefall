@@ -54,3 +54,11 @@ test('cited rows are looked up by source table and row number', () => {
   assert.equal(all.found.length, 3)
   assert.equal(citedRows({ table: 'Z.csv', rows: 'all' }, tests).tableLoaded, 0)
 })
+
+test('lab: the documented reading leaves out burner-stream tests; including them is a visible choice', () => {
+  const burner = { test_id: 'b1', investigation: 'B', source_table: 'B.csv', source_row: 9, phase: 'gas', fuel: 'C2H4', o2_pct_min: 85, o2_pct_max: 85, pressure_atm_min: 0.5, problems: 'burner stream' }
+  assert.equal(reaches(burner, OFFICIAL), false)
+  assert.equal(reaches(burner, { ...OFFICIAL, excludeBurner: false }), true)
+  assert.equal(compare({ tests: [burner], investigations, lab: { ...OFFICIAL, excludeBurner: false } }).totals.lab, 1)
+  assert.equal(compare({ tests: [burner], investigations, lab: { ...OFFICIAL, excludeBurner: false } }).totals.official, 0)
+})

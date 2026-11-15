@@ -5,11 +5,11 @@
   color-scheme: dark;
 
   /* Surfaces: graphite and blue-gray */
-  --bg: #10171f;
-  --bg-raised: #141d27;
+  --bg: #080b0f;
+  --bg-raised: #0d1218;
   --surface: #18222d;
   --surface-2: #22303e;
-  --surface-inset: #0e151c;
+  --surface-inset: #090d12;
   --border: #354455;
   --border-strong: #4b6076;
 
@@ -42,7 +42,7 @@
   --grade-critical: #d03b3b;
 
   --focus: #9aeaf6;
-  --grid-line: rgba(120, 160, 190, 0.07);
+  --grid-line: rgba(120, 160, 190, 0.1);
   --stage-glow: rgba(83, 216, 237, 0.1);
   --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
 

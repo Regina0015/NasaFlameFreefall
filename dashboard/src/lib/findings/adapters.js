@@ -49,7 +49,64 @@ export const localFilesAdapter = {
   },
 }
 
-export const ADAPTERS = [databaseAdapter, localFilesAdapter]
+// Findings and grades from the Auditor gateway, read through the server-side proxy (/api/auditor). The proxy holds the
+// gateway address and API key; the browser never sees them. A grade counts only when the gateway says the audit is
+// not stale AND the full audit it returns names the same finding version, SHA-256 and grade. Anything else is
+// "not audited yet", never a grade. A missing setting, an unreachable gateway or a rejected key makes this source
+// unavailable.
+export const auditorGatewayAdapter = {
+  id: 'auditor-gateway',
+  label: 'Auditor gateway',
+  async load({ fetchImpl = fetch } = {}) {
+    const get = async (path) => {
+      const response = await fetchImpl(`/api/auditor${path}`, { headers: { Accept: 'application/json' } })
+      let body = null
+      try {
+        body = await response.json()
+      } catch {
+        // Not JSON: handled below.
+      }
+      return { response, body }
+    }
+
+    let listing
+    try {
+      listing = await get('/findings?include_rejected=true')
+    } catch {
+      return { status: 'unavailable', message: 'The Auditor proxy could not be reached.' }
+    }
+    if (!listing.body) return { status: 'unavailable', message: 'The Auditor proxy does not exist here. It only runs with npm run dev.' }
+    if (!listing.response.ok) return { status: 'unavailable', message: listing.body.error || `The Auditor proxy answered ${listing.response.status}.` }
+    const rows = listing.body.findings
+    if (!Array.isArray(rows) || !rows.every((r) => r && typeof r.finding_id === 'string' && r.finding && typeof r.finding === 'object')) {
+      return { status: 'unavailable', message: 'The Auditor gateway returned an unexpected shape.' }
+    }
+
+    const entries = await Promise.all(
+      rows.map(async (row) => {
+        const id = row.finding_id
+        const base = { id, finding: row.finding, sha256: row.finding_sha256 ?? null, audit: null }
+        if (row.grade === 'pending audit') return { ...base, auditStatus: 'none', auditNote: 'The gateway has no audit for this finding yet.' }
+        if (row.stale_audit) return { ...base, auditStatus: 'stale', auditNote: 'The gateway says this finding changed after its audit, so the audit verifies nothing.' }
+        try {
+          const { response, body } = await get(`/audits/${id}`)
+          const audit = body?.audit
+          if (!response.ok || !audit) throw new Error('no audit')
+          const same = audit.finding_version === row.finding?.version && audit.finding_sha256 === row.finding_sha256 && audit.grade === row.grade
+          if (!same) {
+            return { ...base, auditStatus: 'stale', auditNote: 'The audit the gateway returned does not match this version of the finding (version, SHA-256 or grade differ).' }
+          }
+          return { ...base, audit, auditStatus: 'matched', auditNote: `Audit of version ${audit.finding_version} matches this finding (SHA-256 verified by the gateway and checked again here).` }
+        } catch {
+          return { ...base, auditStatus: 'stale', auditNote: 'The full audit could not be read from the gateway, so no grade is shown.' }
+        }
+      }),
+    )
+    return { status: 'ok', findings: entries, generatedAt: new Date().toISOString() }
+  },
+}
+
+export const ADAPTERS = [databaseAdapter, auditorGatewayAdapter, localFilesAdapter]
 
 // Tries each adapter in order and classifies what the first usable one returns.
 export async function loadFindings({ adapters = ADAPTERS, fetchImpl, policy } = {}) {

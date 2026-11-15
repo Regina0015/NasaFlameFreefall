@@ -5,7 +5,7 @@ import { Segmented } from './ui.jsx'
 import { SCENARIOS } from '../lib/scenarios.js'
 
 const PHASE_LABELS = { solid: 'Solid fuels', droplet: 'Liquid droplets', gas: 'Gas flames', smoke: 'Smoke' }
-const EMPTY = { phase: '', fuel: '', o2Min: '', pressureMaxPsi: '' }
+const EMPTY = { phase: '', fuel: '', o2Min: '', pressureMaxPsi: '', excludeBurner: false }
 const PAGE = 10
 
 const fmt = (n) => n.toLocaleString('en-US')
@@ -63,7 +63,7 @@ export default function InvestigationBrowser({ evidence, view, onOpenMap, onOpen
     setFromResult(null)
     setScenario(s.id)
     setShowAll(false)
-    setFilters({ ...EMPTY, o2Min: String(s.o2Min), pressureMaxPsi: String(s.pressureMaxPsi) })
+    setFilters({ ...EMPTY, o2Min: String(s.o2Min), pressureMaxPsi: String(s.pressureMaxPsi), excludeBurner: Boolean(s.excludeBurner) })
   }
 
   return (
@@ -129,7 +129,7 @@ export default function InvestigationBrowser({ evidence, view, onOpenMap, onOpen
           {activeScenario && (
             <p className="fd-note" role="note">
               {activeScenario.label}: at least {activeScenario.o2Min}% oxygen and at most {activeScenario.pressureMaxPsi} psi. Source: {activeScenario.source}.{' '}
-              {activeScenario.limitation}
+              {activeScenario.limitation} Burner-stream tests are left out, as the project does for atmosphere comparisons: their oxygen is the burner stream, not the chamber.
             </p>
           )}
 
@@ -166,6 +166,11 @@ export default function InvestigationBrowser({ evidence, view, onOpenMap, onOpen
             <label className="mp-field">
               <span>Pressure at most (psi)</span>
               <input type="number" min="0" step="any" inputMode="decimal" value={filters.pressureMaxPsi} onChange={(e) => set({ pressureMaxPsi: e.target.value })} />
+            </label>
+
+            <label className="mp-check">
+              <input type="checkbox" checked={filters.excludeBurner} onChange={(e) => set({ excludeBurner: e.target.checked })} />
+              <span>Leave out burner-stream tests</span>
             </label>
 
             <button

@@ -7,6 +7,7 @@ export const SCENARIOS = [
     label: 'Lunar base definition',
     o2Min: 30,
     pressureMaxPsi: 10.2,
+    excludeBurner: true, // the project's rule for atmosphere comparisons
     source: 'Challenge text, "Spacesuits and oxygen concentration" (via _config/environments.md)',
     limitation: 'PSI has no partial-gravity combustion data: every test here is microgravity, which does not directly describe lunar gravity.',
   },

@@ -3,6 +3,10 @@
 .env.*
 !.env.example
 *.key
+*.pem
+credentials*.json
+service-account*.json
+dashboard/.env.local
 CLAUDE.local.md
 .claude/settings.local.json
 

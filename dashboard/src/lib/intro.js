@@ -34,6 +34,66 @@ export const smoother = (x) => {
 export const easeOut = (x) => 1 - Math.pow(1 - clamp01(x), 3)
 export const range = (t, a, b) => clamp01((t - a) / (b - a))
 
+// Post-login docking transition (seconds from the moment sign-in or Explore demo is confirmed).
+// About 5 s in total. Everything on screen follows these constants; adjust them here.
+export const DIVE = {
+  FORM_OUT: 0.45, // the login panel fades out
+  FLIGHT: 3.8, // camera flight: accelerates, then eases into the docking position
+  RING_IN_START: 0.2, // the conceptual docking ring fades in
+  RING_IN_END: 1.6,
+  WELCOME_IN: 2.4, // the welcome panel appears while the camera slows down
+  WELCOME_FADE: 0.55,
+  WELCOME_OUT: 4.3, // and leaves after a short, readable hold
+  REVEAL: 4.4, // the scene fades out and the dashboard content starts its entrance
+  FADE_OUT: 0.65,
+  TOTAL: 5.1, // the scene layer is removed
+  SKIP_FADE: 0.3, // when the person skips
+  STREAK_SHIFT: 70, // how far the star field streams past the camera over the flight (scene units)
+}
+
+// Flight progress 0..1 and normalized speed 0..1 (the derivative of the same curve).
+export const diveProgress = (t) => smoother(t / DIVE.FLIGHT)
+export const diveSpeed = (t) => {
+  const u = clamp01(t / DIVE.FLIGHT)
+  return (30 * u * u * (1 - u) * (1 - u)) / 1.875
+}
+
+/**
+ * Finds the flat, forward-facing end cap of a module near the station core from surface samples in
+ * unit space (the +Z side is the front). Purely geometric: no mesh names. Returns
+ * { center: [x, y, z], radius } or null when no such cap exists, so the camera falls back to the core.
+ */
+export function findDockingTarget(points) {
+  const count = points.length / 3
+  let zMax = -Infinity
+  for (let i = 0; i < count; i++) if (points[i * 3 + 2] > zMax) zMax = points[i * 3 + 2]
+  if (!Number.isFinite(zMax)) return null
+  let n = 0
+  let sx = 0
+  let sy = 0
+  let xMin = Infinity
+  let xMax = -Infinity
+  let yMin = Infinity
+  let yMax = -Infinity
+  for (let i = 0; i < count; i++) {
+    const x = points[i * 3]
+    const y = points[i * 3 + 1]
+    const z = points[i * 3 + 2]
+    if (Math.abs(x) > 0.03 || y < -0.3 || y > 0.12 || z < zMax - 0.004) continue
+    n += 1
+    sx += x
+    sy += y
+    xMin = Math.min(xMin, x)
+    xMax = Math.max(xMax, x)
+    yMin = Math.min(yMin, y)
+    yMax = Math.max(yMax, y)
+  }
+  if (n < 40) return null
+  const radius = Math.max(xMax - xMin, yMax - yMin) / 2
+  if (!(radius > 0.004)) return null
+  return { center: [sx / n, sy / n, zMax], radius }
+}
+
 // Small seeded random generator so every run looks the same.
 export function mulberry32(seed) {
   let a = seed >>> 0

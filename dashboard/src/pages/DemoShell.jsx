@@ -1,7 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Brand, Segmented, ThemeToggle } from '../components/ui.jsx'
 import Evidence, { formatTime } from '../components/Evidence.jsx'
-import Welcome, { welcomeSeen } from '../components/Welcome.jsx'
 import MapView from '../components/MapView.jsx'
 import FindingsView from '../components/FindingsView.jsx'
 import FindingsSummary from '../components/FindingsSummary.jsx'
@@ -75,7 +74,7 @@ function ConnectionLine({ label, children }) {
   )
 }
 
-export default function DemoShell({ mode, initialView, session, theme, onToggleTheme, onLeave }) {
+export default function DemoShell({ mode, initialView, session, theme, entering, onToggleTheme, onLeave }) {
   const [view, setView] = useState(initialView === 'professional' ? 'cientifico' : 'estudiante')
   const [model, setModel] = useState('iss')
   const [habitatMode, setHabitatMode] = useState('cutaway')
@@ -91,7 +90,6 @@ export default function DemoShell({ mode, initialView, session, theme, onToggleT
   const [browserPreset, setBrowserPreset] = useState(null)
   const [depth, setDepth] = useState(0) // how many steps of in-app navigation can be undone with Back
   const [cameFrom, setCameFrom] = useState(null)
-  const [welcome, setWelcome] = useState(() => !welcomeSeen())
 
   const evidence = useEvidence()
   const findings = useFindings()
@@ -259,9 +257,10 @@ export default function DemoShell({ mode, initialView, session, theme, onToggleT
   const explorerActive = workspace === 'explorer'
 
   return (
-    <div className="ws">
-      {/* The workspace is inert while the entry transition covers it, so focus cannot wander behind it. */}
-      <div className="ws-shell" inert={welcome || undefined}>
+    <div className="ws" data-entry={entering}>
+      {/* The workspace is inert while the entry transition covers it, so focus cannot wander behind it.
+          Its data keeps loading underneath; the cinematic never claims anything has finished. */}
+      <div className="ws-shell" inert={entering ? true : undefined}>
         <header className="ws-bar">
           <Brand />
 
@@ -502,8 +501,6 @@ export default function DemoShell({ mode, initialView, session, theme, onToggleT
 
         <AssistantLauncher chat={chat} view={view} onOpenResult={showLatestResult} />
       </div>
-
-      {welcome && <Welcome account={!isDemo} onDone={() => setWelcome(false)} />}
     </div>
   )
 }
