@@ -19,9 +19,11 @@ The dashboard only shows results that went through all three. It has two views: 
 | Folder | Contents |
 |---|---|
 | `stages/` | Six numbered stages: ingest, normalize, investigate, calculate, audit and publish. Each has a `CONTEXT.md` that states what it reads, what it does and what it delivers |
-| `_config/` | Shared rules: models per agent, confidence grade, data schema, crew environments and the two views |
+| `_config/` | Shared context for the agents: challenge summary, tier table, crew environments, the two views, confidence grade, data schema, models |
+| `data/snapshot/` | The normalized PSI data the Calculator reads (temporary copy until the database export exists) |
+| `.claude/` | The Investigator and Calculator agents and their commands (`/investigate`, `/ask`, `/chart`, `/graph`) |
 | `schemas/` | Exact format of the data passed between stages, with examples |
-| `scripts/` | Python code for each task (empty for now) |
+| `scripts/` | Python tools for every deterministic step: download, normalize, query, calculate, check, chart |
 | `supabase/` | `schema.sql`: the database tables |
 | `dashboard/` | The React web app; reads from Supabase |
 | `docs/` | Challenge text, PSI data inventory, Calculator output format, and the ICM paper |
@@ -51,7 +53,22 @@ Full spec: `docs/calculator-output.md`. Schema: `schemas/finding.schema.json`. E
 
 ## Status
 
-Skeleton. The Calculator output format is drafted; scripts are empty and the dashboard only shows sample data. Some project documents are still in Spanish and are being translated: the whole project will be in English.
+Branch `calculator-agent`. Setup: `uv sync` (needs uv and Python 3.12+); tests: `uv run python -m unittest discover -s scripts/tests -t .` (see `CLAUDE.md`).
+
+**Works now**
+
+- PSI download (24 combustion investigations, 22 test tables) and the data snapshot: 967 tests from 9 tables of 8 investigations, tiers, and 63 relations between investigations.
+- Read-only SQL over the snapshot (`scripts.query`), a tested calculation catalog (`o2_range`, `coverage_by_environment`, `sql_query`) and calc files (`scripts.run_calc`).
+- Findings checked before they are saved (`scripts.write_finding`): every number in the text must come from the computed values, and every finding validates against `schemas/finding.schema.json`.
+- Charts (Vega-Lite 6) and proof graphs on request, saved as a new version of the finding.
+- Agent commands in Claude Code: `/investigate`, `/ask "<question>"`, `/chart F-001`, `/graph F-001`.
+- Eight demo findings in `stages/04_calcular/output/findings/` from `docs/demo-questions.md` (draft for team review), including the lunar oxygen gap and a `no_data` answer.
+
+**Waiting on teammates**
+
+- **Auditor:** `scripts.audit_step` runs the teammate's `scripts/auditar.py` and reads `stages/05_auditar/output/audits/`. Its model step (C8) needs Ollama with `gemma4:e4b-it-qat`; recalculators for `coverage_by_environment` and `sql_query`, and a total-count value name (`_n_tests`), are still to come. No grade is ever invented.
+- **Database:** run `/investigate` once from a fresh pull, review its output, then define the findings table; the publish script comes after that. If the database export changes the snapshot columns, the query tool reports the missing ones by name.
+- **Dashboard:** reads findings from the database; it draws `chart` (Vega-Lite 6) and `graph` from the finding file.
 
 ## Notes
 

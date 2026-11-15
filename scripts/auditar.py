@@ -1,7 +1,7 @@
 """Etapa 05 — Auditor: comprueba cada hallazgo (finding) por un camino independiente
 y le asigna un grado de confianza. No corrige nada: solo reporta.
 
-Leer antes: stages/05_auditar/CONTEXT.md, _config/confianza.md y
+Leer antes: stages/05_auditar/CONTEXT.md, _config/confidence.md y
 stages/05_auditar/references/lista-revision.md.
 
 Lee:
@@ -46,12 +46,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMAS = ROOT / "schemas"
 
-# --- Umbrales PROVISIONALES (ver _config/confianza.md; el equipo puede cambiarlos) ---
+# --- Umbrales PROVISIONALES (ver _config/confidence.md; el equipo puede cambiarlos) ---
 RECALC_REL_TOL = 1e-6      # C3: tolerancia relativa del recálculo. Los conteos deben ser exactos.
 SUPPORT_BROAD_MIN = 30     # C5: pruebas mínimas para "soporte amplio".
 QUALITY_MINOR_MIN = 0.90   # C7: fracción mínima de celdas legibles para "problemas menores".
 
-# --- Modelo local (ver _config/modelos.md) ---
+# --- Modelo local (ver _config/models.md) ---
 DEFAULT_MODEL = "gemma4:e4b-it-qat"
 DEFAULT_OLLAMA_URL = "http://localhost:11434"
 MODEL_OPTIONS = {"temperature": 0, "seed": 42, "num_ctx": 8192}
@@ -855,7 +855,7 @@ def review_template(audit: dict, existing: dict | None) -> dict | None:
 
 
 def assign_grade(status: str, results: dict[str, str], quality: str | None) -> tuple[str, list[str]]:
-    """Reglas de _config/confianza.md. quality: clean | minor | many | None."""
+    """Reglas de _config/confidence.md. quality: clean | minor | many | None."""
     failed = {c for c, r in results.items() if r == "fail"}
     hard = sorted(failed & set(HARD_CHECKS))
     if hard:

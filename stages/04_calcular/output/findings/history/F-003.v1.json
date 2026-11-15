@@ -1,0 +1,92 @@
+{
+  "id": "F-003",
+  "version": 1,
+  "question": "How did FLEX droplet flames end with each diluent gas (nitrogen, carbon dioxide, helium)?",
+  "status": "has_data",
+  "claim": "Most FLEX droplet flames ended in extinction with every diluent: 58 of 101 with nitrogen, 88 of 123 with nitrogen and carbon dioxide, and 40 of 50 with nitrogen and helium.",
+  "summary_student": "In space, burning fuel droplets often went out before the fuel was used up. This happened in most tests, whether the air around them was diluted with nitrogen, carbon dioxide or helium.",
+  "summary_professional": "FLEX (PSI-69) test end by ambient diluent: N2 101 tests, 58 extinction; N2+CO2 123 tests, 88 extinction; N2+He 50 tests, 40 extinction (n = 274). The other test ends recorded are disruption and completion.",
+  "values": {
+    "psi69_n2_co2_extinction": {
+      "value": 88,
+      "unit": "tests"
+    },
+    "psi69_n2_co2_tests": {
+      "value": 123,
+      "unit": "tests"
+    },
+    "psi69_n2_extinction": {
+      "value": 58,
+      "unit": "tests"
+    },
+    "psi69_n2_he_extinction": {
+      "value": 40,
+      "unit": "tests"
+    },
+    "psi69_n2_he_tests": {
+      "value": 50,
+      "unit": "tests"
+    },
+    "psi69_n2_tests": {
+      "value": 101,
+      "unit": "tests"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "SELECT 'psi69_' || lower(replace(diluent, '+', '_')) || '_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.diluent')) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND diluent IS NOT NULL GROUP BY investigation, source_table, diluent UNION ALL SELECT 'psi69_' || lower(replace(diluent, '+', '_')) || '_extinction' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list_distinct(list_concat(list(json_extract_string(field_sources, '$.diluent')), list(json_extract_string(field_sources, '$.outcome')))) AS source_columns FROM tests WHERE investigation = 'PSI-69' AND diluent IS NOT NULL AND outcome = 'extinction' GROUP BY investigation, source_table, diluent ORDER BY name"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-69",
+      "doi": "10.60555/mbq8-0451",
+      "table": "PSI-69_Experimental table_FLEX.csv",
+      "columns": [
+        "N initial ambient composition; mole fraction",
+        "N initial ambient composition; mole fraction, CO initial ambient composition; mole fraction",
+        "N initial ambient composition; mole fraction, He initial ambient composition; mole fraction",
+        "Test end"
+      ],
+      "rows": "all"
+    }
+  ],
+  "n_tests": 274,
+  "assumptions": [
+    "\"Extinction\" is the test end recorded in the FLEX table (column \"Test end\"); PSI does not define it further.",
+    "Tests are grouped by the diluent gases named in the FLEX table."
+  ],
+  "limitations": [
+    "Counts outcomes only; oxygen level, pressure and droplet size also differ between tests and were not held equal.",
+    "Does not show that carbon dioxide or helium suppress fires better: the groups are not matched experiments.",
+    "Covers only FLEX droplet fuels (heptane and methanol), not solid materials."
+  ],
+  "warnings": [],
+  "environments": [
+    "space_station",
+    "transit_vehicle"
+  ],
+  "tier": 1,
+  "pillar": "suppression",
+  "visual_offer": {
+    "chart": {
+      "available": true,
+      "idea": "Bars of FLEX tests and extinctions for each diluent gas."
+    },
+    "graph": {
+      "available": false,
+      "idea": null
+    },
+    "footnote": "Want a visual? I can draw a chart of FLEX tests and extinctions for each diluent gas."
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T00:09:07Z"
+  }
+}

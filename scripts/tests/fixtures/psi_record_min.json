@@ -1,0 +1,21 @@
+{
+  "accession": "PSI-25",
+  "investigationAcronym": "BASS-II",
+  "title": "Burning and Suppression of Solids - II",
+  "doi": "10.60555/4qc4-de67",
+  "projectType": "Microgravity Investigation",
+  "subResearchArea": "Spacecraft Fire Safety",
+  "experimentHardware": "Microgravity Science Glovebox (MSG)",
+  "objective": "BASS-II results contribute to the combustion computational models.",
+  "related_glds": "PSI-26",
+  "publications": [
+    {"authorList": "Olson Sandra L., Ferkul Paul V.", "comments": [], "doi": "10.1016/j.combustflame.2017.03.001", "pubMedID": "", "status": {}, "title": "Microgravity flammability boundary for PMMA rods"}
+  ],
+  "experimentalTable": [
+    {"file_name": "PSI-25_Experimental table_BASS-II.csv", "file_size": 16590, "remote_path": "/Home/psi-data/PSI-25/Experimental table/PSI-25_Experimental table_BASS-II.csv"}
+  ],
+  "added": [
+    {"file_name": "a.zip"}, {"file_name": "b.zip"}, {"file_name": "c.zip"}
+  ],
+  "contacts": [{"email": "someone@example.org"}]
+}

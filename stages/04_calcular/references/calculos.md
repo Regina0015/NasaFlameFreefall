@@ -1,22 +1,17 @@
-# Catálogo de cálculos
+# Calculation catalog
 
-Cada cálculo vive como función en `scripts/calculos.py`, con su prueba unitaria. El Calculador elige de aquí; si falta uno, lo agrega aquí y allá.
+Every calculation lives as a function in `scripts/functions.py`, with its unit test in `scripts/tests/test_functions.py`. The Calculator chooses from here; when none fits it uses `sql_query`, and a calculation that keeps coming back is added here as a tested function.
 
-| Función | Qué responde | Entradas | Estado |
+| Function | What it answers | Inputs | Status |
 |---|---|---|---|
-| `cobertura_o2` | ¿Cuántas pruebas se hicieron con oxígeno mayor o igual a un umbral? Mínimo y máximo probados | investigación, umbral | pendiente |
+| `o2_range` | Lowest and highest O2 tested per investigation, and how many tests reached a threshold | investigations, threshold_pct | built |
+| `coverage_by_environment` | How many tests per fuel phase fall within an environment's sourced atmosphere (O2, and pressure when recorded) | environment | built |
+| `sql_query` | Anything else, as one saved read-only SQL query that returns `name, value, unit, investigation, source_table, source_rows, source_columns` | sql | built |
 
-## Ideas por evaluar (ninguna aprobada)
+## Ideas to evaluate (none approved)
 
-- Cobertura de presión frente a la de cada ambiente.
-- Oxígeno más bajo al que cada combustible siguió ardiendo (FLEX: 274 pruebas con composición y fin de prueba).
-- Longitud quemada en microgravedad frente a 1 g por material (Saffire-II).
-- Tabla de qué combinaciones de combustible, oxígeno y flujo tienen pruebas y cuáles no (mapa de huecos).
-- Puntaje de relevancia por ambiente, con desglose.
-
-## Reglas para agregar un cálculo
-
-1. Función pura: mismas entradas, mismo resultado.
-2. Devuelve los valores con unidad y la lista de filas que usó.
-3. Tiene al menos una prueba unitaria con un caso calculado a mano.
-4. Si no hay filas que apliquen, devuelve "sin datos"; no devuelve cero.
+- Pressure coverage against each environment's.
+- Lowest oxygen at which each fuel kept burning (FLEX: 274 tests with composition and test end).
+- Burn length in microgravity versus 1 g per material (Saffire-II).
+- Map of which combinations of fuel, oxygen and flow have tests and which do not (gap map).
+- Relevance score per environment, with its breakdown.

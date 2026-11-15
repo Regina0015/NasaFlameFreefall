@@ -1,7 +1,7 @@
 import { useTabla } from '../lib/datos.js'
 
 // Pendiente: grado de confianza con sus comprobaciones y cadena de prueba.
-// Regla: ningún hallazgo se muestra sin su grado (ver _config/confianza.md).
+// Regla: ningún hallazgo se muestra sin su grado (ver _config/confidence.md).
 export default function Hallazgos({ vista }) {
   const { filas, cargando, error, origen } = useTabla('hallazgos')
 

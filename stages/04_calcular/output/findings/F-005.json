@@ -1,0 +1,83 @@
+{
+  "id": "F-005",
+  "version": 1,
+  "question": "Which materials did SAME-R heat to make smoke, and how many tests did each get?",
+  "status": "has_data",
+  "claim": "SAME-R made smoke from five spacecraft materials: Kapton in 29 tests, silicone in 22, lampwick and Pyrell in 20 each, and Teflon in 18.",
+  "summary_student": "SAME-R heated common spacecraft materials on the space station until they smoked, and measured how big the smoke particles were, which matters for smoke detectors. Kapton was tested most often.",
+  "summary_professional": "SAME-R (PSI-101): 109 smoke tests by sample type: Kapton 29, silicone 22, lampwick 20, Pyrell 20, Teflon 18. Its PSI objective is to quantify the sizes smoke particulate reaches in low gravity.",
+  "values": {
+    "psi101_kapton": {
+      "value": 29,
+      "unit": "tests"
+    },
+    "psi101_silicone": {
+      "value": 22,
+      "unit": "tests"
+    },
+    "psi101_lampwick": {
+      "value": 20,
+      "unit": "tests"
+    },
+    "psi101_pyrell": {
+      "value": 20,
+      "unit": "tests"
+    },
+    "psi101_teflon": {
+      "value": 18,
+      "unit": "tests"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "SELECT 'psi101_' || lower(fuel) AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.fuel')) AS source_columns FROM tests WHERE investigation = 'PSI-101' AND fuel IS NOT NULL GROUP BY investigation, source_table, fuel ORDER BY value DESC, name"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-101",
+      "doi": "10.60555/2np7-jv14",
+      "table": "PSI-101_Experimental table_SAME-R.csv",
+      "columns": [
+        "Sample Type"
+      ],
+      "rows": "all"
+    }
+  ],
+  "n_tests": 109,
+  "assumptions": [
+    "Tests are counted by the sample type named in the SAME-R table."
+  ],
+  "limitations": [
+    "Counts tests only; it does not compare smoke particle sizes or detector responses.",
+    "These materials were heated to make smoke; the counts say nothing about how easily they ignite."
+  ],
+  "warnings": [],
+  "environments": [
+    "space_station",
+    "transit_vehicle"
+  ],
+  "tier": 1,
+  "pillar": "detection",
+  "visual_offer": {
+    "chart": {
+      "available": true,
+      "idea": "Bars of SAME-R smoke tests per material."
+    },
+    "graph": {
+      "available": false,
+      "idea": null
+    },
+    "footnote": "Want a visual? I can draw a chart of how many SAME-R smoke tests each material got."
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T00:11:27Z"
+  }
+}

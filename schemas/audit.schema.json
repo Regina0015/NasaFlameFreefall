@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "audit.schema.json",
   "title": "Audit",
-  "description": "Result of auditing one version of one finding. Produced by stage 05 (scripts/auditar.py). Grade rules: _config/confianza.md. Question list: stages/05_auditar/references/lista-revision.md.",
+  "description": "Result of auditing one version of one finding. Produced by stage 05 (scripts/auditar.py). Grade rules: _config/confidence.md. Question list: stages/05_auditar/references/lista-revision.md.",
   "type": "object",
   "required": [
     "finding_id", "finding_version", "finding_sha256", "checks", "recalculation",

@@ -1,0 +1,54 @@
+{
+  "id": "F-007",
+  "version": 1,
+  "question": "Is there any PSI combustion test at lunar or Mars gravity?",
+  "status": "no_data",
+  "claim": "No PSI combustion test in the snapshot ran at lunar or Mars gravity.",
+  "summary_student": "NASA's combustion database has no fire tests at the gravity of the Moon or Mars. Fire tests were done in orbit or on Earth, never at partial gravity.",
+  "summary_professional": "No test in the snapshot has a gravity level other than microgravity or Earth gravity (n = 0 matching tests). Partial-gravity behavior can only be bounded by microgravity and normal-gravity results.",
+  "values": {},
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "SELECT 'partial_gravity_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, ['gravity'] AS source_columns FROM tests WHERE gravity NOT IN ('microgravity', 'earth') GROUP BY investigation, source_table"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [],
+  "n_tests": 0,
+  "assumptions": [
+    "Uses the gravity recorded for each test in the snapshot."
+  ],
+  "limitations": [
+    "No data is not a safety result: it means fire behavior at lunar and Mars gravity is untested in PSI.",
+    "Some experiments imitated partial gravity in other ways (for example the E-FIELD Flames electric field), which this query does not count."
+  ],
+  "warnings": [
+    "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+  ],
+  "environments": [
+    "lunar_base",
+    "mars_base"
+  ],
+  "tier": null,
+  "pillar": null,
+  "visual_offer": {
+    "chart": {
+      "available": false,
+      "idea": null
+    },
+    "graph": {
+      "available": false,
+      "idea": null
+    },
+    "footnote": null
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T00:11:30Z"
+  }
+}
