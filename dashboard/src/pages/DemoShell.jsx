@@ -13,7 +13,6 @@ import LabView from '../components/LabView.jsx'
 import { investigationDetail } from '../lib/investigation.js'
 import ResearchSearch from '../components/ResearchSearch.jsx'
 import ResearchResults from '../components/ResearchResults.jsx'
-import AssistantLauncher from '../components/AssistantLauncher.jsx'
 import { useFindings } from '../lib/findings/useFindings.js'
 import { useChat } from '../chat/useChat.js'
 import { useEvidence } from '../lib/evidence.js'
@@ -49,7 +48,7 @@ const HABITAT_MODES = [
 const NAV = [
   { id: 'overview', label: 'Overview' },
   { id: 'investigations', label: 'Investigations' },
-  { id: 'results', label: 'Research results', needsTurns: true },
+  { id: 'results', label: 'Research history', needsTurns: true },
   { id: 'findings', label: 'Findings' },
   { id: 'explorer', label: 'Visual explorer' },
   { id: 'lab', label: 'Lab' },
@@ -215,11 +214,14 @@ export default function DemoShell({ mode, initialView, session, theme, entering,
   // action, never when a response arrives, so a late answer cannot move the workspace.
   const submitQuestion = (question) => {
     navigate('results', null)
-    requestAnimationFrame(() => {
-      if (bodyRef.current) bodyRef.current.scrollTop = 0
-      document.getElementById('rr-title')?.focus({ preventScroll: true })
-    })
     chat.ask(question)
+    // The explicit submission scrolls to the new turn (the question and its loading state). A later answer never scrolls.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const turns = document.querySelectorAll('.rt')
+        turns[turns.length - 1]?.scrollIntoView({ block: 'start', behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+      }),
+    )
   }
 
   const showLatestResult = () => go('results')
@@ -264,7 +266,7 @@ export default function DemoShell({ mode, initialView, session, theme, entering,
         <header className="ws-bar">
           <Brand />
 
-          <span className="tag tag-accent">{isDemo ? 'Demo preview' : session?.local ? 'Demo account' : 'Signed in'}</span>
+          {(isDemo || session?.local) && <span className="tag tag-accent">{isDemo ? 'Demo preview' : 'Demo account'}</span>}
 
           <div className="ws-bar-end">
             <div className="ws-source">
@@ -347,8 +349,7 @@ export default function DemoShell({ mode, initialView, session, theme, entering,
                 investigations={evidence.data?.graph.investigations ?? []}
                 labelFor={labelFor}
                 activeId={activeTurn}
-                onActive={(turn) => navigate('results', turn)}
-                onSubmit={submitQuestion}
+                scrollRef={bodyRef}
                 onSeeStatus={restoreOverview}
                 onOpenEvidence={openEvidence}
                 onApplyBrowser={applyBrowser}
@@ -359,10 +360,6 @@ export default function DemoShell({ mode, initialView, session, theme, entering,
             {workspace === 'findings' && <FindingsView findings={findings} view={view} onOpen={openEvidence} />}
 
             <div className="ws-overview" hidden={workspace !== 'overview'}>
-              <div className="ws-reveal" style={{ '--i': 0 }}>
-                <ResearchSearch chat={chat} onSubmit={submitQuestion} onShowResult={showLatestResult} />
-              </div>
-
               <header className="ws-intro ws-reveal" style={{ '--i': 1 }}>
                 <h2 id="overview-title" ref={overviewHeading} tabIndex={-1}>
                   Research overview
@@ -499,7 +496,10 @@ export default function DemoShell({ mode, initialView, session, theme, entering,
           )}
         </div>
 
-        <AssistantLauncher chat={chat} view={view} onOpenResult={showLatestResult} />
+        {/* The question bar lives in normal flow below the scrolling workspace and reserves its own height. */}
+        <div className="ws-dock">
+          <ResearchSearch chat={chat} onSubmit={submitQuestion} onShowResult={workspace === 'results' ? undefined : showLatestResult} />
+        </div>
       </div>
     </div>
   )
