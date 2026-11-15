@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { errorText } from '../lib/errorText.js'
 
 // ONE shared conversation for the whole workspace: the research search at the top, the results view and the
 // floating assistant all read and write this single state. It lives above the views, so changing views never loses
@@ -88,7 +89,7 @@ export function useChat(view) {
           body: JSON.stringify({ view, messages: history.filter((m) => !m.skip).map(({ role, content }) => ({ role, content })) }),
         })
         const data = await r.json()
-        if (!r.ok) throw new Error(data.error ?? `Error ${r.status}`)
+        if (!r.ok) throw new Error(errorText(data) ?? `Error ${r.status}`)
         const asked = data.rejected ? history.map((m, i) => (i === history.length - 1 ? { ...m, skip: true } : m)) : history
         settle([...asked, { role: 'assistant', content: data.answer, meta: data, skip: data.rejected }])
       } catch (err) {

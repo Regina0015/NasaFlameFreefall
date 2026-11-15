@@ -1,4 +1,5 @@
 import { classify } from './eligibility.js'
+import { errorText } from '../errorText.js'
 
 // Findings source adapters. Each one answers { id, label, status, message, findings }:
 //   status 'ok'          -> findings is an array of { id, finding, audit, auditStatus, auditNote }
@@ -83,7 +84,7 @@ export const localFilesAdapter = {
       }
     }
 
-    if (!response.ok) return { status: 'unavailable', message: body?.error || `The local findings endpoint answered ${response.status}.` }
+    if (!response.ok) return { status: 'unavailable', message: errorText(body) || `The local findings endpoint answered ${response.status}.` }
     if (!Array.isArray(body?.findings)) return { status: 'unavailable', message: 'The local findings endpoint returned an unexpected shape.' }
     return { status: 'ok', findings: body.findings, generatedAt: body.generatedAt ?? null }
   },
@@ -116,7 +117,7 @@ export const auditorGatewayAdapter = {
       return { status: 'unavailable', message: 'The Auditor proxy could not be reached.' }
     }
     if (!listing.body) return { status: 'unavailable', message: 'The Auditor proxy does not exist here. It only runs with npm run dev.' }
-    if (!listing.response.ok) return { status: 'unavailable', message: listing.body.error || `The Auditor proxy answered ${listing.response.status}.` }
+    if (!listing.response.ok) return { status: 'unavailable', message: errorText(listing.body) || `The Auditor proxy answered ${listing.response.status}.` }
     const rows = listing.body.findings
     if (!Array.isArray(rows) || !rows.every((r) => r && typeof r.finding_id === 'string' && r.finding && typeof r.finding === 'object')) {
       return { status: 'unavailable', message: 'The Auditor gateway returned an unexpected shape.' }
