@@ -1,0 +1,48 @@
+.chat-notice {
+  font-style: italic;
+}
+
+.chat-messages {
+  list-style: none;
+  padding: 0;
+  max-height: 28rem;
+  overflow-y: auto;
+}
+
+.chat-messages p {
+  margin: 0.25rem 0;
+  white-space: pre-wrap;
+}
+
+.chat-user {
+  margin: 0.75rem 0 0.75rem 20%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(127, 127, 127, 0.15);
+}
+
+.chat-assistant {
+  margin: 0.75rem 20% 0.75rem 0;
+}
+
+.chat-error,
+.chat-alert {
+  color: #b3261e;
+}
+
+.chat-meta {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.chat-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chat-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem;
+  font: inherit;
+}
