@@ -3,6 +3,7 @@ import Investigaciones from './secciones/Investigaciones.jsx'
 import Ranking from './secciones/Ranking.jsx'
 import Hallazgos from './secciones/Hallazgos.jsx'
 import Grafo from './secciones/Grafo.jsx'
+import ChatPanel from './chat/ChatPanel.jsx'
 
 // Las dos vistas comparten los mismos datos; cambia cómo se presentan.
 // Ver _config/audiencias.md.
@@ -28,6 +29,7 @@ export default function App() {
       <Ranking vista={vista} />
       <Hallazgos vista={vista} />
       <Grafo vista={vista} />
+      <ChatPanel view={vista} />
     </main>
   )
 }
