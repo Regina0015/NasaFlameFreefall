@@ -2,7 +2,7 @@
 export function assistantProblem(status) {
   if (!status || status.available) return null
   if (status.unreachable) {
-    return 'Its backend is not reachable from this page. The assistant runs only locally, with npm run dev, Ollama and the repository data; it is not part of this deployment.'
+    return 'It is offline on this public site by design, for security. The assistant runs an open model (Gemma) on our own GPU, and we do not expose that machine to the internet: no open ports, no API keys in the browser, and questions are never sent to a third-party AI service. You can see it answering in our demo video, or run it locally from the repository.'
   }
   if (status.ollama === false) return 'Ollama is not responding. Start Ollama, then use Retry.'
   return `The local model is missing. Run: ollama pull ${status.model}`
