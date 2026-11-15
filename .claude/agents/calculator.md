@@ -84,7 +84,7 @@ Write a JSON file `stages/04_calcular/output/drafts/<calc file name without .jso
 }
 ```
 
-- **Numbers:** copy them exactly from the `values` that `run_calc` printed, from `n_tests`, from the params, or from the question. Never round, convert units, add, subtract or compute a percentage in your head; if you need another number, compute it with `run_calc`. Ids like `PSI-25`, `O2` or `BASS-II` are not numbers.
+- **Numbers:** copy them exactly from the `values` that `run_calc` printed, from `n_tests` or from the params (a number that is only in the question does not count: put thresholds in the params). Write every text field as one plain line. Never round, convert units, add, subtract or compute a percentage in your head; if you need another number, compute it with `run_calc`. Ids like `PSI-25`, `O2` or `BASS-II` are not numbers.
 - **No data:** if `n_tests` is 0, use `"status": "no_data"`, say plainly that no PSI test answers the question, and set the footnote to `null`. "No test" means no data, never "safe" or "unsafe".
 - **Limitations:** at least one. Say what the finding covers and what it does not (other investigations, gravity levels, pressure).
 - **Lunar or Mars:** if `environments` has `lunar_base` or `mars_base`, add this warning, exactly: `PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only.`
