@@ -6,9 +6,9 @@ stages/05_auditar/references/lista-revision.md.
 
 Lee:
   stages/04_calcular/output/findings/F-XXX.json  (forma: schemas/finding.schema.json)
-  stages/01_ingesta/output/tablas/                (CSV ORIGINALES de PSI, no los normalizados)
-  stages/01_ingesta/output/fichas/PSI-XX.json     (para confirmar DOI, acrónimo y tablas)
-  stages/01_ingesta/output/manifiesto.json        (opcional: nombre original del CSV -> archivo guardado)
+  stages/01_ingesta/output/psi/                   (CSV ORIGINALES de PSI, no los normalizados,
+                                                   y las fichas PSI-XX.json: DOI, acrónimo y tablas)
+  stages/01_ingesta/output/psi/manifest.csv       (opcional: nombre original del CSV -> archivo guardado)
 Escribe:
   stages/05_auditar/output/audits/F-XXX.json     (forma: schemas/audit.schema.json)
   stages/05_auditar/output/summary.md
@@ -45,6 +45,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMAS = ROOT / "schemas"
+PSI_DIR = ROOT / "stages/01_ingesta/output/psi"  # etapa 01: CSV originales y fichas PSI-XX.json juntos
 
 # --- Umbrales PROVISIONALES (ver _config/confidence.md; el equipo puede cambiarlos) ---
 RECALC_REL_TOL = 1e-6      # C3: tolerancia relativa del recálculo. Los conteos deben ser exactos.
@@ -346,13 +347,17 @@ class Sources:
         y 'path' o 'saved_as'."""
         if not path or not Path(path).is_file():
             return {}
-        data = json.loads(Path(path).read_text(encoding="utf-8"))
-        entries = data.get("files", []) if isinstance(data, dict) else data
+        text = Path(path).read_text(encoding="utf-8-sig")
+        if Path(path).suffix.lower() == ".csv":  # manifest.csv de la etapa 01: file,url,sha256,bytes,fetched_at
+            entries = list(csv.DictReader(io.StringIO(text)))
+        else:
+            data = json.loads(text)
+            entries = data.get("files", []) if isinstance(data, dict) else data
         mapping = {}
         for e in entries if isinstance(entries, list) else []:
             if isinstance(e, dict):
-                orig = e.get("original_name") or e.get("file_name")
-                saved = e.get("path") or e.get("saved_as")
+                orig = e.get("original_name") or e.get("file_name") or e.get("file")
+                saved = e.get("path") or e.get("saved_as") or e.get("file")
                 if orig and saved:
                     mapping[orig] = saved
         return mapping
@@ -530,6 +535,8 @@ class Quantity:
     scale: float = 1.0        # celda * scale = valor en %
     cell_text: str = ""       # texto de la celda de la primera fila de 'rows'
     cell_values: list[float] = field(default_factory=list)  # lo que se leyó de esa celda (sin escalar)
+    scope: str = "investigation"  # 'investigation': lo que se compara con 'values'; 'table': parcial de una tabla
+    n_tables: int = 1
 
 
 @dataclass
@@ -602,9 +609,39 @@ def recalc_o2_range(finding: dict, sources: Sources) -> Recalc:
             out.quantities.append(Quantity(stat="count_at_or_above", value=float(n), kind="other", **common))
     for inv in sorted(set(invs) - covered):
         out.problems.append(f"{inv} is in method.params but has no evidence entry")
+    out.quantities = by_investigation(out.quantities)
     out.tested_range_ok = True
     out.tested_range_detail = ("Coverage calculation: it reports the O2 range that was tested "
                                "and does not predict untested conditions.")
+    return out
+
+
+def by_investigation(quantities: list[Quantity]) -> list[Quantity]:
+    """Junta las cantidades por investigación. Una llave como 'psi159_n_at_or_above' habla de toda
+    la investigación: si cita varias tablas (CFI-G: Normal e Inverse), se compara con el total
+    (mínimo de los mínimos, máximo de los máximos, suma de los conteos), no con cada tabla.
+    Las cantidades de cada tabla se conservan con scope='table'."""
+    groups: dict[tuple[str, str], list[Quantity]] = {}
+    for q in quantities:
+        groups.setdefault((q.investigation, q.stat), []).append(q)
+    out = []
+    for (inv, stat), qs in groups.items():
+        if len(qs) == 1:
+            out.append(qs[0])
+            continue
+        for q in qs:
+            q.scope = "table"
+        out += qs
+        known = [q for q in qs if q.value is not None]
+        if stat == "count_at_or_above":
+            agg = Quantity(investigation=inv, stat=stat, value=float(sum(q.value for q in known)) if known else None,
+                           kind="other")
+        else:
+            best = (min if stat == "min" else max)(known, key=lambda q: q.value) if known else None
+            agg = Quantity(**{**best.__dict__}) if best else Quantity(investigation=inv, stat=stat, value=None,
+                                                                    kind="percent")
+        agg.scope, agg.n_tables = "investigation", len(qs)
+        out.append(agg)
     return out
 
 
@@ -971,7 +1008,8 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
                 recalculation.append({"value_name": key, "finding_value": obj["value"], "recalculated_value": None,
                                       "unit": obj["unit"], "match": False, "detail": why})
                 continue
-            cands = [q for q in recalc.quantities if q.stat == stat and (inv is None or q.investigation == inv)]
+            cands = [q for q in recalc.quantities if q.stat == stat and q.scope == "investigation"
+                     and (inv is None or q.investigation == inv)]
             exact = stat in ("count_at_or_above", "n_tests")
             fv = None if obj["value"] is None else (obj["value"] if exact else to_percent(obj["value"], obj["unit"]))
             hit = next((q for q in cands if close(fv, q.value, exact)), None)
@@ -984,7 +1022,9 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
                 note = "matched by value only: the key does not name the investigation"
             recalculation.append({"value_name": key, "finding_value": obj["value"], "recalculated_value": back,
                                   "unit": obj["unit"], "match": hit is not None,
-                                  "detail": f"{stat} of {q.investigation}" + (f"; {note}" if note else "") if q else
+                                  "detail": f"{stat} of {q.investigation}"
+                                  + (f" over its {q.n_tables} cited tables" if q.n_tables > 1 else "")
+                                  + (f"; {note}" if note else "") if q else
                                   "no recalculated quantity of this kind"})
             if hit is None:
                 c3_problems.append(f"values.{key} = {obj['value']} {obj['unit']}, recalculated "
@@ -1223,9 +1263,9 @@ def write_summary(path: Path, audits: list[dict], unreadable: list[str], model_n
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Stage 05: audit the Calculator's findings.")
     ap.add_argument("--findings", type=Path, default=ROOT / "stages/04_calcular/output/findings")
-    ap.add_argument("--tables", type=Path, default=ROOT / "stages/01_ingesta/output/tablas")
-    ap.add_argument("--fiches", type=Path, default=ROOT / "stages/01_ingesta/output/fichas")
-    ap.add_argument("--manifest", type=Path, default=ROOT / "stages/01_ingesta/output/manifiesto.json")
+    ap.add_argument("--tables", type=Path, default=PSI_DIR, help="original PSI CSVs (default: %(default)s)")
+    ap.add_argument("--fiches", type=Path, default=PSI_DIR, help="PSI-XX.json fiches (default: %(default)s)")
+    ap.add_argument("--manifest", type=Path, default=PSI_DIR / "manifest.csv")
     ap.add_argument("--out", type=Path, default=ROOT / "stages/05_auditar/output")
     ap.add_argument("--units", type=Path, default=ROOT / "stages/05_auditar/references/unidades-columnas.json")
     ap.add_argument("--only", help="audit only this finding id, e.g. F-001")

@@ -395,6 +395,56 @@ class TestUnitsFile(Base):
         self.assertEqual(self.result(a, "C3"), "fail")  # 0.3939 % no es 39.39 %
 
 
+class TestTwoTablesOneInvestigation(Base):
+    """Como CFI-G (PSI-159): dos tablas de la misma investigación, citadas en un solo hallazgo."""
+    T2 = "PSI-25_Experimental table_BASS-II_extra.csv"
+
+    def setUp(self):
+        super().setUp()
+        d = Path(self.tmp.name)
+        (d / "tablas" / self.T2).write_text(
+            "Test #,Calibrated  initial O2 % by vol \nX1,35\nX2,31\nX3,12\n", encoding="utf-8")
+        fiche = dict(FICHE, experimentalTable=[{"file_name": TABLE}, {"file_name": self.T2}])
+        (d / "fichas" / "PSI-25.json").write_text(json.dumps(fiche), encoding="utf-8")
+        self.sources = A.Sources(d / "tablas", d / "fichas")
+
+    def finding(self, n_above, o2_min=12.0, o2_max=35.0):
+        f = base_finding()
+        f["evidence"].append({"investigation": "PSI-25", "doi": "10.60555/4qc4-de67", "table": self.T2,
+                              "columns": ["Calibrated initial O2 % by vol"], "rows": "all"})
+        f["values"] = {"psi25_o2_min": {"value": o2_min, "unit": "% O2"},
+                       "psi25_o2_max": {"value": o2_max, "unit": "% O2"},
+                       "psi25_n_tests": {"value": 7, "unit": "tests"},
+                       "psi25_n_at_or_above": {"value": n_above, "unit": "tests"}}
+        f["n_tests"] = 7
+        f["claim"] = "BASS-II tested 12% to 35% oxygen in 7 tests; 2 reached 30% or more."
+        f["summary_professional"] = "BASS-II initial O2: 12–35% (n = 7); 2 tests at ≥30% O2."
+        return f
+
+    def test_total_over_both_tables(self):
+        a = self.audit(self.finding(n_above=2))  # 0 en la tabla 1 + 2 en la tabla 2
+        self.assertEqual(self.result(a, "C3"), "pass")
+        detail = next(r for r in a["recalculation"] if r["value_name"] == "psi25_n_at_or_above")["detail"]
+        self.assertIn("over its 2 cited tables", detail)
+        self.assertEqual(self.result(a, "C2"), "pass")  # el mínimo y el máximo vienen de celdas reales
+
+    def test_one_table_alone_does_not_pass(self):
+        # 13.6 es el mínimo de la primera tabla, pero el de la investigación es 12
+        a = self.audit(self.finding(n_above=2, o2_min=13.6))
+        self.assertEqual(self.result(a, "C3"), "fail")
+
+
+class TestPaths(unittest.TestCase):
+    def test_default_paths_point_to_psi(self):
+        self.assertEqual(A.PSI_DIR, A.ROOT / "stages/01_ingesta/output/psi")
+
+    def test_csv_manifest(self):
+        with tempfile.TemporaryDirectory() as d:
+            m = Path(d) / "manifest.csv"
+            m.write_text("file,url,sha256,bytes,fetched_at\nPSI-25.json,u,x,1,t\nA B.csv,u,x,1,t\n", encoding="utf-8")
+            self.assertEqual(A.Sources._load_manifest(m), {"PSI-25.json": "PSI-25.json", "A B.csv": "A B.csv"})
+
+
 class TestHumanReview(Base):
     @staticmethod
     def sha(finding):
