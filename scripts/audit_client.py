@@ -62,9 +62,13 @@ def save_verdict(verdict: dict, finding_path: Path, audits_dir: Path = AUDITS_DI
     data = Path(finding_path).read_bytes()
     if verdict.get("finding_sha256") != hashlib.sha256(data).hexdigest():
         raise ValueError("the Auditor graded other bytes than the local finding file; audit again")
+    local = json.loads(data.decode("utf-8"))
+    # Checked before writing: a wrong id must never overwrite another finding's audit or leave the folder.
+    if verdict.get("finding_id") != local.get("id") or verdict.get("finding_version") != local.get("version"):
+        raise ValueError("the verdict does not match the local finding (id or version)")
     audits_dir = Path(audits_dir)
     audits_dir.mkdir(parents=True, exist_ok=True)
-    path = audits_dir / f"{verdict['finding_id']}.json"
+    path = audits_dir / f"{findings.check_id(local['id'])}.json"
     path.write_text(json.dumps(verdict, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
     if read_verdict(Path(finding_path), audits_dir) is None:
         path.unlink()

@@ -45,7 +45,7 @@ export function loadStation(baseUrl) {
 // Hides meshes that float far from the main structure (the model contains a few detached
 // parts). The rule is purely geometric: a mesh is detached when its bounding-box centre is
 // farther from the largest mesh's centre than that mesh's own half-diagonal.
-function pruneDetached(root) {
+export function pruneDetached(root) {
   root.updateMatrixWorld(true)
   const meshes = []
   root.traverse((obj) => {

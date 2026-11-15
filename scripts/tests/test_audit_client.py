@@ -37,6 +37,19 @@ class SaveVerdictTest(unittest.TestCase):
             save_verdict(self.verdict("0" * 64), self.path, self.audits)
         self.assertFalse((self.audits / "F-001.json").exists())
 
+    def test_verdict_naming_another_finding_never_touches_its_file(self):
+        # A wrong id from the gateway must not overwrite (and then delete) another finding's audit,
+        # nor write outside the audits folder.
+        self.audits.mkdir()
+        other = self.audits / "F-002.json"
+        other.write_text('{"kept": true}', encoding="utf-8")
+        for fid in ("F-002", "../F-002", None):
+            with self.assertRaisesRegex(ValueError, "does not match the local finding"):
+                save_verdict({**self.verdict(self.sha), "finding_id": fid}, self.path, self.audits)
+        self.assertEqual(other.read_text(encoding="utf-8"), '{"kept": true}')
+        self.assertEqual(sorted(p.name for p in self.audits.parent.rglob("*.json")),
+                         ["F-001.json", "F-002.json"])  # the finding and the untouched audit
+
 
 if __name__ == "__main__":
     unittest.main()

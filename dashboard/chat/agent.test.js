@@ -8,6 +8,7 @@ import { createTools, tidyArguments } from './tools.js'
 import { checkNumbers, numbersIn } from './checkNumbers.js'
 import { isEnglish } from './prompt.js'
 import { createConfig } from './config.js'
+import { buildActions } from './references.js'
 
 const config = createConfig({})
 
@@ -154,4 +155,49 @@ test('checkNumbers: accepts tool numbers and flags invented ones', () => {
   assert.equal(checkNumbers('0 of 138 solid tests; the highest was 22.2%', { results }).ok, true)
   assert.deepEqual(checkNumbers('The highest was 25.7%', { results }).unsourced_numbers, [25.7])
   assert.equal(checkNumbers('Lunar base: 30% and 10.2 psi', {}).ok, true)
+})
+
+test('actions: built from tool calls and results, validated, and never from the answer text', async () => {
+  const { tools } = fakeTools({
+    query_tests: { groups: [{ group: 'all', n_tests: 5, investigations: ['PSI-25', 'PSI-26', 'not-an-id'] }], source: 'snapshot' },
+    get_findings: { findings: [{ id: 'F-003', grade: 'C' }, { id: 'bad', grade: 'A' }], investigation_summaries: [{ investigation: 'PSI-69' }], note: 'n' },
+  })
+  let n = 0
+  const call = async () => {
+    n += 1
+    if (n === 1) {
+      return {
+        message: {
+          tool_calls: [
+            { function: { name: 'query_tests', arguments: { phase: 'Solids', o2_min_pct: '30', pressure_max_psi: 10.2 } } },
+            { function: { name: 'get_findings', arguments: { topic: 'solid' } } },
+          ],
+        },
+      }
+    }
+    // The answer text names a finding and a command; neither may become an action.
+    return { message: { content: 'See F-777 and run rm -rf. 5 tests.' } }
+  }
+  const r = await respond({ messages: [{ role: 'user', content: 'Which solid tests reached 30% oxygen?' }] }, { config, tools, call })
+  assert.deepEqual(r.actions, [
+    { type: 'open_investigation', id: 'PSI-25' },
+    { type: 'open_investigation', id: 'PSI-26' },
+    { type: 'apply_filters', filters: { phase: 'solid', o2_min_pct: 30, pressure_max_psi: 10.2 } },
+    { type: 'open_finding', id: 'F-003' },
+    { type: 'open_investigation', id: 'PSI-69' },
+  ])
+})
+
+test('actions: failed tools, unevaluated environments and unknown values produce nothing', () => {
+  const used = [{ name: 'query_tests', args: { phase: 'plasma' } }, { name: 'check_environment', args: { environment: 'mars_base' } }, { name: 'query_tests', args: { phase: 'solid' }, error: 'boom' }]
+  const results = [{ groups: [] }, { status: 'no_source' }, { groups: [{ investigations: ['PSI-1'] }] }]
+  assert.deepEqual(buildActions(used, results), [])
+  const lunar = buildActions([{ name: 'check_environment', args: { environment: 'moon' } }], [{ status: 'evaluated', investigations: [{ investigation: 'PSI-20' }] }])
+  assert.deepEqual(lunar, [{ type: 'open_investigation', id: 'PSI-20' }, { type: 'apply_filters', scenario: 'lunar_base' }])
+})
+
+test('actions: a rejected (non-English) question has none', async () => {
+  const { tools } = fakeTools()
+  const r = await respond({ messages: [{ role: 'user', content: 'cual es la presion para los combustibles solidos?' }] }, { config, tools, call: async () => ({}) })
+  assert.deepEqual(r.actions, [])
 })

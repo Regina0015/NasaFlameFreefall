@@ -280,7 +280,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "yes",
-      "reason": "The text mentions 'liquid fuels' in the summary, which is a fuel type, but this specific term is not explicitly listed in the cited investigations, evidence, values, assumptions, or limitations.",
+      "reason": "The text mentions 'liquid fuels' in the summary and cited investigation objective, but no specific fuel name is provided in the evidence, values, assumptions, or limitations.",
       "attempts": 1
     },
     {
@@ -348,6 +348,6 @@
       "seed": 42,
       "num_ctx": 8192
     },
-    "date": "2026-11-15T09:34:52Z"
+    "date": "2026-11-15T14:57:16Z"
   }
 }

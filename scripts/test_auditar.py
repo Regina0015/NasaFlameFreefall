@@ -117,7 +117,7 @@ class TestHelpers(unittest.TestCase):
         self.assertEqual(A.norm_col("Calibrated  initial O2 % by vol "), "Calibrated initial O2 % by vol")
 
     def test_text_numbers_skip_formulas_and_ids(self):
-        nums = [m.group(1) for m in A._TEXT_NUM.finditer("PSI-25 O2 CO2 13.6–22.2% vol (n = 129) qwen3:8b 4b")]
+        nums = [n for n, _ in A._text_numbers("PSI-25 O2 CO2 13.6–22.2% vol (n = 129) C2H4 1-g F-001 FLEX-2")]
         self.assertEqual(nums, ["13.6", "22.2", "129"])
 
     def test_text_units(self):
@@ -763,6 +763,164 @@ class TestHumanReview(Base):
     def tearDown(self):
         A.OllamaModel = self._ollama
         super().tearDown()
+
+
+class TestModelPrompt(Base):
+    """What the model sees for Q3 and Q4: the scope of the calculation, and the fuels and phase of the cited rows.
+    Without them the model flagged correct text ('the 10 Nomex tests', 'gas flames') as out of scope."""
+
+    def prompt(self, finding, qid, sources=None):
+        question = next(t for q, t, _ in A.MODEL_QUESTIONS_PER_FIELD if q == qid)
+        return A.build_model_prompt(finding, "claim", finding["claim"], question, sources or self.sources, qid)
+
+    def with_phase(self):
+        cov = Path(self.tmp.name) / "cov.json"
+        cov.write_text(json.dumps({"investigations": {"PSI-25": {"phase": "solid"}}, "tables": {}}), encoding="utf-8")
+        d = Path(self.tmp.name)
+        return A.Sources(d / "tablas", d / "fichas", coverage_path=cov)
+
+    def test_cited_investigation_lists_its_fuels_and_phase(self):
+        for qid in ("Q3", "Q4"):
+            p = self.prompt(base_finding(), qid, self.with_phase())
+            self.assertIn("Fuel phase: solid", p, qid)
+            self.assertIn("Fuels in the cited rows: PMMA film, SIBAL", p, qid)
+
+    def test_fuels_come_only_from_the_cited_rows(self):
+        f = base_finding()
+        f["evidence"][0]["rows"] = [3, 4]
+        self.assertIn("Fuels in the cited rows: SIBAL.", self.prompt(f, "Q3"))
+
+    def test_scope_is_the_cited_investigations_for_o2_range(self):
+        for qid in ("Q3", "Q4"):
+            self.assertIn("SCOPE: only the tests of the CITED INVESTIGATIONS", self.prompt(base_finding(), qid), qid)
+
+    def test_scope_is_every_table_when_the_calculation_scanned_them_all(self):
+        coverage = base_finding()
+        coverage["method"] = {"script": "scripts/functions.py", "function": "coverage_by_environment",
+                              "params": {"environment": "lunar_base"}, "formula": "f"}
+        sql_all = base_finding()
+        sql_all["method"] = {"script": "scripts/functions.py", "function": "sql_query", "formula": "f",
+                             "params": {"sql": "SELECT ... FROM tests WHERE fuel ILIKE '%PMMA%' GROUP BY investigation"}}
+        for f in (coverage, sql_all):
+            self.assertIn("SCOPE: every PSI test table in the database", self.prompt(f, "Q4"), f["method"]["function"])
+
+    def test_sql_filtered_by_investigation_keeps_the_cited_scope(self):
+        f = base_finding()
+        f["method"] = {"script": "scripts/functions.py", "function": "sql_query", "formula": "f",
+                       "params": {"sql": "SELECT ... FROM tests WHERE investigation IN ('PSI-25') GROUP BY 1"}}
+        self.assertIn("SCOPE: only the tests of the CITED INVESTIGATIONS", self.prompt(f, "Q4"))
+
+    def test_evidence_shows_how_many_rows_not_the_row_list(self):
+        f = base_finding()
+        f["evidence"][0]["rows"] = [1, 2, 3]
+        p = self.prompt(f, "Q3")
+        self.assertIn("3 rows", p)
+        self.assertNotIn("[1, 2, 3]", p)
+
+    def test_q6_accepts_saying_psi_cannot_tell(self):
+        q6 = next(t for q, t, _ in A.MODEL_QUESTIONS_PER_FIELD if q == "Q6")
+        self.assertIn("cannot tell", q6)
+
+
+class TestReviewFindings2026_11_15(TestSqlQuery):
+    """Defects found by the code review of 2026-11-15. Each test failed before its fix."""
+
+    @unittest.skipUnless(HAVE_DUCKDB, "duckdb not installed")
+    def test_a_number_written_as_a_value_in_the_sql_is_rejected(self):
+        sql = ("SELECT 'psi25_peak' AS name, 999.0 AS value, 'atm' AS unit, investigation, source_table, "
+               "list(source_row ORDER BY source_row) AS source_rows, ['Calibrated  initial O2 % by vol'] AS source_columns "
+               "FROM tests GROUP BY investigation, source_table")
+        f = self.finding(sql=sql)
+        f["values"] = {"psi25_peak": {"value": 999.0, "unit": "atm"}}
+        f["claim"] = f["summary_professional"] = f["summary_student"] = "The BASS-II peak was 999 atm."
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C2"), "fail")
+        self.assertIn("999", next(c for c in a["checks"] if c["id"] == "C2")["detail"])
+        self.assertEqual(a["grade"], "rejected")
+
+    def test_thresholds_in_comparisons_and_the_psi_factor_are_allowed(self):
+        self.assertEqual(A.sql_value_literals("SELECT min(p) * 14.6959 AS value FROM tests WHERE o2 >= 30 AND p<=0.69 "
+                                              "AND f = 'PSI-25' AND n <> 0 HAVING count(*) > 1"), [])
+        self.assertEqual(A.sql_value_literals("SELECT count(*) * 100.0 / 4 AS value, 34 FROM tests"), [100.0, 4.0, 34.0])
+
+    def test_no_data_without_evidence_is_still_recomputed(self):
+        f = base_finding()  # o2_range over PSI-25, whose table has 4 tests
+        f.update(status="no_data", evidence=[], values={}, n_tests=0)
+        f["claim"] = f["summary_student"] = f["summary_professional"] = "No BASS-II test has oxygen data."
+        a = self.audit(f)
+        self.assertNotEqual(self.result(a, "C3"), "not_applicable")
+        self.assertEqual(a["grade"], "rejected")
+
+    def test_numbers_glued_to_units_are_checked(self):
+        missing, _ = A.check_text_numbers("Flames spread at 85cm/s, 40kPa and 999K; 5x faster.", [])
+        self.assertEqual(missing, ["85", "40", "999", "5"])
+        missing, _ = A.check_text_numbers("PSI-25 (BASS-II), FLEX-2, O2, CO2, C2H4, 1-g, F-001, "
+                                          "doi 10.60555/4qc4-de67 and 22.2% O2.", [A.Known(22.2, "percent", "v")])
+        self.assertEqual(missing, [])
+
+    def test_chart_numbers_include_layers_and_numeric_strings(self):
+        chart = {"data": {"values": [{"a": "99.9", "b": "PSI-25"}]},
+                 "layer": [{"mark": "bar"}, {"data": {"values": [{"o2": 99}]}, "mark": "rule"}]}
+        self.assertEqual(sorted(x for _, x in A.chart_numbers(chart)), [99.0, 99.9])
+
+    def test_a_table_name_cannot_leave_the_tables_folder(self):
+        outside = Path(self.tmp.name) / "secret.csv"
+        outside.write_text("a,b\n1,2\n", encoding="utf-8")
+        for name in ("../secret.csv", str(outside), "..\\secret.csv"):
+            table, err = self.sources.table(name)
+            self.assertIsNone(table, name)
+            self.assertIn("not a PSI table name", err, name)
+
+    @unittest.skipUnless(HAVE_DUCKDB, "duckdb not installed")
+    def test_a_text_value_in_the_sql_is_a_problem_not_a_crash(self):
+        sql = ("SELECT 'psi25_x' AS name, 'many' AS value, 'tests' AS unit, investigation, source_table, "
+               "list(source_row ORDER BY source_row) AS source_rows, ['Calibrated  initial O2 % by vol'] AS source_columns "
+               "FROM tests GROUP BY investigation, source_table")
+        a = self.audit(self.finding(sql=sql))
+        self.assertEqual(self.result(a, "C3"), "fail")
+        self.assertIn("not a number", next(c for c in a["checks"] if c["id"] == "C3")["detail"])
+
+    def main_argv(self, d):
+        return ["--findings", str(d / "findings"), "--tables", str(d / "tablas"), "--fiches", str(d / "fichas"),
+                "--out", str(d / "out"), "--no-model"]
+
+    @unittest.skipUnless(HAVE_DUCKDB, "duckdb not installed")
+    def test_reaudit_with_an_old_review_already_kept_does_not_crash(self):
+        d = Path(self.tmp.name)
+        (d / "findings").mkdir()
+        (d / "out" / "reviews").mkdir(parents=True)
+        (d / "findings" / "F-001.json").write_text(json.dumps(self.finding()), encoding="utf-8")  # SQL: Q8 template
+        stale = {"finding_id": "F-001", "finding_sha256": "0" * 64, "flags": []}
+        (d / "out" / "reviews" / "F-001.json").write_text(json.dumps(stale), encoding="utf-8")
+        (d / "out" / "reviews" / "F-001.old.json").write_text("{}", encoding="utf-8")
+        self.assertEqual(A.main(self.main_argv(d) + ["--snapshot", str(self.snap)]), 0)
+        self.assertEqual(json.loads((d / "out" / "reviews" / "F-001.old.json").read_text(encoding="utf-8")), stale)
+        self.assertTrue((d / "out" / "audits" / "F-001.json").is_file())
+
+    def test_a_copied_file_does_not_overwrite_another_findings_audit(self):
+        import hashlib
+        d = Path(self.tmp.name)
+        (d / "findings").mkdir()
+        (d / "findings" / "F-001.json").write_text(json.dumps(base_finding()), encoding="utf-8")
+        copy_ = base_finding()  # a hand copy that still says "id": "F-001", with other text
+        copy_["claim"] = "A different claim."
+        (d / "findings" / "F-002.json").write_text(json.dumps(copy_), encoding="utf-8")
+        self.assertEqual(A.main(self.main_argv(d)), 0)
+        audit = json.loads((d / "out" / "audits" / "F-001.json").read_text(encoding="utf-8"))
+        self.assertEqual(audit["finding_sha256"], hashlib.sha256((d / "findings" / "F-001.json").read_bytes()).hexdigest())
+
+    def test_summary_lists_every_stored_audit_after_an_only_run(self):
+        d = Path(self.tmp.name)
+        (d / "findings").mkdir()
+        for fid in ("F-001", "F-002"):
+            f = base_finding()
+            f["id"] = fid
+            (d / "findings" / f"{fid}.json").write_text(json.dumps(f), encoding="utf-8")
+        self.assertEqual(A.main(self.main_argv(d)), 0)
+        self.assertEqual(A.main(self.main_argv(d) + ["--only", "F-001"]), 0)
+        summary = (d / "out" / "summary.md").read_text(encoding="utf-8")
+        self.assertIn("F-001", summary)
+        self.assertIn("F-002", summary)
 
 
 if __name__ == "__main__":

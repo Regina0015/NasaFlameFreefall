@@ -22,7 +22,7 @@
       "name": "fidelity",
       "done_by": "code",
       "result": "pass",
-      "detail": "psi25_nomex_o2_min = 21.0 % O2 <- cell '21' (Calibrated initial O2 % by vol) at row 24 of PSI-25_Experimental table_BASS-II.csv; psi99_nomex_o2_min = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 7 of PSI-99_Experimental table_SAFFIRE-2.csv; psi25_nomex_o2_max = 22.2 % O2 <- cell '22.2' (Calibrated initial O2 % by vol) at row 23 of PSI-25_Experimental table_BASS-II.csv; psi99_nomex_o2_max = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 7 of PSI-99_Experimental table_SAFFIRE-2.csv"
+      "detail": "psi25_nomex_o2_min = 21.0 % O2 <- cell '21' (Calibrated initial O2 % by vol) at row 24 of PSI-25_Experimental table_BASS-II.csv; psi99_nomex_o2_min = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 7 of PSI-99_Experimental table_SAFFIRE-2.csv; psi99_nomex_o2_max = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 7 of PSI-99_Experimental table_SAFFIRE-2.csv; psi25_nomex_o2_max = 22.2 % O2 <- cell '22.2' (Calibrated initial O2 % by vol) at row 23 of PSI-25_Experimental table_BASS-II.csv"
     },
     {
       "id": "C3",
@@ -372,6 +372,6 @@
       "seed": 42,
       "num_ctx": 8192
     },
-    "date": "2026-11-15T09:34:12Z"
+    "date": "2026-11-15T14:56:28Z"
   }
 }

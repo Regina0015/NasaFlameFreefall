@@ -1,6 +1,6 @@
 {
   "finding_id": "F-012",
-  "finding_sha256": "8924b8554034a771af119d93d28207e45354e9ce7e68cf93039bce438b486e0c",
+  "finding_sha256": "164d80e171348788c069c92d223f1fd07806f34dfa5907209e7eb82e5df54716",
   "flags": [
     {
       "question_id": "Q8",

@@ -64,7 +64,7 @@
       "name": "faithful_text",
       "done_by": "code+model",
       "result": "fail",
-      "detail": "5 of 19 answers differ from the expected one: Q3/claim, Q4/claim, Q3/summary_student, Q4/summary_student, Q3/summary_professional."
+      "detail": "4 of 19 answers differ from the expected one: Q3/claim, Q4/claim, Q4/summary_student, Q3/summary_professional."
     },
     {
       "id": "C9",
@@ -255,8 +255,8 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": "yes",
-      "reason": "The text mentions 'Gas flames' and 'oxygen levels above the one planned for a Moon base' which are not explicitly detailed in the cited materials.",
+      "answer": "no",
+      "reason": "The text mentions 'Gas flames' and 'oxygen levels' but does not name a specific fuel, material, experiment, investigation, or test condition that is absent from the provided context.",
       "attempts": 1
     },
     {
@@ -354,6 +354,6 @@
       "seed": 42,
       "num_ctx": 8192
     },
-    "date": "2026-11-15T09:31:55Z"
+    "date": "2026-11-15T14:55:22Z"
   }
 }

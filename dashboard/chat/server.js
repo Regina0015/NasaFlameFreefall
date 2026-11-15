@@ -3,6 +3,8 @@
 //   GET  /api/chat/status  is Ollama up, and does it have the model?
 // It does not exist on Vercel: there the chat panel hides itself.
 
+import { stat } from 'node:fs/promises'
+import path from 'node:path'
 import { createConfig } from './config.js'
 import { createTools } from './tools.js'
 import { respond } from './agent.js'
@@ -15,22 +17,43 @@ function send(res, status, data) {
   res.end(JSON.stringify(data))
 }
 
+function httpError(status, message) {
+  return Object.assign(new Error(message), { status })
+}
+
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let text = ''
+    let tooLarge = false
     req.on('data', (part) => {
+      if (tooLarge) return // keep draining the request, but stop keeping it
       text += part
-      if (text.length > BODY_LIMIT) reject(new Error('Message too large.'))
+      if (text.length > BODY_LIMIT) {
+        tooLarge = true
+        text = ''
+        reject(httpError(413, 'Message too large.'))
+      }
     })
     req.on('end', () => {
+      if (tooLarge) return
       try {
         resolve(JSON.parse(text || '{}'))
       } catch {
-        reject(new Error('The request body is not JSON.'))
+        reject(httpError(400, 'The request body is not JSON.'))
       }
     })
     req.on('error', reject)
   })
+}
+
+// When the local snapshot the tools read was last written (null if it is missing).
+async function snapshotUpdated(config) {
+  try {
+    const file = path.join(config.repoRoot, 'data', 'snapshot', 'tests.csv')
+    return (await stat(file)).mtime.toISOString()
+  } catch {
+    return null
+  }
 }
 
 async function ollamaStatus(config) {
@@ -51,6 +74,16 @@ async function ollamaStatus(config) {
   }
 }
 
+function sameOrigin(req) {
+  const origin = req.headers.origin
+  if (!origin) return true // not a browser page (curl, tests); browsers send Origin on every POST
+  try {
+    return new URL(origin).host === req.headers.host
+  } catch {
+    return false // "null": a sandboxed page or a file
+  }
+}
+
 // The dashboard's switch says 'cientifico'; the chat calls that view 'professional'.
 const VIEWS = { student: 'student', estudiante: 'student', professional: 'professional', cientifico: 'professional' }
 
@@ -62,9 +95,20 @@ export function createHandler(env) {
     try {
       if (req.method === 'GET' && req.url.startsWith('/status')) {
         const s = await ollamaStatus(config)
-        return send(res, 200, { ...s, available: s.ollama && s.model_installed })
+        return send(res, 200, {
+          ...s,
+          available: s.ollama && s.model_installed,
+          snapshot_updated: await snapshotUpdated(config),
+        })
       }
       if (req.method !== 'POST') return send(res, 405, { error: 'Use POST.' })
+      // Only the dashboard page may ask: another website open in the same browser could post to this
+      // local server. A JSON content type makes the browser ask first (CORS), and an Origin header, when
+      // sent, must be this server.
+      if (!sameOrigin(req)) return send(res, 403, { error: 'The chat only answers the dashboard page.' })
+      if (!String(req.headers['content-type'] || '').toLowerCase().startsWith('application/json')) {
+        return send(res, 415, { error: 'Send JSON (Content-Type: application/json).' })
+      }
 
       const { messages, view } = await readBody(req)
       const output = await respond({ messages, view: VIEWS[view] ?? 'student' }, { config, tools })
@@ -74,7 +118,7 @@ export function createHandler(env) {
         return send(res, 503, { error: `Ollama is not responding at ${config.ollamaUrl}. Is it running?` })
       }
       if (e.status === 404) return send(res, 503, { error: `The model is missing. Run: ollama pull ${config.model}` })
-      return send(res, 400, { error: e.message })
+      return send(res, e.status === 413 ? 413 : 400, { error: e.message })
     }
   }
 }

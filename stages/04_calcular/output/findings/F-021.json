@@ -1,0 +1,91 @@
+{
+  "id": "F-021",
+  "version": 1,
+  "question": "How does flame spread rate change with oxygen concentration in microgravity?",
+  "status": "has_data",
+  "claim": "The PSI tests in the database cannot show how flame spread rate changes with oxygen in microgravity: only 2 Saffire-II (PSI-99) microgravity tests report a numeric spread rate, 2.1 mm/s and 2.6 mm/s, and both ran at 22.1% O2.",
+  "summary_student": "We searched every PSI test in the database for a flame spread rate measured in microgravity. Only 2 Saffire-II tests have one, 2.1 mm/s and 2.6 mm/s, and both burned at the same oxygen level, 22.1% O2. Because the oxygen never changed between them, these tests cannot tell us how spread rate depends on oxygen.",
+  "summary_professional": "Across the PSI tests in the database, a numeric microgravity spread rate appears only in the Saffire-II (PSI-99) experimental table, column '?-g Spread Length', for n = 2 tests: 2.1 mm/s (fuel 'Cotton-Fiberglass (SIBAL)') and 2.6 mm/s (fuel cell empty in the source). The O2 level of both tests is 22.1% O2 at the lowest and 22.1% O2 at the highest, so there is no oxygen variation and no spread-rate versus O2 relation can be derived. The other Saffire-II microgravity cells read 'n/a' or refer to a table note, and no other PSI table in the database has a spread-rate column.",
+  "values": {
+    "ug_spread_rate_row_5": {
+      "value": 2.1,
+      "unit": "mm/s"
+    },
+    "ug_spread_rate_row_6": {
+      "value": 2.6,
+      "unit": "mm/s"
+    },
+    "ug_spread_rate_tests": {
+      "value": 2.0,
+      "unit": "tests"
+    },
+    "ug_spread_rate_o2_lowest": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "ug_spread_rate_o2_highest": {
+      "value": 22.1,
+      "unit": "% O2"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "WITH s AS (SELECT investigation, source_table, source_row, o2_pct_min, o2_pct_max, field_sources, try_cast(replace(json_extract_string(other, '$.\"?-g Spread Length\"'), ' mm/s', '') AS DOUBLE) AS spread FROM tests WHERE gravity = 'microgravity') SELECT 'ug_spread_rate_row_' || source_row AS name, spread AS value, 'mm/s' AS unit, investigation, source_table, list_value(source_row) AS source_rows, list_value('?-g Spread Length') AS source_columns FROM s WHERE spread IS NOT NULL UNION ALL SELECT 'ug_spread_rate_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list_value('?-g Spread Length') AS source_columns FROM s WHERE spread IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'ug_spread_rate_o2_lowest' AS name, min(o2_pct_min) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_min')) AS source_columns FROM s WHERE spread IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT 'ug_spread_rate_o2_highest' AS name, max(o2_pct_max) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) AS source_columns FROM s WHERE spread IS NOT NULL GROUP BY investigation, source_table"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-99",
+      "doi": "10.60555/2chp-m469",
+      "table": "PSI-99_Experimental table_SAFFIRE-2.csv",
+      "columns": [
+        "?-g Spread Length",
+        "Percent O2 (Note 1)"
+      ],
+      "rows": [
+        5,
+        6
+      ]
+    }
+  ],
+  "n_tests": 2,
+  "assumptions": [
+    "The Saffire-II column '?-g Spread Length' is read as the microgravity spread rate because its cells are given in mm/s and the paired column is '1-g Spread Rate'; the '?' is kept as written in the source header.",
+    "Cells that are not a plain number in mm/s ('n/a', 'n/a (Nomex)', or a reference to a table note) are treated as having no spread-rate value.",
+    "The Saffire-II O2 values are approximate and were derived from measured CO2 production, as a note of the source table states."
+  ],
+  "limitations": [
+    "With both spread-rate tests at the same O2 level, this finding gives no trend, slope or threshold for spread rate versus oxygen in microgravity.",
+    "It covers only the Saffire-II (PSI-99) tests; the other PSI tables in the database (for example BASS, BASS-II, SPICE, Saffire-I, Saffire-III) do not report a spread rate, so nothing is concluded about them.",
+    "The Saffire-II table gives no pressure, so the effect of pressure on these spread rates is unknown.",
+    "The '1-g Spread Rate' column of Saffire-II is an Earth-gravity comparison and was not used for the microgravity result.",
+    "No partial-gravity conclusion follows from these tests."
+  ],
+  "warnings": [
+    "Only 2 tests have a microgravity spread rate, and the fuel cell of one of them is empty in the source table (possibly a merged cell)."
+  ],
+  "environments": [],
+  "tier": 1,
+  "pillar": "prevention",
+  "visual_offer": {
+    "chart": {
+      "available": true,
+      "idea": "Points of the 2 Saffire-II microgravity spread rates, 2.1 mm/s and 2.6 mm/s, plotted against O2, both falling at 22.1% O2 to show there is no oxygen range."
+    },
+    "graph": {
+      "available": false,
+      "idea": null
+    },
+    "footnote": "Want a visual? I can draw a chart of the 2 Saffire-II microgravity spread rates against O2, showing both sit at 22.1% O2."
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T10:45:33Z"
+  }
+}

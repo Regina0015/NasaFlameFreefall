@@ -334,3 +334,142 @@
 .cine-glass h2:focus {
   outline: none;
 }
+
+/* Entry transition after sign-in: the form leaves, the scene flies to the hatch, a welcome panel appears,
+   then the layer fades to reveal the dashboard. Timings mirror DIVE in lib/intro.js. */
+
+.entry-layer {
+  display: contents;
+}
+
+.entry-layer[data-active] {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  background: #07090c;
+}
+
+.entry-layer[data-leaving] {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--entry-fade, 0.65s) cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+.cine[data-entering] .cine-glass {
+  opacity: 0;
+  transform: translateY(-6px);
+  visibility: hidden;
+  transition:
+    opacity 450ms ease,
+    transform 450ms ease,
+    visibility 0s linear 450ms;
+}
+
+.cine[data-entering] .cine-actions,
+.cine[data-entering] .cine-foot {
+  opacity: 0;
+  transition: opacity 450ms ease;
+}
+
+.cine[data-entering] .cine-skip {
+  animation-delay: 200ms;
+}
+
+.entry-welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  pointer-events: none;
+  /* The frosted glass covers the whole viewport while the message is shown. */
+  background:
+    linear-gradient(160deg, rgba(120, 160, 200, 0.12), rgba(120, 160, 200, 0) 45%),
+    rgba(8, 13, 20, 0.7);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+  backdrop-filter: blur(22px) saturate(1.2);
+}
+
+.cine[data-entering] .cine-skip {
+  z-index: 4;
+}
+
+.entry-glass {
+  width: min(100%, 34rem);
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
+  text-align: center;
+}
+
+.entry-welcome[data-state='in'] {
+  animation: entry-in 550ms var(--ease-out) both;
+}
+
+.entry-welcome[data-state='out'] {
+  animation: entry-out 420ms ease-in both;
+}
+
+@keyframes entry-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes entry-out {
+  to {
+    opacity: 0;
+  }
+}
+
+.entry-rule {
+  width: 3rem;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.entry-title {
+  font-size: clamp(1.5rem, 1rem + 2.4vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+.entry-accent {
+  color: var(--accent-strong);
+}
+
+.entry-line {
+  max-width: 28rem;
+  font-size: clamp(1rem, 0.92rem + 0.5vw, 1.2rem);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .entry-welcome {
+    background: rgba(10, 16, 24, 0.94);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .entry-welcome {
+    background: rgba(10, 16, 24, 0.94);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry-welcome {
+    animation: none !important;
+  }
+
+  .entry-layer[data-leaving] {
+    transition-duration: 0.2s;
+  }
+}

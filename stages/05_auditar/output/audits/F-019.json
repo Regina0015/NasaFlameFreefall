@@ -232,7 +232,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "yes",
-      "reason": "The text mentions PMMA, which is a material, but it is not explicitly listed in the CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS, or LIMITATIONS sections.",
+      "reason": "The text mentions PMMA, which is a material, but it is not explicitly listed in the cited investigations, evidence, values, assumptions, or limitations sections.",
       "attempts": 1
     },
     {
@@ -300,6 +300,6 @@
       "seed": 42,
       "num_ctx": 8192
     },
-    "date": "2026-11-15T09:35:02Z"
+    "date": "2026-11-15T14:57:28Z"
   }
 }

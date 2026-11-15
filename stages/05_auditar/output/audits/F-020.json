@@ -224,7 +224,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "no",
-      "reason": "The text mentions 'air flow speeds' which is a general condition, but the cited materials refer to specific experiments like SPICE, SAME-R, and SAME, and the evidence and values contain flow rate data for these specific investigations.",
+      "reason": "The text mentions 'air flow speeds' which is a general condition, and the cited materials and evidence refer to specific experiments and conditions, but no unique fuel or material is named in the text that is absent from the supporting data.",
       "attempts": 1
     },
     {
@@ -254,7 +254,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "no",
-      "reason": "The text only describes the range of air flow speeds tested in PSI tables and does not mention lunar or Martian gravity.",
+      "reason": "The text only discusses the range of air flow speeds tested in PSI tables and does not mention lunar or Martian gravity.",
       "attempts": 1
     },
     {
@@ -284,7 +284,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "no",
-      "reason": "The text only compares the range of air speeds tested across different experiments and does not make any statements about safety based on testing gaps.",
+      "reason": "The text only compares the range of air speeds covered by different experiments and does not discuss safety outcomes based on testing gaps.",
       "attempts": 1
     },
     {
@@ -344,7 +344,7 @@
       "done_by": "model",
       "expected": "yes",
       "answer": "yes",
-      "reason": "The limitations explicitly state that the finding says nothing about partial gravity, pressure effects, or crewed-habitat ventilation, which are specific conditions not covered.",
+      "reason": "The limitations explicitly state that the finding says nothing about partial gravity, pressure effects, or crewed-habitat ventilation, which are specific conditions the finding does not cover.",
       "attempts": 1
     },
     {
@@ -372,6 +372,6 @@
       "seed": 42,
       "num_ctx": 8192
     },
-    "date": "2026-11-15T09:35:12Z"
+    "date": "2026-11-15T14:57:42Z"
   }
 }

@@ -47,6 +47,7 @@ uv run python -m unittest discover -s scripts/tests -t .   # run all tests
 uv run python -m scripts.fetch_psi                         # download PSI records and test tables
 uv run python -m scripts.build_snapshot                    # rebuild data/snapshot/
 uv run python -m scripts.pull_db                           # copy the database (Supabase) into data/snapshot/; --check only compares
+uv run python -m scripts.push_findings                     # show which audited findings the database would get; --apply sends them (a person runs it)
 uv run uvicorn api.main:app --host <this PC's LAN IP>      # Auditor gateway (needs API_KEY in .env)
 uv run python -m scripts.audit_client F-001                # Calculator PC: send a finding to the gateway
 uv run python -m scripts.build_postman                     # regenerate postman/*.json

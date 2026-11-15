@@ -248,7 +248,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "no",
-      "reason": "The text mentions 'FLEX-2' and 'PSI-68' which are present in the cited investigations, evidence, and values, but it does not name a specific fuel or material.",
+      "reason": "The text mentions 'FLEX-2' and 'PSI-68' which are present in the cited investigations and evidence, but it does not name a specific fuel or material.",
       "attempts": 1
     },
     {
@@ -316,6 +316,6 @@
       "seed": 42,
       "num_ctx": 8192
     },
-    "date": "2026-11-15T09:34:42Z"
+    "date": "2026-11-15T14:57:04Z"
   }
 }

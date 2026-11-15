@@ -128,6 +128,16 @@ class AuditTest(GatewayCase):
         r = self.client.post("/audit", content=b"x", headers={**KEY, "content-length": "9999999"})
         self.assertEqual(r.status_code, 413)
 
+    def test_oversized_body_sent_in_chunks_without_a_length(self):
+        from api import config
+        r = self.client.post("/audit", content=iter([b"x" * 600_000, b"x" * (config.MAX_BODY_BYTES - 599_999)]),
+                             headers=KEY)
+        self.assertEqual(r.status_code, 413)
+
+    def test_a_length_that_is_not_a_number_is_a_bad_request(self):
+        r = self.client.post("/audit", content=b"x", headers={**KEY, "content-length": "abc"})
+        self.assertEqual(r.status_code, 400)
+
 
 class ReadTest(GatewayCase):
     def test_audits_lists_grade_and_sha(self):

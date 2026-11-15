@@ -64,7 +64,7 @@
       "name": "faithful_text",
       "done_by": "code+model",
       "result": "fail",
-      "detail": "6 of 20 answers differ from the expected one: Q3/claim, Q4/claim, Q3/summary_student, Q4/summary_student, Q3/summary_professional, Q8/method."
+      "detail": "5 of 20 answers differ from the expected one: Q3/claim, Q3/summary_student, Q4/summary_student, Q3/summary_professional, Q8/method."
     },
     {
       "id": "C9",
@@ -184,7 +184,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "yes",
-      "reason": "The text mentions 'initial ambient oxygen levels' which is a condition, but the cited materials and values only refer to oxygen mole fraction or percentage, not a specific fuel or material.",
+      "reason": "The text mentions 'initial ambient oxygen levels' which is a condition, but the cited evidence and values only refer to oxygen mole fraction or percentage, not a specific fuel or material.",
       "attempts": 1
     },
     {
@@ -193,8 +193,8 @@
       "field": "claim",
       "done_by": "model",
       "expected": "yes",
-      "answer": "no",
-      "reason": "The text specifically mentions FLEX (PSI-69) and FLEX-2 (PSI-68), which are listed in the cited investigations, but it also makes a general claim about the range of oxygen levels tested (12.0% to 30.0% O2) without explicitly limiting this range to the cited investigations.",
+      "answer": "yes",
+      "reason": "The text specifically mentions FLEX (PSI-69) and FLEX-2 (PSI-68), which are listed in the cited investigations, but it does not claim to cover all tests within those investigations or any other scope.",
       "attempts": 1
     },
     {
@@ -224,7 +224,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "yes",
-      "reason": "The text mentions 'burning fuel droplets' but no specific fuel material is named in the cited evidence, values, assumptions, or limitations.",
+      "reason": "The text mentions 'fuel droplets' which is a general description, but no specific fuel material is named in the cited evidence, values, assumptions, or limitations.",
       "attempts": 1
     },
     {
@@ -332,6 +332,6 @@
       "seed": 42,
       "num_ctx": 8192
     },
-    "date": "2026-11-15T09:33:33Z"
+    "date": "2026-11-15T14:55:47Z"
   }
 }

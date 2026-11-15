@@ -5,7 +5,7 @@
     "status": "done",
     "job_id": null,
     "finding_id": "F-001",
-    "finding_version": 2,
+    "finding_version": 3,
     "stored": null,
     "grade": "C",
     "failed_checks": [
@@ -15,13 +15,13 @@
       "C8 failed: the text says more than the evidence supports, or it was not reviewed."
     ],
     "send_back_to": null,
-    "finding_sha256": "a5736e8e6d7f59bc1754820e487ad3633bdd1d4fa3f51545b52f8a181e5a0f65",
+    "finding_sha256": "e4e309f43be82b162223ccc05edc0d73d6e872b5ed004547545e77d033cb26c4",
     "model_used": true,
     "cached": false,
     "audit": {
       "finding_id": "F-001",
-      "finding_version": 2,
-      "finding_sha256": "a5736e8e6d7f59bc1754820e487ad3633bdd1d4fa3f51545b52f8a181e5a0f65",
+      "finding_version": 3,
+      "finding_sha256": "e4e309f43be82b162223ccc05edc0d73d6e872b5ed004547545e77d033cb26c4",
       "checks": [
         {
           "id": "C0",
@@ -84,14 +84,14 @@
           "name": "faithful_text",
           "done_by": "code+model",
           "result": "fail",
-          "detail": "4 of 19 answers differ from the expected one: Q3/claim, Q3/summary_student, Q4/summary_student, Q3/summary_professional."
+          "detail": "3 of 19 answers differ from the expected one: Q3/summary_student, Q3/summary_professional, Q4/summary_professional. Review file ignored: it is for another version of the finding (SHA-256 differs); review it again."
         },
         {
           "id": "C9",
           "name": "chart_consistency",
           "done_by": "code",
-          "result": "pass",
-          "detail": "Every number in the chart data matches the finding or the recalculation."
+          "result": "not_applicable",
+          "detail": "No chart."
         }
       ],
       "recalculation": [
@@ -235,8 +235,8 @@
           "field": "claim",
           "done_by": "model",
           "expected": "no",
-          "answer": "yes",
-          "reason": "The text mentions 'solid-fuel tests' and 'droplet tests' which are not explicitly named as such in the cited materials, although BASS-II and FLEX relate to solid and liquid fuels respectively.",
+          "answer": "no",
+          "reason": "The text mentions 'Heptane' and 'Methanol' as fuels, and 'FLEX' and 'BASS-II' as investigations, all of which are present in the cited investigations.",
           "attempts": 1
         },
         {
@@ -246,7 +246,7 @@
           "done_by": "model",
           "expected": "yes",
           "answer": "yes",
-          "reason": "The text specifically mentions 'BASS-II' and 'FLEX' tests, which correspond to the cited investigations.",
+          "reason": "The text specifically mentions FLEX tests (PSI-69) and BASS-II tests (PSI-25), which are the cited investigations.",
           "attempts": 1
         },
         {
@@ -256,7 +256,7 @@
           "done_by": "model",
           "expected": "no",
           "answer": "no",
-          "reason": "The text compares the results of two different types of tests (BASS-II and FLEX) regarding oxygen levels, not the absence of tests as a safety conclusion.",
+          "reason": "The text compares the results of two different sets of tests (FLEX and BASS-II) regarding oxygen levels, not the absence of testing as a safety conclusion.",
           "attempts": 1
         },
         {
@@ -266,7 +266,7 @@
           "done_by": "model",
           "expected": "no",
           "answer": "no",
-          "reason": "The text only discusses BASS-II and FLEX tests and does not mention lunar or Martian gravity.",
+          "reason": "The text only discusses results from FLEX and BASS-II tests without mentioning lunar or Martian gravity.",
           "attempts": 1
         },
         {
@@ -276,7 +276,7 @@
           "done_by": "model",
           "expected": "no",
           "answer": "yes",
-          "reason": "The text mentions 'plastics and fabrics' as solid materials, which are not explicitly named in the cited investigations, evidence, values, assumptions, or limitations.",
+          "reason": "The text mentions 'Heptane' and 'Methanol' as fuels, which are not explicitly listed in the cited investigations, evidence, values, assumptions, or limitations.",
           "attempts": 1
         },
         {
@@ -285,8 +285,8 @@
           "field": "summary_student",
           "done_by": "model",
           "expected": "yes",
-          "answer": "no",
-          "reason": "The text discusses 'Solid materials such as plastics and fabrics' generally, not specifically limiting the scope to the cited investigations.",
+          "answer": "yes",
+          "reason": "The text specifically mentions the FLEX and BASS-II experiments, which are the cited investigations, and does not refer to any wider group of tests.",
           "attempts": 1
         },
         {
@@ -296,7 +296,7 @@
           "done_by": "model",
           "expected": "no",
           "answer": "no",
-          "reason": "The text states that solid materials were never burned at the planned oxygen level, which is a statement about the scope of testing, not a conclusion about safety based on lack of testing.",
+          "reason": "The text compares the oxygen levels achieved in two experiments and does not discuss the implications of untested scenarios as a safety result.",
           "attempts": 1
         },
         {
@@ -306,7 +306,7 @@
           "done_by": "model",
           "expected": "no",
           "answer": "no",
-          "reason": "The text only discusses oxygen levels in space and liquid fuel droplet tests, not the behavior of fire or combustion under lunar or Martian gravity.",
+          "reason": "The text only discusses experiments conducted in microgravity, not under lunar or Martian gravity.",
           "attempts": 1
         },
         {
@@ -316,7 +316,7 @@
           "done_by": "model",
           "expected": "no",
           "answer": "yes",
-          "reason": "The text mentions 'solid fuels' in the summary, but the cited investigations and other sections do not specify a particular fuel material.",
+          "reason": "The text mentions 'Heptane' and 'Methanol' as fuels, which are present in the summary text but not explicitly listed in the CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS, or LIMITATIONS sections.",
           "attempts": 1
         },
         {
@@ -325,8 +325,8 @@
           "field": "summary_professional",
           "done_by": "model",
           "expected": "yes",
-          "answer": "yes",
-          "reason": "The text specifically mentions BASS-II (PSI-25) and FLEX (PSI-69), which correspond to the cited investigations, and does not refer to a wider group of tests.",
+          "answer": "no",
+          "reason": "The text specifies the tests are from BASS-II (PSI-25) and FLEX (PSI-69), which are the cited investigations, but it also makes general statements about the types of tests conducted within those investigations, such as 'phase droplet' or 'phase solid', which are not explicitly limited to the cited investigations themselves.",
           "attempts": 1
         },
         {
@@ -336,7 +336,7 @@
           "done_by": "model",
           "expected": "no",
           "answer": "no",
-          "reason": "The text presents data ranges and counts for specific tests conducted, not a conclusion about safety based on lack of testing.",
+          "reason": "The text reports the results of tests conducted and does not make any claims about safety based on the absence of testing.",
           "attempts": 1
         },
         {
@@ -346,7 +346,7 @@
           "done_by": "model",
           "expected": "no",
           "answer": "no",
-          "reason": "The provided text only discusses oxygen ranges for BASS-II and FLEX tests and does not mention lunar or Martian gravity.",
+          "reason": "The text only discusses combustion tests conducted in microgravity, not under lunar or Martian gravity.",
           "attempts": 1
         },
         {
@@ -356,7 +356,7 @@
           "done_by": "model",
           "expected": "yes",
           "answer": "yes",
-          "reason": "The first limitation explicitly names specific investigations that are not covered by the finding.",
+          "reason": "The limitations explicitly name several things the finding does not cover, such as other PSI investigations, lunar gravity, or specific flame behavior at certain oxygen levels.",
           "attempts": 1
         }
       ],
@@ -374,7 +374,7 @@
           "seed": 42,
           "num_ctx": 8192
         },
-        "date": "2026-11-15T09:29:14Z"
+        "date": "2026-11-15T10:53:50Z"
       }
     },
     "detail": null

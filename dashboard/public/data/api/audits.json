@@ -5,15 +5,15 @@
     "audits": [
       {
         "finding_id": "F-001",
-        "finding_version": 2,
+        "finding_version": 3,
         "grade": "C",
         "failed_checks": [
           "C8"
         ],
         "stale_audit": false,
-        "finding_sha256": "a5736e8e6d7f59bc1754820e487ad3633bdd1d4fa3f51545b52f8a181e5a0f65",
+        "finding_sha256": "e4e309f43be82b162223ccc05edc0d73d6e872b5ed004547545e77d033cb26c4",
         "model_used": true,
-        "audited_at": "2026-11-15T09:29:14Z"
+        "audited_at": "2026-11-15T10:53:50Z"
       },
       {
         "finding_id": "F-002",
@@ -142,16 +142,15 @@
       },
       {
         "finding_id": "F-012",
-        "finding_version": 1,
+        "finding_version": 2,
         "grade": "C",
         "failed_checks": [
-          "C5",
           "C8"
         ],
         "stale_audit": false,
-        "finding_sha256": "8924b8554034a771af119d93d28207e45354e9ce7e68cf93039bce438b486e0c",
+        "finding_sha256": "164d80e171348788c069c92d223f1fd07806f34dfa5907209e7eb82e5df54716",
         "model_used": true,
-        "audited_at": "2026-11-15T09:33:56Z"
+        "audited_at": "2026-11-15T10:54:28Z"
       },
       {
         "finding_id": "F-013",
@@ -239,6 +238,19 @@
         "finding_sha256": "60476c6ef35fafe6399b9f8c50e0145670cac8d405ef73df42c6944594adde94",
         "model_used": true,
         "audited_at": "2026-11-15T09:35:12Z"
+      },
+      {
+        "finding_id": "F-021",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C5",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "927c26169dc2c7be4d18a5fcfce2530bdb58c58ce50159ecdb26c48ece09a482",
+        "model_used": true,
+        "audited_at": "2026-11-15T10:46:03Z"
       }
     ]
   }

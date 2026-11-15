@@ -1,7 +1,7 @@
 {
   "finding_id": "F-012",
-  "finding_version": 1,
-  "finding_sha256": "8924b8554034a771af119d93d28207e45354e9ce7e68cf93039bce438b486e0c",
+  "finding_version": 2,
+  "finding_sha256": "164d80e171348788c069c92d223f1fd07806f34dfa5907209e7eb82e5df54716",
   "checks": [
     {
       "id": "C0",
@@ -15,21 +15,21 @@
       "name": "traceability",
       "done_by": "code",
       "result": "pass",
-      "detail": "Rows, columns and DOI found: PSI-25: 14 rows in PSI-25_Experimental table_BASS-II.csv; PSI-98: 1 rows in PSI-98_Experimental table_SAFFIRE-1.csv; PSI-99: 7 rows in PSI-99_Experimental table_SAFFIRE-2.csv"
+      "detail": "Rows, columns and DOI found: PSI-25: 129 rows in PSI-25_Experimental table_BASS-II.csv; PSI-98: 2 rows in PSI-98_Experimental table_SAFFIRE-1.csv; PSI-99: 9 rows in PSI-99_Experimental table_SAFFIRE-2.csv"
     },
     {
       "id": "C2",
       "name": "fidelity",
       "done_by": "code",
       "result": "pass",
-      "detail": "psi25_solid_o2_max = 22.2 % O2 <- cell '22.2' (Calibrated initial O2 % by vol) at row 1 of PSI-25_Experimental table_BASS-II.csv; psi99_solid_o2_max = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 2 of PSI-99_Experimental table_SAFFIRE-2.csv; psi98_solid_o2_max = 21.7 % O2 <- cell '21.5 - 21.7' (Percent O2) at row 1 of PSI-98_Experimental table_SAFFIRE-1.csv"
+      "detail": "psi99_solid_o2_max = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 2 of PSI-99_Experimental table_SAFFIRE-2.csv; psi98_solid_o2_max = 21.7 % O2 <- cell '21.5 - 21.7' (Percent O2) at row 1 of PSI-98_Experimental table_SAFFIRE-1.csv; psi25_solid_o2_max = 22.2 % O2 <- cell '22.2' (Calibrated initial O2 % by vol) at row 1 of PSI-25_Experimental table_BASS-II.csv"
     },
     {
       "id": "C3",
       "name": "recalculation",
       "done_by": "code",
       "result": "pass",
-      "detail": "All 4 values reproduced by running the finding's SQL over data/snapshot (read-only); every source row and column it reports exists in the original CSVs."
+      "detail": "All 8 values reproduced by running the finding's SQL over data/snapshot (read-only); every source row and column it reports exists in the original CSVs."
     },
     {
       "id": "C4",
@@ -42,8 +42,8 @@
       "id": "C5",
       "name": "support",
       "done_by": "code",
-      "result": "fail",
-      "detail": "22 tests; broad support starts at 30 (provisional)."
+      "result": "pass",
+      "detail": "140 tests; broad support starts at 30 (provisional)."
     },
     {
       "id": "C6",
@@ -57,14 +57,14 @@
       "name": "data_quality",
       "done_by": "code",
       "result": "pass",
-      "detail": "22 of 22 needed cells readable (100.0%); level: clean."
+      "detail": "294 of 294 needed cells readable (100.0%); level: clean."
     },
     {
       "id": "C8",
       "name": "faithful_text",
       "done_by": "code+model",
       "result": "fail",
-      "detail": "7 of 20 answers differ from the expected one: Q3/claim, Q4/claim, Q3/summary_student, Q4/summary_student, Q3/summary_professional, Q4/summary_professional, Q8/method."
+      "detail": "6 of 20 answers differ from the expected one: Q3/claim, Q4/claim, Q4/summary_student, Q3/summary_professional, Q4/summary_professional, Q8/method."
     },
     {
       "id": "C9",
@@ -100,9 +100,41 @@
       "detail": "recomputed over every PSI table"
     },
     {
+      "value_name": "psi98_solid_tests_with_o2",
+      "finding_value": 2.0,
+      "recalculated_value": 2.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi25_solid_tests_with_o2",
+      "finding_value": 129.0,
+      "recalculated_value": 129.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_solid_tests_with_o2",
+      "finding_value": 9.0,
+      "recalculated_value": 9.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi25_solid_tests_at_highest_o2",
+      "finding_value": 14.0,
+      "recalculated_value": 14.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
       "value_name": "n_tests",
-      "finding_value": 22,
-      "recalculated_value": 22,
+      "finding_value": 140,
+      "recalculated_value": 140,
       "unit": "tests",
       "match": true,
       "detail": "sum of the cited rows over all evidence"
@@ -176,7 +208,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "yes",
-      "reason": "The text mentions 'solid-fuel test' which is a general description not explicitly listed as a specific item in the cited sections.",
+      "reason": "The text mentions 'PSI tests in the database with phase 'solid'' which is a general description not explicitly listed as a specific item in the cited sections.",
       "attempts": 1
     },
     {
@@ -186,7 +218,7 @@
       "done_by": "model",
       "expected": "yes",
       "answer": "no",
-      "reason": "The text makes a general claim about the highest oxygen level recorded for 'any solid-fuel test' and then lists specific investigations as examples, indicating a scope wider than just the cited investigations.",
+      "reason": "The text refers to 'the database' and 'PSI tests' generally, not exclusively to the cited investigations.",
       "attempts": 1
     },
     {
@@ -196,7 +228,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "no",
-      "reason": "The text only compares recorded oxygen levels from specific tests and does not mention any lack of tests being presented as a safety result.",
+      "reason": "The text reports a specific finding about the highest oxygen level in a subset of tests and the frequency with which that level was reached, not a lack of testing being framed as a safety conclusion.",
       "attempts": 1
     },
     {
@@ -206,7 +238,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "no",
-      "reason": "The text only provides data on oxygen levels for solid-fuel tests and does not mention lunar or Martian gravity.",
+      "reason": "The text only discusses PSI tests and oxygen levels without mentioning lunar or Martian gravity.",
       "attempts": 1
     },
     {
@@ -215,8 +247,8 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": "yes",
-      "reason": "The text mentions 'plastic sheets, rods and fabrics' as solid materials, which are not explicitly listed in the cited investigations, evidence, values, assumptions, or limitations.",
+      "answer": "no",
+      "reason": "The text mentions 'PMMA film', 'clear rod', and 'Nomex natural (nomex III)' as fuels, and 'BASS-II' as an investigation, all of which are present in the cited evidence or investigations.",
       "attempts": 1
     },
     {
@@ -226,7 +258,7 @@
       "done_by": "model",
       "expected": "yes",
       "answer": "no",
-      "reason": "The text refers to 'all PSI experiments that burned solid materials' and 'PSI' generally, which is broader than just the cited investigations.",
+      "reason": "The text states it checked 'every PSI test in the database' and mentions a specific investigation (BASS-II) but does not limit its scope to only the cited investigations.",
       "attempts": 1
     },
     {
@@ -236,7 +268,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "no",
-      "reason": "The text discusses the limitations of the tested oxygen concentration rather than making a safety judgment based on untested conditions.",
+      "reason": "The text describes the scope of tests conducted and the results found, not the absence of tests leading to a safety conclusion.",
       "attempts": 1
     },
     {
@@ -246,7 +278,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "no",
-      "reason": "The text discusses oxygen concentration in PSI experiments but makes no mention of lunar or Martian gravity.",
+      "reason": "The text only mentions tests conducted in microgravity and does not mention lunar or Martian gravity.",
       "attempts": 1
     },
     {
@@ -256,7 +288,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "yes",
-      "reason": "The text mentions 'PMMA films, slabs and rods and Nomex' as materials, which are not listed in the cited investigations, evidence, values, assumptions, or limitations.",
+      "reason": "The text mentions 'PSI tests' and 'database' which are not explicitly detailed in the cited sections, but the question asks if any named item *does not* appear in the provided sections, and 'PSI tests' is a general category used in the text.",
       "attempts": 1
     },
     {
@@ -266,7 +298,7 @@
       "done_by": "model",
       "expected": "yes",
       "answer": "no",
-      "reason": "The text refers to 'solid-phase tests' and 'other solid-fuel investigations' which is a wider group than just the cited investigations.",
+      "reason": "The text refers to 'Over the PSI tests in the database' and mentions PSI-25, PSI-99, and PSI-98, which are specific tests within the cited investigations, but it also refers to a broader set of tests ('n = 140') and a general category ('PSI tests in the database').",
       "attempts": 1
     },
     {
@@ -276,7 +308,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "no",
-      "reason": "The text describes the scope of tests conducted and the maximum O2 values found, but it does not interpret the absence of data from specific tests as a safety conclusion.",
+      "reason": "The text describes the highest recorded values from specific tests and does not make any claims about safety based on the absence of testing.",
       "attempts": 1
     },
     {
@@ -286,7 +318,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "no",
-      "reason": "The text only discusses combustion findings in microgravity and does not mention lunar or Martian gravity.",
+      "reason": "The text only mentions 'microgravity' and does not mention lunar or Martian gravity.",
       "attempts": 1
     },
     {
@@ -296,7 +328,7 @@
       "done_by": "model",
       "expected": "yes",
       "answer": "yes",
-      "reason": "The limitations explicitly name several specific investigations, materials, and conditions that the finding does not cover.",
+      "reason": "The limitations explicitly state several things the finding does not cover, such as burning at Earth gravity, lunar or Mars gravity, or the pressure at which tests ran.",
       "attempts": 1
     },
     {
@@ -324,6 +356,6 @@
       "seed": 42,
       "num_ctx": 8192
     },
-    "date": "2026-11-15T09:33:56Z"
+    "date": "2026-11-15T14:56:14Z"
   }
 }

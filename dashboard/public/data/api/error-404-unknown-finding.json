@@ -1,7 +1,7 @@
 {
   "http_status": 404,
-  "note": "GET /findings/F-999 (does not exist)",
+  "note": "GET /findings/F-999 (does not exist). Same message for GET /audits/F-999. From the updated gateway code (api/store.py): the Auditor PC sends it after it pulls main.",
   "body": {
-    "detail": "F-999 not found in <path on the Auditor PC>"
+    "detail": "F-999 not found on the gateway"
   }
 }

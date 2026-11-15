@@ -64,7 +64,7 @@
       "name": "faithful_text",
       "done_by": "code+model",
       "result": "fail",
-      "detail": "6 of 20 answers differ from the expected one: Q3/claim, Q4/claim, Q3/summary_student, Q4/summary_student, Q3/summary_professional, Q8/method."
+      "detail": "5 of 20 answers differ from the expected one: Q4/claim, Q3/summary_student, Q4/summary_student, Q3/summary_professional, Q8/method."
     },
     {
       "id": "C9",
@@ -263,8 +263,8 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": "yes",
-      "reason": "The text mentions 'SAME-R smoke tests' and 'SAME smoke tests' which correspond to PSI-101 and PSI-102 investigations, but it also mentions 'PSI tables' generally, which is not explicitly defined as a single entity in the provided context.",
+      "answer": "no",
+      "reason": "The text mentions 'SAME-R smoke tests' and 'SAME smoke tests' which correspond to PSI-101 and PSI-102, and it mentions 'DAFT' which corresponds to PSI-47, all of which are cited, but the text also mentions 'Kapton', 'Silicone', 'Lampwick', 'Teflon', 'Pyrell', 'Silicone Rubber', and 'Dibutyl Phthalate' as materials, and these materials are present in the evidence and values.",
       "attempts": 1
     },
     {
@@ -314,7 +314,7 @@
       "done_by": "model",
       "expected": "yes",
       "answer": "no",
-      "reason": "The text mentions specific materials tested in SAME-R and SAME, but it also mentions 'five materials' and 'earlier SAME experiment' without explicitly limiting the scope to only the cited investigations.",
+      "reason": "The text mentions specific materials and test counts for SAME-R and SAME, but it also mentions 'five materials' and 'earlier SAME experiment' without explicitly limiting the scope to only the cited investigations.",
       "attempts": 1
     },
     {
@@ -344,7 +344,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "yes",
-      "reason": "The text mentions 'Kapton 29' as a sample material in the summary, but the evidence and values only list 'Kapton' without the specific number '29'.",
+      "reason": "The text mentions 'Kapton 29' as a sample material in the summary, but the evidence and values only list 'Kapton' or 'Kapton tests' without the specific number '29'.",
       "attempts": 1
     },
     {
@@ -412,6 +412,6 @@
       "seed": 42,
       "num_ctx": 8192
     },
-    "date": "2026-11-15T09:33:46Z"
+    "date": "2026-11-15T14:56:00Z"
   }
 }

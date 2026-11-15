@@ -1,0 +1,119 @@
+{
+  "id": "F-012",
+  "version": 1,
+  "question": "What is the highest oxygen level at which any solid material was burned in PSI, and in which investigation?",
+  "status": "has_data",
+  "claim": "The highest oxygen level recorded for any solid-fuel test in PSI is 22.2% O2, in BASS-II (PSI-25), just above Saffire-II (PSI-99) at 22.1% and Saffire-I (PSI-98) at 21.7%.",
+  "summary_student": "Among all PSI experiments that burned solid materials such as plastic sheets, rods and fabrics, the most oxygen-rich air used was 22.2% oxygen, in the BASS-II experiment. That is only a little more oxygen than normal Earth air, so PSI does not show how these solids burn in much richer air.",
+  "summary_professional": "Across solid-phase tests with a stated O2 value, the maximum is 22.2% O2 by volume (calibrated initial O2) in BASS-II (PSI-25), on PMMA films, slabs and rods and Nomex, all in microgravity. The per-investigation maxima of the other solid-fuel investigations with O2 data are 22.1% O2 for Saffire-II (PSI-99, approximate, derived from measured CO2 production) and 21.7% O2 for Saffire-I (PSI-98). The finding rests on n = 22 tests at those maxima; BASS (PSI-26) and Saffire-III (PSI-100) report no O2 value and are not included.",
+  "values": {
+    "psi25_solid_o2_max": {
+      "value": 22.2,
+      "unit": "% O2"
+    },
+    "psi99_solid_o2_max": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi98_solid_o2_max": {
+      "value": 21.7,
+      "unit": "% O2"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "WITH s AS (SELECT *, max(o2_pct_max) OVER (PARTITION BY investigation, source_table) AS inv_max FROM tests WHERE phase = 'solid' AND o2_pct_max IS NOT NULL) SELECT lower(replace(investigation, '-', '')) || '_solid_o2_max' AS name, max(o2_pct_max) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) AS source_columns FROM s WHERE o2_pct_max = inv_max GROUP BY investigation, source_table ORDER BY value DESC"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-25",
+      "doi": "10.60555/4qc4-de67",
+      "table": "PSI-25_Experimental table_BASS-II.csv",
+      "columns": [
+        "Calibrated initial O2 % by vol"
+      ],
+      "rows": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        12,
+        23,
+        27,
+        28,
+        31,
+        40,
+        47,
+        48
+      ]
+    },
+    {
+      "investigation": "PSI-98",
+      "doi": "10.60555/0t15-1z43",
+      "table": "PSI-98_Experimental table_SAFFIRE-1.csv",
+      "columns": [
+        "Percent O2"
+      ],
+      "rows": [
+        1
+      ]
+    },
+    {
+      "investigation": "PSI-99",
+      "doi": "10.60555/2chp-m469",
+      "table": "PSI-99_Experimental table_SAFFIRE-2.csv",
+      "columns": [
+        "Percent O2 (Note 1)"
+      ],
+      "rows": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    }
+  ],
+  "n_tests": 22,
+  "assumptions": [
+    "A test counts as a solid-material burn when its phase in the snapshot is solid; the test outcome (ignition, spread or extinction) was not filtered.",
+    "Oxygen is the value in the table's O2 column (BASS-II: calibrated initial O2 % by vol; Saffire-II: O2 derived from measured CO2 production), with volume and mole fraction treated as equal.",
+    "For rows given as a range, the upper end of the range is used."
+  ],
+  "limitations": [
+    "Covers only the solid-fuel investigations that state O2: BASS-II (PSI-25), Saffire-II (PSI-99) and Saffire-I (PSI-98). BASS (PSI-26) and Saffire-III (PSI-100) give no O2 value, so a higher level in those tests cannot be ruled out from the tables.",
+    "Gas-burner tests are excluded even when they emulate burning solids: ACME BRE (PSI-20) is a gas-phase burner, so its oxygen levels are not solid-material burns.",
+    "All of these solid tests were in microgravity and the tables give no pressure, so the finding says nothing about solid flammability at other gravity levels, at reduced pressure, or in oxygen-enriched cabin atmospheres.",
+    "It does not say whether each test ignited, spread or extinguished; it only reports the oxygen level the test was run at."
+  ],
+  "warnings": [],
+  "environments": [],
+  "tier": 1,
+  "pillar": "prevention",
+  "visual_offer": {
+    "chart": {
+      "available": true,
+      "idea": "Bars of the highest O2 level tested with solid fuels in BASS-II, Saffire-II and Saffire-I, side by side."
+    },
+    "graph": {
+      "available": false,
+      "idea": null
+    },
+    "footnote": "Want a visual? I can draw a chart comparing the highest oxygen level used with solid fuels in BASS-II, Saffire-II and Saffire-I."
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T08:12:43Z"
+  }
+}

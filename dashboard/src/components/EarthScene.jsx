@@ -5,11 +5,16 @@ import {
   BufferAttribute,
   BufferGeometry,
   CatmullRomCurve3,
+  CircleGeometry,
   Color,
   DoubleSide,
   Group,
   LinearMipmapLinearFilter,
+  LineSegments,
   Mesh,
+  MeshBasicMaterial,
+  RingGeometry,
+  TorusGeometry,
   PerspectiveCamera,
   Quaternion,
   PlaneGeometry,
@@ -23,7 +28,21 @@ import {
   WebGLRenderer,
 } from 'three'
 
-import { T, cameraWaypoints, clamp01, easeOut, mulberry32, pathParam, range, smooth, smoother } from '../lib/intro.js'
+import {
+  DIVE,
+  T,
+  cameraWaypoints,
+  clamp01,
+  diveProgress,
+  diveSpeed,
+  easeOut,
+  findDockingTarget,
+  mulberry32,
+  pathParam,
+  range,
+  smooth,
+  smoother,
+} from '../lib/intro.js'
 import { analyseStation, applyHologram, loadStation, makeAssembly, makeWordTargets } from '../lib/stationParticles.js'
 
 // NASA SVS 3615 equirectangular map (see public/textures/SOURCES.md). Clouds are baked in.
@@ -351,6 +370,118 @@ function makeShootingStars() {
   return { geometry, meshes }
 }
 
+// ---------- Docking flight: star streaks (one batched LineSegments, driven by two uniforms) ----------
+
+const STREAK_DEPTH = 46 // streaks live between 1 and this many units ahead of the camera, in camera space
+const STREAK_VERT = /* glsl */ `
+  uniform float uShift;
+  uniform float uSpeed;
+  uniform float uDepth;
+  attribute float aEnd;     // 0 head (nearer), 1 tail (farther)
+  attribute float aLen;
+  attribute float aTint;
+  varying float vAlpha;
+  varying float vTint;
+  void main() {
+    float d = mod(position.z - uShift, uDepth) + 1.0;
+    float z = d + aEnd * aLen * uSpeed * 5.0;
+    vec4 mv = modelViewMatrix * vec4(position.x, position.y, -z, 1.0);
+    gl_Position = projectionMatrix * mv;
+    float near = smoothstep(1.0, 4.0, d);
+    float far = 1.0 - smoothstep(uDepth * 0.55, uDepth, d);
+    vAlpha = uSpeed * near * far * (1.0 - 0.9 * aEnd) * 0.7;
+    vTint = aTint;
+  }
+`
+const STREAK_FRAG = /* glsl */ `
+  uniform vec3 uSilver;
+  uniform vec3 uIce;
+  varying float vAlpha;
+  varying float vTint;
+  void main() {
+    gl_FragColor = vec4(mix(uSilver, uIce, vTint), vAlpha);
+  }
+`
+
+function makeStreaks(count, rng) {
+  const pos = new Float32Array(count * 6)
+  const end = new Float32Array(count * 2)
+  const len = new Float32Array(count * 2)
+  const tint = new Float32Array(count * 2)
+  for (let i = 0; i < count; i++) {
+    const a = rng() * Math.PI * 2
+    // Outside the central cone, so streaks sweep past the edges and never pile up at screen centre.
+    const r = 0.9 + Math.pow(rng(), 1.7) * 13
+    const x = Math.cos(a) * r
+    const y = Math.sin(a) * r
+    const z = rng() * STREAK_DEPTH
+    const l = 0.6 + rng() * 1.1
+    const c = rng() < 0.35 ? 1 : rng() * 0.2
+    for (let k = 0; k < 2; k++) {
+      pos.set([x, y, z], i * 6 + k * 3)
+      end[i * 2 + k] = k
+      len[i * 2 + k] = l
+      tint[i * 2 + k] = c
+    }
+  }
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new BufferAttribute(pos, 3))
+  geometry.setAttribute('aEnd', new BufferAttribute(end, 1))
+  geometry.setAttribute('aLen', new BufferAttribute(len, 1))
+  geometry.setAttribute('aTint', new BufferAttribute(tint, 1))
+  const material = new ShaderMaterial({
+    vertexShader: STREAK_VERT,
+    fragmentShader: STREAK_FRAG,
+    uniforms: {
+      uShift: { value: 0 },
+      uSpeed: { value: 0 },
+      uDepth: { value: STREAK_DEPTH },
+      uSilver: { value: new Color('#eef3f8') },
+      uIce: { value: new Color('#9fdcf0') },
+    },
+    transparent: true,
+    depthWrite: false,
+    depthTest: false,
+    blending: AdditiveBlending,
+  })
+  const lines = new LineSegments(geometry, material)
+  lines.frustumCulled = false
+  lines.renderOrder = 5
+  lines.visible = false
+  return lines
+}
+
+// A restrained, conceptual docking ring placed on the measured end cap (in the station's unit space).
+// It is an exterior detail only: a closed hatch cover with a ring and a thin cyan accent. Nothing
+// suggests an opening or an interior.
+function makeDock(target) {
+  const R = target.radius * 1.35
+  const tube = R * 0.09
+  const group = new Group()
+  group.position.set(target.center[0], target.center[1], target.center[2] + tube * 0.5)
+  group.visible = false
+  const make = (geometry, color, base) => {
+    const material = new MeshBasicMaterial({ color, transparent: true, opacity: 0, depthWrite: false, toneMapped: false })
+    const mesh = new Mesh(geometry, material)
+    mesh.renderOrder = 3
+    group.add(mesh)
+    return { geometry, material, base }
+  }
+  const parts = [
+    make(new CircleGeometry(R * 0.72, 48), '#08131b', 0.6),
+    make(new TorusGeometry(R, tube, 12, 72), '#b8c8d8', 0.9),
+    make(new RingGeometry(R * 0.74, R * 0.79, 72), '#53d8ed', 0.75),
+  ]
+  parts[0].geometry.translate(0, 0, -tube * 0.3)
+  return {
+    group,
+    radius: R,
+    geometries: parts.map((p) => p.geometry),
+    materials: parts.map((p) => p.material),
+    base: parts.map((p) => p.base),
+  }
+}
+
 const STATION_DISTANCE = 14 // camera distance to the station at the end of the intro
 const CAMERA_PLANE = 9 // depth of camera-space effects (shooting stars)
 const SEED = 20260921
@@ -362,12 +493,24 @@ const SEED = 20260921
  *
  * Props: reducedMotion and startFinal show the settled end state at once; skipSignal jumps to
  * it; replaySignal restarts the sequence. onIntroDone fires when the login may appear;
- * onFail fires if WebGL is unavailable.
+ * onFail fires if WebGL is unavailable. diveSignal starts the one-way docking flight that follows a
+ * confirmed sign-in (it continues from the settled composition and never replays the intro).
  */
-export default function EarthScene({ reducedMotion, startFinal, ambientPaused, skipSignal, replaySignal, onIntroDone, onFail }) {
+export default function EarthScene({
+  reducedMotion,
+  startFinal,
+  ambientPaused,
+  skipSignal,
+  replaySignal,
+  diveSignal = 0,
+  onIntroDone,
+  onFail,
+}) {
   const hostRef = useRef(null)
   const skipRef = useRef(skipSignal)
   const replayRef = useRef(replaySignal)
+  const diveRef = useRef(diveSignal)
+  const diveFnRef = useRef(null)
   const doneRef = useRef(onIntroDone)
   const failRef = useRef(onFail)
   const startFinalRef = useRef(startFinal)
@@ -397,6 +540,13 @@ export default function EarthScene({ reducedMotion, startFinal, ambientPaused, s
       replayFnRef.current?.()
     }
   }, [replaySignal])
+
+  useEffect(() => {
+    if (diveRef.current !== diveSignal) {
+      diveRef.current = diveSignal
+      diveFnRef.current?.()
+    }
+  }, [diveSignal])
 
   useEffect(() => {
     const host = hostRef.current
@@ -477,6 +627,21 @@ export default function EarthScene({ reducedMotion, startFinal, ambientPaused, s
     ignite.scale.x = 2.8
     ignite.position.z = -CAMERA_PLANE
     camera.add(ignite)
+
+    // Docking flight (only after a confirmed sign-in): its own random stream, so the opening is untouched.
+    const streaks = makeStreaks(small ? 420 : 900, mulberry32(SEED + 7))
+    camera.add(streaks)
+    let dock = null // { group, radius, materials, geometries, base } once the station is loaded
+    let diving = false
+    let diveStart = 0
+    let diveT = 0
+    const diveFrom = new Vector3()
+    const diveLook = new Vector3()
+    const diveFocus = new Vector3()
+    const diveEnd = new Vector3()
+    const diveNormal = new Vector3()
+    const diveSide = new Vector3()
+    const worldUp = new Vector3(0, 1, 0)
 
     // Earth.
     let finished = false
@@ -595,6 +760,43 @@ export default function EarthScene({ reducedMotion, startFinal, ambientPaused, s
       const swing = smoother(range(tt, T.ORBIT_END + 0.9, T.DEPART_END + 0.8))
       lookAt.set(0, 0, 0).lerp(aim, swing)
       camera.lookAt(lookAt)
+
+      // Docking flight: starts from the settled composition above and ends in front of the hatch.
+      let ringFade = 0
+      if (diving) {
+        const s = diveProgress(diveT)
+        const speed = diveSpeed(diveT)
+        diveFrom.copy(camera.position)
+        diveLook.copy(lookAt)
+        if (dock && !fallback) {
+          stationGroup.updateMatrixWorld(true)
+          diveFocus.copy(dock.group.position)
+          stationGroup.localToWorld(diveFocus)
+          diveNormal.set(0, 0, 1).applyQuaternion(stationGroup.quaternion)
+          diveEnd.copy(diveFocus).addScaledVector(diveNormal, 5.5 * dock.radius * stationGroup.scale.x)
+        } else {
+          // No suitable hatch (or no station): push gently toward the station core, or toward Earth.
+          diveFocus.copy(fallback ? earth.position : aim)
+          diveNormal.copy(diveFrom).sub(diveFocus).normalize()
+          diveEnd.copy(diveFocus).addScaledVector(diveNormal, fallback ? 2.6 : diveFrom.distanceTo(diveFocus) * 0.4)
+        }
+        camera.position.lerpVectors(diveFrom, diveEnd, s)
+        // A very slight lateral arc keeps the flight from reading as a flat zoom.
+        diveSide.subVectors(diveEnd, diveFrom).cross(worldUp).normalize()
+        camera.position.addScaledVector(diveSide, Math.sin(Math.PI * s) * 0.02 * diveFrom.distanceTo(diveEnd))
+        lookAt.lerpVectors(diveLook, diveFocus, smoother(range(s, 0, 0.85)))
+        camera.lookAt(lookAt)
+        streaks.material.uniforms.uSpeed.value = speed
+        streaks.material.uniforms.uShift.value = s * DIVE.STREAK_SHIFT
+        ringFade = smooth(range(diveT, DIVE.RING_IN_START, DIVE.RING_IN_END))
+      }
+      streaks.visible = diving && streaks.material.uniforms.uSpeed.value > 0.002
+      if (dock) {
+        dock.group.visible = ringFade > 0.002 && !fallback
+        dock.materials.forEach((m, i) => {
+          m.opacity = dock.base[i] * ringFade
+        })
+      }
       camera.updateMatrixWorld(true)
 
       earth.rotation.y = baseRotation + Math.min(tt, T.ORBIT_END) * 0.02
@@ -705,6 +907,13 @@ export default function EarthScene({ reducedMotion, startFinal, ambientPaused, s
       const dt = Math.min((now - last) / 1000 || 0, 0.05)
       last = now
       if (finished) {
+        if (diving) {
+          // Docking flight: timed from the real clock so it stays in step with the page timeline.
+          diveT = Math.max(0, (now - diveStart) / 1000)
+          ambientTime += dt
+          draw(T.TOTAL, ambientTime)
+          return
+        }
         // Ambient phase: same loop, stars only. Mobile renders every other frame.
         ambientTime += dt
         if (small) {
@@ -734,13 +943,26 @@ export default function EarthScene({ reducedMotion, startFinal, ambientPaused, s
     }
 
     function startLoop() {
-      if (frame || frozen || (finished && !ambientOn())) return
+      if (frame || frozen || (finished && !ambientOn() && !diving)) return
       last = performance.now()
       frame = requestAnimationFrame(tick)
     }
     // Do no work while the tab is hidden.
     const onVisibility = () => (document.hidden ? stopLoop() : startLoop())
+    diveFnRef.current = () => {
+      if (diving || reducedMotion || frozen) return
+      if (!finished) {
+        elapsed = T.TOTAL
+        finish()
+      }
+      diving = true
+      diveT = 0
+      diveStart = performance.now()
+      stopLoop()
+      startLoop()
+    }
     pauseFnRef.current = () => {
+      if (diving) return
       if (pausedRef.current) {
         stopLoop()
         if (finished) draw(T.TOTAL, ambientTime)
@@ -821,6 +1043,12 @@ export default function EarthScene({ reducedMotion, startFinal, ambientPaused, s
         root.visible = false
         stationGroup.add(pivot, assembly)
         station = { assembly, root, pivot, materials, size: analysis.size }
+        const target = findDockingTarget(analysis.targets)
+        if (target) {
+          dock = makeDock(target)
+          stationGroup.add(dock.group)
+          if (import.meta.env.DEV) console.info('[dive] docking target', target.center.map((n) => +n.toFixed(3)), +target.radius.toFixed(3))
+        } else if (import.meta.env.DEV) console.info('[dive] no docking cap found; the flight falls back to the station core')
         stationState = 'ready'
         if (import.meta.env.DEV) console.info('[intro] station size', analysis.size.toArray().map((n) => +n.toFixed(3)))
         layout()
@@ -881,6 +1109,13 @@ export default function EarthScene({ reducedMotion, startFinal, ambientPaused, s
       shooting.meshes.forEach((m) => m.material.dispose())
       igniteGeometry.dispose()
       igniteMaterial.dispose()
+      diveFnRef.current = null
+      streaks.geometry.dispose()
+      streaks.material.dispose()
+      if (dock) {
+        dock.geometries.forEach((g) => g.dispose())
+        dock.materials.forEach((m) => m.dispose())
+      }
       if (station) {
         station.assembly.geometry.dispose()
         station.assembly.material.dispose()

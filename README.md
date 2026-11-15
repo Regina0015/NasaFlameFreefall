@@ -77,7 +77,7 @@ Setup: `uv sync` (needs uv and Python 3.12+); tests: `uv run python -m unittest 
 
 **Waiting on teammates**
 
-- **Database owner:** done: the pressure fix, the `findings` table in `supabase/schema.sql` and `scripts/load_snapshot.py` are merged, and the database matches `pull_db`. Next: load the findings and their audits into the `findings` table.
+- **Database owner:** done: the pressure fix, the `findings` table in `supabase/schema.sql` and `scripts/load_snapshot.py` are merged, and the database matches `pull_db`. Next: a person runs `uv run python -m scripts.push_findings --apply` to load the audited findings into the `findings` table (without `--apply` it only shows what would change; rejected and unaudited findings are never sent).
 - **Team:** review three Investigator records against PSI, every line of `tier-review.md`, and the use of `transit_vehicle`; then run `push_investigations --apply`. Tier changes go in `_config/tiers.md`.
 - **Auditor and model:** see "Connecting the Auditor to a teammate's model" below.
 

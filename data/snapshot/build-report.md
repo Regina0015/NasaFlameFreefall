@@ -26,4 +26,3 @@
 | PSI-99_Experimental table_SAFFIRE-2.csv | 15 | 9 | 10, 11, 12, 13, 14, 15 |
 
 Tables in the PSI folder with no mapper yet:
-

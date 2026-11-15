@@ -232,7 +232,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "yes",
-      "reason": "The text mentions 'small gas flames' which is a general description not specifically detailed in the cited materials.",
+      "reason": "The text mentions 'small gas flames' which is not specifically named in the cited materials.",
       "attempts": 1
     },
     {
@@ -340,6 +340,6 @@
       "seed": 42,
       "num_ctx": 8192
     },
-    "date": "2026-11-15T09:30:24Z"
+    "date": "2026-11-15T14:54:38Z"
   }
 }

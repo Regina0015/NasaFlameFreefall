@@ -11,12 +11,23 @@ For the teammate building the dashboard. It lists every section, the data behind
 | Investigations (24) | Supabase table `investigations` | Ready. Summaries, pillar and environments arrive after the team reviews the Investigator output and runs `push_investigations --apply` (today only 2 of 24 have them) |
 | Tests (1982) | Supabase table `tests` (also `tests_clean`, `measurements`) | Ready. Supabase returns at most 1000 rows per request: page with `.range()` or filter |
 | Relations between investigations (95) | Supabase table `relations` | Ready |
-| Findings and their audits | A findings table in `supabase/schema.sql` | **Not yet.** The database owner is adding it. Until then use `dashboard/public/data/` sample files with the same fields as `schemas/finding.schema.json` |
+| Findings and their audits | Supabase table `findings` (columns in `supabase/schema.sql`) | **Ready to load.** The table exists and is empty; a person runs `uv run python -m scripts.push_findings --apply` to fill it. Until then use the real responses in `dashboard/public/data/api/` (section 8): each row has the same fields |
 | Chart of a finding | `finding.chart` (Vega-Lite 6 JSON) | Ready in the finding file; draw it with `vega-embed` |
 | Proof graph of a finding | `finding.graph` | Ready in the finding file |
 | Chat | `/api/chat` (local only, `npm run dev`) | Ready; needs the Ollama model |
 
 Keys: only `VITE_SUPABASE_URL` and the publishable key `VITE_SUPABASE_ANON_KEY` in `dashboard/.env.local`. Never the secret key.
+
+**Reading findings from Supabase.** `supabase.from('findings').select('*')` returns one row per published finding:
+- **Columns:** every field of the finding (section 1), plus `grade`, `grade_reasons`, `finding_sha256`, `audit` (the whole audit, the same object as `body.audit` in `audit-F-001.json`) and `audited_at`.
+- **What `push_findings` sends:**
+  - Only the current version of findings with an audit for exactly their file, and never a `rejected` one.
+  - Each row already has its grade, so the dashboard does not filter or grade anything.
+  - Rows that are no longer published are removed.
+- **Knowledge gaps** are rows with `status = 'no_data'` and `grade = 'no_data'`.
+- **On Vercel:** the Auditor gateway is only on the team's Wi-Fi, so the deployed dashboard reads findings from Supabase only. Use the gateway (section 8) for local development.
+- **Today `push_findings` would publish 18 rows** (F-007 and F-019 are `rejected`, so they stay out).
+- **Without Supabase configured** (no `dashboard/.env.local`), `useTabla('findings')` reads `dashboard/public/data/findings.json`: one real row (F-001 v3) exactly as the table will hold it. `src/secciones/Hallazgos.jsx` already reads this table; it is a placeholder for the design. The old sample `public/data/hallazgos.json` (Spanish columns) is no longer read.
 
 ## 1. Findings (Calculator + Auditor)
 
@@ -43,10 +54,10 @@ A finding is one answer to one question. The Calculator writes it, code checks e
 
 ### Real examples (from `stages/04_calcular/output/findings/`)
 
-**F-001, grade C** (only C8, the model text review, is still open):
+**F-001 v3, grade C** (only C8, the model text review, is still open):
 - Question: "Did any BASS-II or FLEX test reach the lunar habitat oxygen level (30% or more)?"
-- Claim: "None of the 129 BASS-II solid-fuel tests reached 30% oxygen (highest 22.2%), while 24 of the 274 FLEX droplet tests did, up to 34%."
-- Student: "Solid materials such as plastics and fabrics were never burned in space at the oxygen level planned for a Moon base. Only some liquid fuel droplet tests reached that level."
+- Claim: "Yes: 24 of the 274 FLEX tests (PSI-69, phase droplet, fuel Heptane or Methanol) reached 30% O2 or more, while 0 of the 129 BASS-II tests (PSI-25, phase solid) did."
+- Student: "The FLEX experiment burned single fuel droplets of Heptane and Methanol in microgravity, and 24 of its 274 tests used 30% oxygen or more, the oxygen level of a lunar habitat. The BASS-II experiment burned solid samples in 129 tests in microgravity, and 0 of them reached 30% oxygen; its highest level was 22.2%. ..."
 - Warning: "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
 - Chart: range bars of tested O2 per investigation, with a dashed line at 30%.
 
@@ -138,6 +149,7 @@ Already built: `dashboard/src/chat/ChatPanel.jsx`, mounted in the "Research assi
 - Each answer shows where its data came from and says it is **not an audited finding**.
 - Phases with tests that report no oxygen come back as "No data for ...". Show that as text, not as a zero.
 - It only exists with `npm run dev` and the Ollama model; on Vercel the panel shows a notice.
+- A new chat UI must keep calling `POST /api/chat` from the dashboard page with `Content-Type: application/json`. Other websites and non-JSON posts are refused (403, 415), and a body over 64 KB gets 413.
 
 ## 5. Interpretation lab (to build)
 
@@ -179,7 +191,7 @@ A panel next to the chat: "what if the data were read differently?". It shows wh
 
 The Auditor runs on its own PC behind an HTTP gateway (`api/`). Real responses, captured from that gateway on 2026-11-15, are in `dashboard/public/data/api/` (one file per call: `{http_status, note, body}`). Build the findings views against these files first; the shapes are the contract.
 
-**Never call the gateway from the browser.** Every route except `/health` needs the `X-API-Key` header, and anything in a `VITE_` variable ends up in the public bundle. Read grades through a server: the Vite dev server (like the chat in `dashboard/chat/`), or the `findings` table in Supabase once findings and audits are loaded there.
+**Never call the gateway from the browser.** Every route except `/health` needs the `X-API-Key` header, and anything in a `VITE_` variable ends up in the public bundle. In the deployed dashboard, read findings and grades from the Supabase `findings` table (section 0). In local development a server may call the gateway: the Vite dev server, like the chat in `dashboard/chat/`.
 
 | Call | File | Use it for |
 |---|---|---|
@@ -197,6 +209,62 @@ The Auditor runs on its own PC behind an HTTP gateway (`api/`). Real responses, 
 
 **Rules:**
 - A grade is shown only when `grade` is one of the five grades and `stale_audit` is false. `pending audit`, an error or an unreachable gateway all show "Not audited yet", never a grade.
-- `failed_checks` in plain words for the student view: C5 = "based on few tests", C7 = "some table cells were unclear", C8 = "the text review did not pass". The professional view lists every check with its `detail`.
+- `failed_checks` in plain words for the student view: see the table below. The professional view lists every check with its `detail`.
 - `rejected` findings are not published (section 1). A `no_data` finding with C8 failed comes back `rejected` until its text passes the review.
 - Results of every finding sent through the gateway: `battery-results.json`.
+- `POST /audit` is for the Calculator's PC, not for the dashboard. The dashboard only reads.
+
+### What the tests showed (2026-11-15)
+
+All 19 findings were sent through the gateway with the model on (`battery-results.json`). Afterwards F-001 v3 and F-012 v2 (rewritten so their text names only what was counted) and the new F-021 were audited too: all three are `C`.
+
+- **17 are `C`, 2 are `rejected`, none is A or B yet.** F-007 and F-019 are knowledge gaps (`status: no_data`) whose text review failed, so they come back `rejected`.
+- **Every `C` has C8 failed.** Some also have C5 (F-009, F-013, F-014, F-017, F-021) or C7 (F-002, F-006, F-008, F-009).
+- **Why C8 fails:**
+  - The small model flagged correct text as out of scope ("the 10 Nomex tests", "gas flames"). The Auditor's prompt now gives it the scope of the calculation and the fuels and phase of the cited rows; this applies once the Auditor PC updates.
+  - 12 findings also wait for a person's answer to Q8, "does the calculation answer the question?": F-005, F-010 to F-014, F-016 to F-021 (guide: `stages/05_auditar/output/reviews/Q8-GUIDE.md`).
+- **Grades will change when these files are refreshed; the shapes will not.** Build every state now: A, B, C, No data, Not published and "Not audited yet". To see a state, copy a row of `findings.json` and change its `grade`.
+- **Speed:** an audit with the model took 9 to 25 s (one took 76 s). Reading stored grades is fast (`/health` answered in 0.09 s), so the dashboard never waits on an audit.
+
+### Each check in plain words
+
+C0 to C4 and C9 are core checks: if one fails, the finding is `rejected` and not shown. C5 to C8 lower the grade.
+
+| Check | Name in `checks` | What it checks | Student sentence when it fails |
+|---|---|---|---|
+| C0 | `format` | The finding file is complete | (not shown: rejected) |
+| C1 | `traceability` | Every source exists: investigation, DOI, table, columns, rows | (not shown: rejected) |
+| C2 | `fidelity` | Values match the original NASA table cells | (not shown: rejected) |
+| C3 | `recalculation` | The Auditor recomputed the result from the original tables and got the same | (not shown: rejected) |
+| C4 | `units_and_ranges` | Units and value ranges make sense | (not shown: rejected) |
+| C5 | `support` | Based on at least 30 tests | "Based on few tests." |
+| C6 | `tested_range` | Stays inside the conditions that were tested; lunar or Mars findings carry the partial-gravity warning | "Goes beyond what was tested." |
+| C7 | `data_quality` | The cited table cells are readable | "Some table cells were unclear." |
+| C8 | `faithful_text` | The text says only what the data shows (code, the model and, for Q8, a person) | "The text review did not pass yet." |
+| C9 | `chart_consistency` | The chart shows the same numbers as the finding | (not shown: rejected) |
+
+### Text review (professional view)
+
+`audit.text_review` is a list. Each item has:
+- `question_id` (Q1 to Q8) and `question`.
+- `field`: `claim`, `summary_student`, `summary_professional`, `limitations` or `method`.
+- `done_by`: `code`, `model` or `human`.
+- `expected` and `answer` (`yes`, `no` or `null`), and `reason`.
+
+How to show each item:
+- An item passes when `answer` equals `expected`.
+- An item with `dismissed` or `confirmed` (`{reviewer, note}`) was decided by a person: show the reviewer and the note.
+- `done_by: human` with `answer: null` shows as "Waiting for a person's review".
+
+### Errors and states
+
+| Response | When | Show |
+|---|---|---|
+| 401 | Wrong or missing `X-API-Key` | "Auditor not reachable" (log it on the server) |
+| 404 | Unknown finding id: `{"detail": "F-999 not found on the gateway"}` | "Not found" |
+| 422 | Bad filter, for example `?grade=bogus` | Nothing to users; fix the request |
+| 503 | The gateway has no `API_KEY` set | "Auditor not reachable" |
+| No answer or timeout | The Auditor PC is off, or the server is not on the team's network (the gateway is only on that Wi-Fi) | "Auditor not reachable", never a grade |
+| `/health` with `status: degraded` | The model is not reachable | Grades can still be read; new audits cannot pass C8 |
+
+These files were captured before the Auditor PC updated. `error-404-unknown-finding.json` already shows the new message (it no longer shows a folder of that PC).

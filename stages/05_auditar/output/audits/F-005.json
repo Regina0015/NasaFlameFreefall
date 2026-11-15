@@ -232,7 +232,7 @@
       "done_by": "model",
       "expected": "no",
       "answer": "yes",
-      "reason": "The text mentions 'common spacecraft materials' which is a general description not specifically listed in the cited evidence or other sections.",
+      "reason": "The text mentions 'common spacecraft materials' which is a general description not explicitly listed as a specific material in the evidence or citations.",
       "attempts": 1
     },
     {
@@ -340,6 +340,6 @@
       "seed": 42,
       "num_ctx": 8192
     },
-    "date": "2026-11-15T09:30:48Z"
+    "date": "2026-11-15T14:54:50Z"
   }
 }

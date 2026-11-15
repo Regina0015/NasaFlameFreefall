@@ -11,7 +11,7 @@
     "duckdb": true,
     "psi_tables": 22,
     "snapshot": true,
-    "findings_stored": 19,
+    "findings_stored": 20,
     "audits_pending": 0,
     "api_key_set": true
   }

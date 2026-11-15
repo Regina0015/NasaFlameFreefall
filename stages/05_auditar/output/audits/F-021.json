@@ -1,0 +1,345 @@
+{
+  "finding_id": "F-021",
+  "finding_version": 1,
+  "finding_sha256": "927c26169dc2c7be4d18a5fcfce2530bdb58c58ce50159ecdb26c48ece09a482",
+  "checks": [
+    {
+      "id": "C0",
+      "name": "format",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "Matches schemas/finding.schema.json."
+    },
+    {
+      "id": "C1",
+      "name": "traceability",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "Rows, columns and DOI found: PSI-99: 2 rows in PSI-99_Experimental table_SAFFIRE-2.csv"
+    },
+    {
+      "id": "C2",
+      "name": "fidelity",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "ug_spread_rate_o2_lowest = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 5 of PSI-99_Experimental table_SAFFIRE-2.csv; ug_spread_rate_o2_highest = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 5 of PSI-99_Experimental table_SAFFIRE-2.csv"
+    },
+    {
+      "id": "C3",
+      "name": "recalculation",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "All 6 values reproduced by running the finding's SQL over data/snapshot (read-only); every source row and column it reports exists in the original CSVs."
+    },
+    {
+      "id": "C4",
+      "name": "units_and_ranges",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "Every value is in a known unit and a possible range."
+    },
+    {
+      "id": "C5",
+      "name": "support",
+      "done_by": "code",
+      "result": "fail",
+      "detail": "2 tests; broad support starts at 30 (provisional)."
+    },
+    {
+      "id": "C6",
+      "name": "tested_range",
+      "done_by": "code",
+      "result": "not_applicable",
+      "detail": "No tested-range rule applies."
+    },
+    {
+      "id": "C7",
+      "name": "data_quality",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "8 of 8 needed cells readable (100.0%); level: clean."
+    },
+    {
+      "id": "C8",
+      "name": "faithful_text",
+      "done_by": "code+model",
+      "result": "fail",
+      "detail": "7 of 20 answers differ from the expected one: Q3/claim, Q4/claim, Q3/summary_student, Q4/summary_student, Q3/summary_professional, Q4/summary_professional, Q8/method."
+    },
+    {
+      "id": "C9",
+      "name": "chart_consistency",
+      "done_by": "code",
+      "result": "not_applicable",
+      "detail": "No chart."
+    }
+  ],
+  "recalculation": [
+    {
+      "value_name": "ug_spread_rate_row_5",
+      "finding_value": 2.1,
+      "recalculated_value": 2.1,
+      "unit": "mm/s",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "ug_spread_rate_row_6",
+      "finding_value": 2.6,
+      "recalculated_value": 2.6,
+      "unit": "mm/s",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "ug_spread_rate_tests",
+      "finding_value": 2.0,
+      "recalculated_value": 2.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "ug_spread_rate_o2_lowest",
+      "finding_value": 22.1,
+      "recalculated_value": 22.1,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "ug_spread_rate_o2_highest",
+      "finding_value": 22.1,
+      "recalculated_value": 22.1,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "n_tests",
+      "finding_value": 2,
+      "recalculated_value": 2,
+      "unit": "tests",
+      "match": true,
+      "detail": "sum of the cited rows over all evidence"
+    }
+  ],
+  "text_review": [
+    {
+      "question_id": "Q1",
+      "question": "Does every number in the text come from values, n_tests, method params, the cited rows or the recalculation?",
+      "field": "claim",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Every number has a source.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q2",
+      "question": "Do the units of the numbers in the text (%) agree with the units of their sources?",
+      "field": "claim",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Units agree.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q1",
+      "question": "Does every number in the text come from values, n_tests, method params, the cited rows or the recalculation?",
+      "field": "summary_student",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Every number has a source.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q2",
+      "question": "Do the units of the numbers in the text (%) agree with the units of their sources?",
+      "field": "summary_student",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Units agree.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q1",
+      "question": "Does every number in the text come from values, n_tests, method params, the cited rows or the recalculation?",
+      "field": "summary_professional",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Every number has a source.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q2",
+      "question": "Do the units of the numbers in the text (%) agree with the units of their sources?",
+      "field": "summary_professional",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Units agree.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q3",
+      "question": "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? Ignore numbers: they are checked separately.",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "yes",
+      "reason": "The text mentions 'PSI tests' which is not explicitly detailed in the cited investigations, evidence, values, assumptions, or limitations.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q4",
+      "question": "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', 'materials in space' or 'all PSI tests'.",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": "no",
+      "reason": "The text refers to 'The PSI tests in the database' and then specifies that only two of those tests, which are Saffire-II (PSI-99), report a numeric spread rate, indicating a scope wider than just the cited investigation.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q5",
+      "question": "Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)?",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text describes the limitations of the available data regarding flame spread rate measurements, not a safety conclusion based on lack of testing.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q6",
+      "question": "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count.",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text only discusses PSI tests in microgravity and does not mention lunar or Martian gravity.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q3",
+      "question": "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? Ignore numbers: they are checked separately.",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "yes",
+      "reason": "The text mentions 'PSI test' and 'flame spread rate' which are not explicitly detailed in the cited sections.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q4",
+      "question": "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', 'materials in space' or 'all PSI tests'.",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": "no",
+      "reason": "The text states it searched 'every PSI test in the database' and found results from '2 Saffire-II tests', indicating a scope wider than just the cited investigation.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q5",
+      "question": "Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)?",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text discusses the limitations of the available data regarding the relationship between flame spread rate and oxygen level, not whether a condition is safe or unsafe.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q6",
+      "question": "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count.",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text only discusses data from microgravity tests and does not mention lunar or Martian gravity.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q3",
+      "question": "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? Ignore numbers: they are checked separately.",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "yes",
+      "reason": "The text mentions 'Cotton-Fiberglass (SIBAL)' as a fuel, which is not present in the cited sections.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q4",
+      "question": "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', 'materials in space' or 'all PSI tests'.",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": "no",
+      "reason": "The text refers to 'Across the PSI tests in the database' and 'no other PSI table in the database', indicating a scope wider than just the cited investigation.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q5",
+      "question": "Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)?",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text describes the absence of data in certain tests but does not interpret this absence as a safety conclusion.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q6",
+      "question": "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count.",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text discusses microgravity spread rates in PSI tests but does not mention lunar or Martian gravity.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q7",
+      "question": "Does at least one LIMITATIONS item name something specific that this finding does NOT let you conclude (for example an investigation, material, condition or environment it does not cover)? Saying where the data come from is not a limitation.",
+      "field": "limitations",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "The limitations explicitly state what the finding does not allow one to conclude, such as a trend, slope, threshold, or effect of pressure.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q8",
+      "question": "Does the SQL in method.params answer the finding's question, and do its filters keep every test they should (for example, rows with NULL are dropped by NOT IN)? The code only checks that the numbers come from the data; a person must read the SQL.",
+      "field": "method",
+      "done_by": "human",
+      "expected": "yes",
+      "answer": null,
+      "attempts": 0,
+      "reason": "Pending. The snapshot covers 21 of 22 PSI tables; a claim about 'PSI' or 'no test' does not see: PSI-142_Experimental table_Data Summary Table.csv."
+    }
+  ],
+  "grade": "C",
+  "reasons": [
+    "C8 failed: the text says more than the evidence supports, or it was not reviewed."
+  ],
+  "send_back_to": null,
+  "audited_by": {
+    "script": "scripts/auditar.py",
+    "model": "gemma4:e4b-it-qat",
+    "model_params": {
+      "think": false,
+      "temperature": 0,
+      "seed": 42,
+      "num_ctx": 8192
+    },
+    "date": "2026-11-15T14:57:53Z"
+  }
+}

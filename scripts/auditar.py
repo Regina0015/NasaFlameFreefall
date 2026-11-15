@@ -107,16 +107,21 @@ CODE_QUESTIONS = [
 ]
 MODEL_QUESTIONS_PER_FIELD = [
     ("Q3", "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not "
-           "appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? "
+           "appear in SCOPE, CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? "
+           "A general word for a listed fuel phase counts as appearing (for example 'gas flames' for phase gas, "
+           "'fuel droplets' for phase droplet, 'solid-fuel tests' for phase solid). "
            "Ignore numbers: they are checked separately.", "no"),
-    ("Q4", "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? "
-           "Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' "
-           "or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', "
-           "'materials in space' or 'all PSI tests'.", "yes"),
+    ("Q4", "Is every statement in the TEXT limited to the tests in SCOPE? "
+           "Answer yes if the text only talks about those tests, for example 'none of the 129 BASS-II tests', "
+           "'in these two investigations', 'the 10 Nomex tests', or 'the PSI tests in the database' when SCOPE says "
+           "every PSI test table was scanned. A sentence does not need to repeat the investigation name. "
+           "Answer no if it talks about a wider group, such as 'solid materials', 'materials in space', "
+           "'plastics and fabrics', or 'all PSI tests' when SCOPE is only the cited investigations.", "yes"),
     ("Q5", "Does the TEXT present a lack of tests as if it were a safety result "
            "(for example, calling something safe or unsafe because it was not tested)?", "no"),
     ("Q6", "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? "
-           "Saying that there is no data for lunar or Martian gravity does not count.", "no"),
+           "Saying that there is no data for lunar or Martian gravity, or that PSI data cannot tell how fire "
+           "would behave there, does not count.", "no"),
 ]
 MODEL_QUESTION_ONCE = (
     "Q7", "Does at least one LIMITATIONS item name something specific that this finding does NOT let you "
@@ -130,6 +135,12 @@ SYSTEM_PROMPT = (
     "{\"reason\": \"...\", \"answer\": \"yes\" | \"no\"}. The answer must agree with the reason."
 )
 RETRY_REMINDER = "Reply ONLY with JSON of the form {\"reason\": \"one sentence\", \"answer\": \"yes\" or \"no\"}."
+
+# Columns that name the fuel or material in the PSI tables. Read from the original CSV for the model's context
+# (Q3, Q4), so the model knows what the cited rows burned without trusting the Calculator.
+FUEL_COLUMNS = ("Fuel", "Fuel Sample Material", "Sample Material", "Material", "Fuel Type", "Sample (Fuel Type)",
+                "Sample Type", "Fuel Bottle")
+MAX_FUELS_SHOWN = 12
 
 COUNT_UNITS = {"tests", "test", "count", "rows", "days", "test days"}
 POSITIVE_UNITS = {"atm", "psi", "kpa", "pa", "cm/s", "mm/s", "m/s", "mm", "cm", "m", "s", "ms",
@@ -403,8 +414,13 @@ class Sources:
 
     def table(self, name: str) -> tuple[Table | None, str]:
         if name not in self._tables:
-            path = self.table_path(name)
-            if path is None:
+            # The name comes from the finding: only a plain .csv file name, never a path out of the folder.
+            plain = (isinstance(name, str) and name.lower().endswith(".csv") and name.strip() == name
+                     and not any(ch in name for ch in "/\\:\0") and name not in (".", ".."))
+            path = self.table_path(name) if plain else None
+            if not plain:
+                self._tables[name] = (None, f"{name!r} is not a PSI table name (a plain .csv file name)")
+            elif path is None:
                 self._tables[name] = (None, f"file not found in {_show(self.tables_dir)} or the manifest")
             else:
                 try:
@@ -425,6 +441,36 @@ class Sources:
     def acronym(self, investigation: str) -> str | None:
         f = self.fiche(investigation)
         return f.get("investigationAcronym") if f else None
+
+    def phase(self, investigation: str) -> str | None:
+        """Fuel phase of an investigation from cobertura-tablas.json (approved by a person), or None."""
+        if not hasattr(self, "_phases"):
+            self._phases = {}
+            try:
+                cov = json.loads(self.coverage_path.read_text(encoding="utf-8")) if self.coverage_path else {}
+                self._phases = {k: v.get("phase") for k, v in (cov.get("investigations") or {}).items()
+                                if isinstance(v, dict)}
+            except (OSError, ValueError, AttributeError):
+                pass
+        phase = self._phases.get(investigation)
+        return phase if isinstance(phase, str) and phase else None
+
+    def fuels(self, evidence: list[dict]) -> list[str]:
+        """Distinct fuel or material names in the cited rows, read from the original PSI tables."""
+        names: list[str] = []
+        for ev in evidence:
+            table, _ = self.table(ev.get("table", ""))
+            if table is None:
+                continue
+            col = next((c for c in (table.col_index(n) for n in FUEL_COLUMNS) if c is not None), None)
+            if col is None:
+                continue
+            rows, _ = cited_rows(table, ev.get("rows", "all"))
+            for r in rows:
+                name = " ".join("".join(ch for ch in table.cell(r, col) if ch.isprintable()).split())[:60]
+                if name and name not in names:
+                    names.append(name)
+        return names
 
     def brief(self, investigation: str, limit: int = 400) -> tuple[str, str]:
         """Título y comienzo del objetivo de la ficha PSI, sin HTML, para dar contexto al modelo."""
@@ -480,8 +526,24 @@ class Known:
     label: str
 
 
-# Números del texto. Se ignoran los pegados a letras (O2, CO2, 4b) y los de identificadores (PSI-25, F-001).
-_TEXT_NUM = re.compile(r"(?<![A-Za-z0-9.])(?<![A-Za-z]-)(\d+(?:\.\d+)?)(?![A-Za-z0-9])(\s*%)?")
+# Números del texto. Primero se quitan los identificadores (mismas reglas que scripts/number_check.py):
+# DOIs, PSI-25 / F-001 / FLEX-2, 1-g, y fórmulas o nombres que empiezan con letra (O2, CO2, C2H4).
+# Un número con la unidad pegada (85cm/s, 40kPa, 5x) SÍ cuenta.
+_TEXT_IDENTIFIERS = [
+    re.compile(r"\b10\.\d{4,9}/\S+"),
+    re.compile(r"\b[A-Za-z]+-\d+(?:-[A-Za-z]\d+)*\b"),
+    re.compile(r"\b1\s?-?\s?g\b"),
+    re.compile(r"\b[A-Za-z]\w*\d\w*\b"),
+]
+_TEXT_NUM = re.compile(r"(?<![\w.])(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(\s*%)?")
+
+
+def _text_numbers(text: str):
+    """(número escrito, lleva '%') de cada número del texto, sin los de identificadores."""
+    for pattern in _TEXT_IDENTIFIERS:
+        text = pattern.sub(" ", text)
+    for m in _TEXT_NUM.finditer(text):
+        yield m.group(1).replace(",", "") + (m.group(2) or ""), bool(m.group(3))
 
 
 def _decimals(s: str) -> int:
@@ -501,8 +563,7 @@ def _fmt(x: float) -> str:
 def check_text_numbers(text: str, known: list[Known]) -> tuple[list[str], list[str]]:
     """Q1: números sin fuente. Q2: números con '%' cuya fuente no es un porcentaje."""
     missing, bad_unit = [], []
-    for m in _TEXT_NUM.finditer(text):
-        num, has_pct = m.group(1), bool(m.group(2))
+    for num, has_pct in _text_numbers(text):
         as_pct = [k for k in known
                   if (k.kind in ("percent", "any") and text_matches(num, k.value))
                   or (k.kind == "fraction" and text_matches(num, k.value * 100))]
@@ -514,36 +575,46 @@ def check_text_numbers(text: str, known: list[Known]) -> tuple[list[str], list[s
     return missing, bad_unit
 
 
-def _numbers_in(obj, path=""):
+_NUMERIC_TEXT = re.compile(r"\s*[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?\s*")
+
+
+def _numbers_in(obj, path="", strings=False):
+    """Números de un JSON anidado. Con strings=True también un texto que es solo un número ('99.9')."""
     if isinstance(obj, bool):
         return
     if isinstance(obj, (int, float)):
         yield path, float(obj)
+    elif strings and isinstance(obj, str) and _NUMERIC_TEXT.fullmatch(obj):
+        yield path, float(obj)
     elif isinstance(obj, dict):
         for k, v in obj.items():
-            yield from _numbers_in(v, f"{path}.{k}")
+            yield from _numbers_in(v, f"{path}.{k}", strings)
     elif isinstance(obj, list):
         for i, v in enumerate(obj):
-            yield from _numbers_in(v, f"{path}[{i}]")
+            yield from _numbers_in(v, f"{path}[{i}]", strings)
 
 
 def chart_numbers(chart: dict):
-    """Números que la gráfica presenta como datos: data.values y cada 'datum' numérico.
+    """Números que la gráfica presenta como datos: cada data.values (también los de capas), los
+    datasets y cada 'datum' numérico, contando textos que son un número ('99.9').
     No se revisan ajustes de dibujo (dominio de ejes, strokeDash, dx...)."""
-    yield from _numbers_in(chart.get("data", {}).get("values", []), "chart.data.values")
-
     def walk(o, path):
         if isinstance(o, dict):
             for k, v in o.items():
-                if k == "datum" and isinstance(v, (int, float)) and not isinstance(v, bool):
-                    yield f"{path}.datum", float(v)
+                p = f"{path}.{k}"
+                if k == "data" and isinstance(v, dict):
+                    yield from _numbers_in(v.get("values", []), f"{p}.values", strings=True)
+                elif k == "datasets" and isinstance(v, dict):
+                    yield from _numbers_in(v, p, strings=True)
+                elif k == "datum" and not isinstance(v, (dict, list)):
+                    yield from _numbers_in(v, p, strings=True)
                 else:
-                    yield from walk(v, f"{path}.{k}")
+                    yield from walk(v, p)
         elif isinstance(o, list):
             for i, v in enumerate(o):
                 yield from walk(v, f"{path}[{i}]")
 
-    yield from walk({k: v for k, v in chart.items() if k != "data"}, "chart")
+    yield from walk(chart, "chart")
 
 
 # =============================================================================
@@ -933,10 +1004,18 @@ def recalc_sql_query(finding: dict, sources: Sources) -> Recalc:
         name, value, unit = rec[idx["name"]], rec[idx["value"]], rec[idx["unit"]]
         inv, tname, rows, cols = (rec[idx["investigation"]], rec[idx["source_table"]],
                                   rec[idx["source_rows"]], rec[idx["source_columns"]])
+        if not isinstance(name, str) or not name:
+            out.problems.append(f"the SQL returns a row whose name is not text: {name!r}")
+            continue
         if name in out.named:
             out.problems.append(f"the SQL returns the name {name!r} twice")
             continue
-        out.named[name] = None if value is None else float(value)
+        try:
+            out.named[name] = None if value is None else float(value)
+        except (TypeError, ValueError):
+            out.named[name] = None
+            out.problems.append(f"{name} = {value!r} is not a number")
+            continue
         if name not in finding["values"]:
             out.problems.append(f"the SQL returns {name} = {value} but the finding does not report it")
         table, err = sources.table(str(tname))
@@ -985,6 +1064,14 @@ def recalc_sql_query(finding: dict, sources: Sources) -> Recalc:
             else:
                 out.fidelity_problems.append(f"{name} = {value} {unit} is not an original cell of {tname} "
                                              f"in columns {names}")
+        elif value is not None:
+            # Ni conteo ni porcentaje (presión, velocidad, rango): no se puede anclar a una celda, pero un
+            # número escrito en el SQL fuera de una comparación puede ser el valor escrito a mano.
+            literals = sql_value_literals(sql)
+            if literals:
+                out.fidelity_problems.append(
+                    f"{name} = {value} {unit}: the SQL writes the number(s) {', '.join(_fmt(x) for x in literals)} "
+                    "outside a comparison, so the value may be typed in rather than read from the tables")
     # Las filas que usó el SQL deben estar en la evidencia.
     cited: dict[str, set[int]] = {}
     for ev in finding["evidence"]:
@@ -1110,13 +1197,26 @@ class OllamaModel:
 # Qué ve el modelo en cada pregunta. Menos contexto = menos distracción: con todo el hallazgo
 # a la vista, el modelo de 4B contestaba sobre las advertencias en vez de sobre el texto.
 QUESTION_CONTEXT = {
-    "Q3": ("cited", "evidence", "values", "assumptions", "limitations"),
-    "Q4": ("cited",),
+    "Q3": ("scope", "cited", "evidence", "values", "assumptions", "limitations"),
+    "Q4": ("scope", "cited"),
     "Q5": (),
     "Q6": (),
     "Q7": ("limitations",),
 }
-ALL_CONTEXT = ("cited", "evidence", "values", "assumptions", "limitations", "warnings")
+ALL_CONTEXT = ("scope", "cited", "evidence", "values", "assumptions", "limitations", "warnings")
+
+
+_SQL_NARROWS = re.compile(r"\b(investigation|source_table)\s*(=|<>|!=|in\b|i?like\b)", re.IGNORECASE)
+
+
+def scans_every_table(finding: dict) -> bool:
+    """True when the calculation looked at every PSI test table, not only the cited investigations."""
+    method = finding.get("method") or {}
+    if method.get("function") == "coverage_by_environment":
+        return True
+    if method.get("function") == "sql_query":
+        return not _SQL_NARROWS.search(str((method.get("params") or {}).get("sql") or ""))
+    return False
 
 
 def build_model_prompt(finding: dict, field_name: str, text: str, question: str, sources: Sources,
@@ -1125,6 +1225,10 @@ def build_model_prompt(finding: dict, field_name: str, text: str, question: str,
     lines = []
     if field_name != "limitations":
         lines += [f"TEXT ({field_name}):", text, ""]
+    if "scope" in parts:
+        lines += ["SCOPE: every PSI test table in the database was scanned, so the text may speak of "
+                  "'the PSI tests in the database' or 'the PSI tables'." if scans_every_table(finding)
+                  else "SCOPE: only the tests of the CITED INVESTIGATIONS.", ""]
     if "cited" in parts:
         lines.append("CITED INVESTIGATIONS:")
         seen = set()
@@ -1140,6 +1244,13 @@ def build_model_prompt(finding: dict, field_name: str, text: str, question: str,
                 line += f": {title}."
             if objective and "evidence" in parts:  # el objetivo solo hace falta para Q3
                 line += f" Objective (from PSI): {objective}"
+            phase = sources.phase(inv)
+            if phase:
+                line += f" Fuel phase: {phase}."
+            fuels = sources.fuels([e for e in finding["evidence"] if e["investigation"] == inv])
+            if fuels:
+                more = f", and {len(fuels) - MAX_FUELS_SHOWN} more" if len(fuels) > MAX_FUELS_SHOWN else ""
+                line += f" Fuels in the cited rows: {', '.join(fuels[:MAX_FUELS_SHOWN])}{more}."
             lines.append(line)
         if not seen:
             lines.append("- (none)")
@@ -1149,7 +1260,8 @@ def build_model_prompt(finding: dict, field_name: str, text: str, question: str,
         for ev in finding["evidence"]:
             acr = sources.acronym(ev["investigation"])
             name = f"{ev['investigation']} ({acr})" if acr else ev["investigation"]
-            lines.append(f"- {name}; table {ev['table']}; columns {ev['columns']}; rows {ev['rows']}")
+            rows = "all rows" if ev["rows"] == "all" else f"{len(ev['rows'])} rows"
+            lines.append(f"- {name}; table {ev['table']}; columns {ev['columns']}; {rows}")
     if "values" in parts:
         lines.append("VALUES:")
         lines += [f"- {k} = {v['value']} {v['unit']}" for k, v in finding["values"].items()]
@@ -1183,10 +1295,34 @@ class _ModelSlot:
             return None, 0
 
 
+_SQL_STRINGS = re.compile(r"'(?:[^']|'')*'|\"(?:[^\"]|\"\")*\"")
+_SQL_NUM = re.compile(r"(?<![A-Za-z0-9_.])\d+(?:\.\d+)?(?![A-Za-z0-9_])")
+
+
 def sql_number_literals(sql: str) -> list[float]:
     """Números escritos en el SQL, fuera de los textos entre comillas ('PSI-25' no cuenta)."""
-    bare = re.sub(r"'(?:[^']|'')*'|\"(?:[^\"]|\"\")*\"", " ", sql)
-    return [float(m) for m in re.findall(r"(?<![A-Za-z0-9_.])\d+(?:\.\d+)?(?![A-Za-z0-9_])", bare)]
+    return [float(m) for m in _SQL_NUM.findall(_SQL_STRINGS.sub(" ", sql))]
+
+
+# Antes de un número que es umbral o ajuste, no valor: comparación, BETWEEN x AND y, IN (...), LIMIT, [i].
+_SQL_SETTING_BEFORE = re.compile(r"(?:<=|>=|<>|!=|=|<|>|\bbetween|\bbetween\s+[-+]?\d+(?:\.\d+)?\s+and"
+                                 r"|\bin\s*\((?:\s*[-+]?\d+(?:\.\d+)?\s*,)*|\blimit|\boffset|\[)\s*[(\-+]*\s*$", re.I)
+_SQL_SETTING_AFTER = re.compile(r"\s*\)*\s*(?:<=|>=|<>|!=|=|<|>)")
+_UNIT_FACTORS = {v for v in PRESSURE_TO_PSI.values() if v != 1.0}
+
+
+def sql_value_literals(sql: str) -> list[float]:
+    """Números del SQL que pueden ser un valor escrito a mano: no son umbrales de una comparación,
+    ni límites, ni un factor de conversión de unidades (14.6959 psi por atm)."""
+    bare = _SQL_STRINGS.sub(" ", sql)
+    out = []
+    for m in _SQL_NUM.finditer(bare):
+        x = float(m.group())
+        if x in _UNIT_FACTORS or _SQL_SETTING_BEFORE.search(bare[:m.start()]) \
+                or _SQL_SETTING_AFTER.match(bare, m.end()):
+            continue
+        out.append(x)
+    return out
 
 
 def _known_numbers(finding: dict, recalc: Recalc | None, row_counts: dict[str, int]) -> list[Known]:
@@ -1206,7 +1342,8 @@ def _known_numbers(finding: dict, recalc: Recalc | None, row_counts: dict[str, i
         known.append(Known(float(n), "other", f"cited rows of {inv}"))
     if recalc and recalc.named:
         for name, v in recalc.named.items():
-            known.append(Known(v, "other", f"recalculated {name}"))
+            if v is not None:
+                known.append(Known(v, "other", f"recalculated {name}"))
     if recalc:
         for q in recalc.quantities:
             if q.value is not None:
@@ -1351,7 +1488,7 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
     # --- C3 (y C2, C7): recálculo independiente ---------------------------------
     func = finding["method"]["function"]
     recalc = None
-    if finding["status"] == "no_data" and not finding["evidence"] and func != "sql_query":
+    if finding["status"] == "no_data" and not finding["evidence"] and func not in RECALCULATORS:
         for cid in ("C2", "C3", "C7"):
             checks[cid] = _check(cid, "not_applicable", "No-data finding without evidence: nothing to recompute.")
     elif func not in RECALCULATORS:
@@ -1680,7 +1817,9 @@ def main(argv: list[str] | None = None) -> int:
                             os.environ.get("MODELO_AUDITOR") or DEFAULT_MODEL)
     slot = _ModelSlot(model)
 
-    files = sorted(args.findings.glob("F-*.json"))
+    # Solo F-NNN.json: las copias (F-001.v1.audit.json, F-001.old.json) no son hallazgos.
+    all_files = [f for f in sorted(args.findings.glob("F-*.json")) if re.fullmatch(r"F-\d{3}", f.stem)]
+    files = all_files
     if args.only:
         files = [f for f in files if f.stem == args.only]
     if not files:
@@ -1705,7 +1844,8 @@ def main(argv: list[str] | None = None) -> int:
                 or not _is_type(finding.get("version"), "integer") or finding["version"] < 1:
             unreadable.append(f"{f.name}: missing a valid 'id' or 'version', so the audit cannot point to it")
             continue
-        review_path = reviews_dir / f"{finding['id']}.json"
+        # Auditoría y revisión van con el nombre del ARCHIVO: una copia que dice otro id no pisa la de ese id.
+        review_path = reviews_dir / f"{f.stem}.json"
         review = None
         if review_path.is_file():
             try:
@@ -1717,12 +1857,12 @@ def main(argv: list[str] | None = None) -> int:
         if template and template != review:
             reviews_dir.mkdir(parents=True, exist_ok=True)
             if review and review.get("finding_sha256") != audit["finding_sha256"]:
-                review_path.rename(review_path.with_suffix(".old.json"))  # se guarda, no se borra
+                os.replace(review_path, review_path.with_suffix(".old.json"))  # se guarda, no se borra
             review_path.write_text(json.dumps(template, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         errs = validate(audit, audit_schema)
         if errs:  # error del auditor, no del hallazgo
             raise RuntimeError(f"auditar.py produced an invalid audit for {f.name}: {errs[:5]}")
-        (audits_dir / f"{finding['id']}.json").write_text(
+        (audits_dir / f"{f.stem}.json").write_text(
             json.dumps(audit, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         audits.append(audit)
         failed = [c["id"] for c in audit["checks"] if c["result"] == "fail"]
@@ -1731,7 +1871,23 @@ def main(argv: list[str] | None = None) -> int:
 
     model_note = (f"Model: {model.name}." if model and not slot.error else
                   f"Model not used: {slot.error}. C8 needs manual review.")
-    write_summary(args.out / "summary.md", audits, unreadable, model_note)
+    # El resumen lista todos los hallazgos, no solo los de esta corrida (--only): los demás con su
+    # auditoría guardada, si sigue siendo para los mismos bytes.
+    done = {f.stem for f in files}
+    stale = []
+    for f in all_files:
+        if f.stem in done:
+            continue
+        try:
+            kept = json.loads((audits_dir / f"{f.stem}.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            kept = None
+        if isinstance(kept, dict) and kept.get("finding_sha256") == hashlib.sha256(f.read_bytes()).hexdigest():
+            audits.append(kept)
+        else:
+            stale.append(f"{f.name}: no audit for its current content; run auditar.py on it")
+    audits.sort(key=lambda a: str(a.get("finding_id")))
+    write_summary(args.out / "summary.md", audits, unreadable + stale, model_note)
     for u in unreadable:
         print(f"NOT AUDITED  {u}", file=sys.stderr)
     if slot.error:

@@ -25,8 +25,12 @@ import auditar as A  # noqa: E402
 
 EXAMPLE = A.SCHEMAS / "examples" / "finding-example.json"
 
-# (pregunta, campo, texto o None para usar el del ejemplo, respuesta correcta, nota)
+# (pregunta, campo, texto o None para usar el del ejemplo, respuesta correcta, nota[, cambios al hallazgo])
 # Para Q7 el "texto" es la lista de límites.
+# Los casos marcados "2026-11-15" repiten alertas falsas que dio el modelo en la batería contra la API.
+SCANS_EVERY_TABLE = {"method": {"script": "scripts/functions.py", "function": "coverage_by_environment",
+                                "params": {"environment": "lunar_base", "o2_min_pct": 30.0},
+                                "formula": "Tests per fuel phase that reached o2_min_pct, over every PSI table."}}
 CASES = [
     ("Q3", "claim", "BASS-II initial oxygen ranged from 13.6% to 22.2% across its 129 tests.", "no", "only cited things"),
     ("Q3", "summary_student", None, "yes", "'plastics and fabrics' are not in the evidence"),
@@ -48,6 +52,16 @@ CASES = [
      "no", "admits there is no data"),
     ("Q7", "limitations", None, "yes", "F-001 limitations"),
     ("Q7", "limitations", ["The data come from NASA PSI."], "no", "not a real limitation"),
+    ("Q3", "claim", "None of the 129 BASS-II solid-fuel tests reached 30% oxygen.", "no",
+     "2026-11-15: 'solid-fuel' is the BASS-II phase"),
+    ("Q4", "claim", "Of the 274 FLEX droplet tests, 24 reached 30% oxygen; most stayed below it.", "yes",
+     "2026-11-15: limited to FLEX without repeating the name"),
+    ("Q6", "claim", "PSI data cannot tell whether these fuels would burn faster on the Moon.", "no",
+     "2026-11-15: says there is no data (F-019 false flag)"),
+    ("Q4", "claim", "None of the PSI tests in the database reached 30% oxygen with a solid fuel.", "yes",
+     "2026-11-15: the calculation scanned every PSI table", SCANS_EVERY_TABLE),
+    ("Q4", "claim", "Solid materials in space were never tested at 30% oxygen.", "no",
+     "wider than the data, even when every table was scanned", SCANS_EVERY_TABLE),
 ]
 
 
@@ -60,14 +74,15 @@ def question_text(qid: str) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Measure the local model on labeled C8 cases.")
-    ap.add_argument("--fiches", type=Path, default=A.ROOT / "stages/01_ingesta/output/fichas")
+    ap.add_argument("--fiches", type=Path, default=A.PSI_DIR)
+    ap.add_argument("--tables", type=Path, default=A.PSI_DIR, help="original PSI CSVs (fuel names for Q3, Q4)")
     ap.add_argument("--model", default=None, help="Ollama model (default: MODELO_AUDITOR from .env)")
     args = ap.parse_args(argv)
 
     A.load_dotenv(A.ROOT / ".env")
     model = A.OllamaModel(os.environ.get("OLLAMA_URL") or A.DEFAULT_OLLAMA_URL,
                           args.model or os.environ.get("MODELO_AUDITOR") or A.DEFAULT_MODEL)
-    sources = A.Sources(A.ROOT, args.fiches)
+    sources = A.Sources(args.tables, args.fiches, coverage_path=A.COVERAGE_FILE)
     base = json.loads(EXAMPLE.read_text(encoding="utf-8"))
     for inv in ("PSI-25", "PSI-69"):
         if sources.acronym(inv) is None:
@@ -75,8 +90,9 @@ def main(argv=None) -> int:
 
     print(f"Model: {model.name}\n")
     score: dict[str, list[int]] = {}
-    for qid, fname, text, correct, note in CASES:
+    for qid, fname, text, correct, note, *changes in CASES:
         finding = copy.deepcopy(base)
+        finding.update(copy.deepcopy(changes[0]) if changes else {})
         if fname == "limitations":
             if text is not None:
                 finding["limitations"] = text

@@ -1,95 +1,82 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import './chat.css'
 
-// Chat with the local model (Ollama). It only exists with `npm run dev` on the computer that runs
-// Ollama; on Vercel there is no /api/chat and the panel shows a notice. See dashboard/chat/.
+// The conversation view. State lives in useChat (one shared conversation for the whole workspace) and the
+// question input lives in the bottom request bar, so this component only shows the connection state and the
+// messages with their provenance. Answers are ungraded unless a consulted finding carries a recorded grade.
 // The chat accepts and answers in English only.
-export default function ChatPanel({ view }) {
-  const [status, setStatus] = useState(null)
-  const [messages, setMessages] = useState([])
-  const [text, setText] = useState('')
-  const [busy, setBusy] = useState(false)
+export default function ChatPanel({ chat, view }) {
+  const { status, messages, busy, seconds } = chat
   const end = useRef(null)
 
+  // Follow new messages only when the reader is already near the bottom, so reading older answers is never interrupted.
+  // A question the person has just sent always scrolls into view. Only the conversation box scrolls, never the page.
+  const nearBottom = useRef(true)
+
   useEffect(() => {
-    fetch('/api/chat/status')
-      .then((r) => (r.ok ? r.json() : null))
-      .then(setStatus)
-      .catch(() => setStatus(null))
-      .finally(() => setStatus((s) => s ?? { available: false }))
+    const box = end.current?.closest('[data-chat-scroll]')
+    if (!box) return undefined
+    const onScroll = () => {
+      nearBottom.current = box.scrollHeight - box.scrollTop - box.clientHeight < 80
+    }
+    box.addEventListener('scroll', onScroll, { passive: true })
+    return () => box.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => end.current?.scrollIntoView({ block: 'nearest' }), [messages, busy])
-
-  async function ask(e) {
-    e.preventDefault()
-    const question = text.trim()
-    if (!question || busy) return
-    const next = [...messages, { role: 'user', content: question }]
-    setMessages(next)
-    setText('')
-    setBusy(true)
-    try {
-      const r = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // Rejected questions (not in English) and errors are not sent back as history.
-        body: JSON.stringify({ view, messages: next.filter((m) => !m.skip).map(({ role, content }) => ({ role, content })) }),
-      })
-      const data = await r.json()
-      if (!r.ok) throw new Error(data.error ?? `Error ${r.status}`)
-      const asked = data.rejected ? next.map((m, i) => (i === next.length - 1 ? { ...m, skip: true } : m)) : next
-      setMessages([...asked, { role: 'assistant', content: data.answer, meta: data, skip: data.rejected }])
-    } catch (err) {
-      setMessages([...next, { role: 'assistant', content: `Could not answer: ${err.message}`, error: true, skip: true }])
-    } finally {
-      setBusy(false)
+  useEffect(() => {
+    const box = end.current?.closest('[data-chat-scroll]')
+    if (!box) return
+    if (nearBottom.current || messages.at(-1)?.role === 'user') {
+      box.scrollTop = box.scrollHeight
+      nearBottom.current = true
     }
-  }
-
-  if (!status) return null
+  }, [messages, busy])
 
   return (
-    <section className="chat" lang="en">
-      <h2>Ask the data</h2>
-      {!status.available ? (
-        <p className="chat-notice">
-          {status.ollama === false
-            ? 'Ollama is not responding. The chat only works locally, with Ollama running and `npm run dev`.'
-            : status.ollama
-              ? `The model is missing: ollama pull ${status.model}`
-              : 'The chat only works locally, with Ollama and `npm run dev`.'}
+    <section className="chat" lang="en" aria-label="Conversation">
+      {!status ? (
+        <p className="chat-notice" role="status">
+          Checking the assistant connection…
+        </p>
+      ) : !status.available ? (
+        <p className="chat-notice chat-unavailable" role="status">
+          <strong>Assistant unavailable.</strong>{' '}
+          {status.unreachable
+            ? 'Its backend is not reachable from this page. The assistant runs only locally, with npm run dev, Ollama and the repository data; it is not part of this deployment.'
+            : status.ollama === false
+              ? 'Ollama is not responding. Start Ollama and use Refresh data to check again.'
+              : `The local model is missing. Run: ollama pull ${status.model}`}
         </p>
       ) : (
-        <>
-          <p className="chat-notice">
-            Answers from the local model {status.model}, in English only. They are not audited findings: each answer
-            says where its data came from.
-          </p>
-          <ol className="chat-messages">
-            {messages.map((m, i) => (
-              <li key={i} className={`chat-${m.role}${m.error ? ' chat-error' : ''}`}>
-                <p>{m.content}</p>
-                {m.meta && !m.meta.rejected && <Provenance meta={m.meta} view={view} />}
-              </li>
-            ))}
-            {busy && <li className="chat-assistant chat-notice">Checking the data…</li>}
-            <li ref={end} aria-hidden="true" />
-          </ol>
-          <form onSubmit={ask} className="chat-form">
-            <input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Did any solid-fuel test reach 30% O2?"
-              aria-label="Question (English only)"
-              disabled={busy}
-            />
-            <button type="submit" disabled={busy || !text.trim()}>
-              Ask
-            </button>
-          </form>
-        </>
+        <p className="chat-notice">
+          Answers from the local model {status.model}, in English only. They are ungraded: they are not audited findings, and each answer says
+          where its data came from.
+          {status.snapshot_updated && (
+            <>
+              {' '}
+              It reads a local data snapshot last written{' '}
+              <time dateTime={status.snapshot_updated}>{new Date(status.snapshot_updated).toLocaleString()}</time>, which can differ from the database.
+            </>
+          )}
+        </p>
       )}
+
+      {messages.length === 0 && !busy && status?.available && <p className="muted">No questions yet. Ask below.</p>}
+
+      <ol className="chat-messages" aria-label="Conversation" aria-live="polite">
+        {messages.map((m, i) => (
+          <li key={i} className={`chat-${m.role}${m.error ? ' chat-error' : ''}`}>
+            <p>{m.content}</p>
+            {m.meta && !m.meta.rejected && <Provenance meta={m.meta} view={view} />}
+          </li>
+        ))}
+        {busy && (
+          <li className="chat-assistant chat-notice">
+            Checking the data… {seconds >= 8 ? `${seconds} s, the local model can be slow.` : ''}
+          </li>
+        )}
+        <li ref={end} aria-hidden="true" />
+      </ol>
     </section>
   )
 }
@@ -97,6 +84,7 @@ export default function ChatPanel({ view }) {
 function Provenance({ meta, view }) {
   return (
     <div className="chat-meta">
+      <p className="chat-tag">Ungraded answer · not an audited finding</p>
       {meta.warnings.map((w) => (
         <p key={w} className="chat-alert">{w}</p>
       ))}
