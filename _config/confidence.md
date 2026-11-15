@@ -47,8 +47,8 @@ Approved to start on 2026-11-14; the team can change them. They live as constant
 |---|---|
 | C3: recalculation tolerance | relative 1e-6; counts must be exact |
 | C5: broad support | 30 tests or more |
-| C7: clean data | 100% of the needed cells readable |
-| C7: minor problems | 90% or more readable; under 90% counts as "many unreadable cells" |
+| C7: clean data | 100% of the needed cells readable and exact |
+| C7: minor problems | 90% or more readable, or some cell approximate (`~ 22.1`) or with several values (`21; 26.5; 40`); under 90% readable counts as "many unreadable cells" |
 
 ## On the dashboard
 

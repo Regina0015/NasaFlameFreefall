@@ -9,6 +9,7 @@ Comprueba cada hallazgo por un camino distinto al que lo produjo y le asigna un 
 - Capa 4 (trabajo): `../01_ingesta/output/manifiesto.json` (opcional: nombre original del CSV → archivo guardado)
 - Capa 3 (referencia): `../../_config/confidence.md`
 - Capa 3 (referencia): `references/lista-revision.md` (preguntas fijas para la revisión del texto)
+- Capa 3 (referencia): `references/unidades-columnas.json` (unidad de columnas de O2 cuyo encabezado no la dice, p. ej. `XO2` de CFI-G; cada entrada vale solo con `approved_by`)
 
 ## Proceso
 
@@ -18,11 +19,11 @@ Script: `scripts/auditar.py`. Pruebas: `scripts/test_auditar.py`.
 0. **Formato** (C0): el hallazgo cumple `schemas/finding.schema.json` y el nombre del archivo coincide con su `id`.
 1. **Trazabilidad** (C1): cada fila y columna citada existe en el CSV original; el DOI coincide con la ficha PSI; la tabla aparece en la ficha.
 2. **Fidelidad** (C2): cada mínimo o máximo reportado es exactamente una celda del CSV original; se anota en qué fila está.
-3. **Recálculo** (C3): repetir el cálculo con código propio, leyendo las celdas originales. Cada función del catálogo de la etapa 04 necesita su recalculador en `auditar.py` (`RECALCULATORS`); sin él, C3 falla. `n_tests` debe ser igual a la suma de filas citadas.
+3. **Recálculo** (C3): repetir el cálculo con código propio, leyendo las celdas originales. `rows: "all"` son todas las filas con algo escrito (las completamente vacías no son pruebas; la numeración no cambia). En `o2_range`, una celda aproximada (`~ 22.1`) o con varios valores (`22.1 to 22.0`, `21; 26.5; 40`) se lee como esos valores; nada más se interpreta (`3400%` queda ilegible: el auditor nunca corrige datos). Las llaves de `values` terminadas en `_n_tests` se comparan con las filas citadas. Cada función del catálogo de la etapa 04 necesita su recalculador en `auditar.py` (`RECALCULATORS`); sin él, C3 falla. `n_tests` debe ser igual a la suma de filas citadas.
 4. **Unidades y rangos** (C4): porcentajes entre 0 y 100, fracciones entre 0 y 1, presiones positivas, conteos enteros. Una unidad desconocida falla hasta que se agregue a la tabla del auditor.
 5. **Soporte** (C5): cuántas pruebas respaldan el hallazgo.
 6. **Rango probado** (C6): el cálculo no predice condiciones no probadas; si el hallazgo menciona base lunar o marciana, lleva la advertencia de que PSI no tiene datos de gravedad parcial.
-7. **Calidad de datos** (C7): qué porción de las celdas necesarias se pudo leer como un solo número.
+7. **Calidad de datos** (C7): qué porción de las celdas necesarias se pudo leer. Limpio = todas legibles y exactas; problemas menores = al menos 90% legibles, o alguna aproximada o con varios valores; muchas = menos de 90%.
 9. **Gráfica** (C9): cada número de `chart.data.values` (y cada `datum`) sale de `values`, de los parámetros o del recálculo.
 
 ### Parte B: revisión del texto (C8)

@@ -1,0 +1,24 @@
+{
+  "_doc": "Unidad de las columnas de O2 cuyo encabezado no la dice. La usa scripts/auditar.py (recalculo de o2_range). Cada entrada vale solo si 'approved_by' tiene el nombre de la persona que la reviso contra el CSV original. Unidades validas: 'fraction' (0 a 1) o 'percent' (0 a 100). Si el encabezado ya dice la unidad y esta entrada dice otra, el auditor falla en vez de elegir.",
+  "tables": {
+    "PSI-159_Experimental table_CFI-G_Normal Flames.csv": {
+      "XO2 before test": {
+        "unit": "fraction",
+        "approved_by": "",
+        "evidence": "179 of 179 cells between 0.1797 and 0.3997; X is the usual symbol for mole fraction"
+      },
+      "XO2 after test": {
+        "unit": "fraction",
+        "approved_by": "",
+        "evidence": "179 of 179 cells between 0.1794 and 0.3973"
+      }
+    },
+    "PSI-159_Experimental table_CFI-G_Inverse Flames.csv": {
+      "XO2": {
+        "unit": "fraction",
+        "approved_by": "",
+        "evidence": "154 of 154 non-empty cells between 0.12 and 0.85. In inverse flames this is the O2 fraction of the burner (oxidizer) stream, not of the chamber atmosphere"
+      }
+    }
+  }
+}
