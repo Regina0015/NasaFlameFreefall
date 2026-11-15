@@ -1,23 +1,23 @@
 {
   "id": "PSI-22",
   "summary_student": {
-    "text": "Small methane and ethylene gas flames were burned aboard the International Space Station while an electric field was applied to them. The team watched how the electric field pushed the flame, changed its soot, and affected flames close to going out. The record says this was not done for space fire safety, but learning how to steer and steady flames could help design future space combustion devices.",
-    "sources": ["approach", "objective", "researchImpacts", "flightProgram"]
+    "text": "Small gas flames of methane and ethylene were burned aboard the International Space Station while an electric field pushed on them. Without gravity pulling hot gas upward, the team could see how electricity alone changes a flame's shape, stability and soot. The record says the work was not done for space fire safety; its uses are cleaner, more efficient burning on Earth and possibly future space combustion devices.",
+    "sources": ["approach", "flightProgram", "researchImpacts"]
   },
   "summary_professional": {
-    "text": "Nitrogen-diluted methane and ethylene laminar diffusion flames, on a gas-jet burner and on the CLD Flame coflow burner, were exposed to an electric field from a high-voltage copper mesh electrode above the burner (up to 10 kV) in ACME in the Combustion Integrated Rack on the ISS. Fuel flow rate, coflow velocity, dilution level and field polarity were varied, from highly stable to near-extinction flames. Voltage-current curves of chemi-ion current, flame response time, flame shape, luminosity, soot distribution, chemiluminescent emission, soot volume fraction and radiant emission (thermopile detectors) were measured.",
-    "sources": ["approach", "objective", "experimentHardware", "10.1016/j.combustflame.2022.112443"]
+    "text": "Laminar methane and ethylene diffusion flames, diluted with nitrogen, were burned on a gas-jet burner and on the CLD coflow burner in the ACME hardware of the Combustion Integrated Rack. A high-voltage copper mesh electrode above the burner (up to 10 kV differential) imposed an electric field of controlled polarity and strength, while fuel flow rate, coflow velocity, dilution and polarity were varied from highly stable to near-extinction flames. Measured quantities were voltage-current curves (chemi-ion current), flame response time to electric forcing, flame shape, luminosity and soot distribution from high-resolution cameras, chemiluminescence and soot volume fraction from filtered spectral imaging, and radiant emission from thermopile detectors.",
+    "sources": ["approach", "experimentHardware", "objective", "10.1016/j.combustflame.2022.112443"]
   },
   "pillar": {
-    "value": "prevention",
-    "reason": "The closest pillar is the characterization of flame stability and stabilized near-limit lifted flames, which bears on when a flame can persist. The record states the research is not being conducted to serve any space application, so this link is weak.",
-    "sources": ["objective", "researchImpacts"]
+    "value": "none",
+    "reason": "The record states the research is not conducted to serve any space applications and names no fire-safety use; its stated impacts are lower pollutant emissions and more efficient combustion on Earth, and possibly future space-based combustion devices such as solid waste processing.",
+    "sources": ["researchImpacts"]
   },
   "environments": [
     {
       "environment": "space_station",
-      "reason": "Tests were run aboard the International Space Station, and the record mentions possible use for future space-based combustion devices such as solid waste processing. It also says the research is not aimed at space applications.",
-      "sources": ["flightProgram", "researchImpacts"]
+      "reason": "The tests were flown on the International Space Station in the Combustion Integrated Rack, with Glenn Research Center directing astronaut actions.",
+      "sources": ["flightProgram", "approach"]
     }
   ],
   "model": "claude-opus-5-5"

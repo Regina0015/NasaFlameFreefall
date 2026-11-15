@@ -13,50 +13,51 @@
   "tier_reason": "Team list, Tier 1. Ground study; PSI subarea: Spacecraft Fire Safety. Uses FLEX flight data.",
   "boost_environments": [],
   "summary_student": {
-    "text": "This ground study used results from the Flame Extinguishment Experiment on the space station, where fuel drops kept burning as weak, low-temperature cool flames after the hot flame went out. With computer models and laboratory flames, it looked at when hot flames turn into cool flames and when flames stop burning. Knowing these limits helps judge when a fire in a spacecraft can keep going.",
+    "text": "This ground study used data from the FLEX experiment, where fuel droplets burned on the International Space Station, plus computer models and lab flames. It looked at when an ordinary hot flame turns into a weak 'cool flame', and how much oxygen, pressure and mixing it takes for each kind of flame to keep burning. Knowing these burning limits matters for spacecraft fire safety.",
     "sources": [
       "objective",
+      "approach",
       "hypothesis",
-      "approach"
+      "subResearchArea"
     ]
   },
   "summary_professional": {
-    "text": "Ground investigation using FLEX flight conditions to study oxygen-concentration effects on cool-flame extinction limits with three numerical schemes: spark-assisted flame propagation of n-heptane/air, one-dimensional freely propagating dimethyl ether (DME) flames with arc-length continuation, and DME/air cool-flame regimes and burning limits at elevated pressure (up to 20 atm). Ground experiments used ozone-sensitized counterflow flames. Targeted measurements were extinction limits, flame temperature and species distributions, to build a flammability-limit diagram for diffusional cool flames including radiation, diffusion and convection.",
+    "text": "Ground investigation using FLEX flight conditions and data to study oxygen-concentration effects on cool-flame extinction limits with three numerical schemes: spark-assisted flame propagation of n-heptane/air, one-dimensional freely-propagating dimethyl ether (DME) flames with arc-length continuation, and DME/air cool flame regimes and burning limits at elevated pressure (up to 20 atm). Ground experiments used ozone-sensitized counterflow flames to map flammability limits of diffusional cool flames affected by radiation, diffusion and convection. Measured or computed quantities were extinction limits, flame temperature and species distribution for validating kinetic and radiation models.",
     "sources": [
       "approach",
       "objective",
-      "10.1016/j.pecs.2019.100787"
+      "10.1016/j.combustflame.2021.111471"
     ]
   },
   "pillar": {
     "value": "prevention",
-    "reason": "The work maps flammability and extinction limits of cool and hot flames as functions of oxygen concentration, dilution and pressure, which defines when a flame can be sustained.",
+    "reason": "Its PSI subarea is Spacecraft Fire Safety, and it develops a flammability-limit diagram for cool flames and links it to hot-flame flammability and extinction limits, which describes when a fuel can keep burning.",
     "sources": [
+      "subResearchArea",
       "objective",
       "hypothesis"
     ]
   },
   "environments": [
     {
-      "environment": "space_station",
-      "reason": "The study uses FLEX data from the ISS and aims to verify phenomena observed in the ISS flame extinguishment experiments; the record lists no flight program for this ground study itself.",
+      "environment": "transit_vehicle",
+      "reason": "The PSI subarea is Spacecraft Fire Safety.",
       "sources": [
-        "objective",
-        "approach"
+        "subResearchArea"
       ]
     },
     {
-      "environment": "transit_vehicle",
-      "reason": "The record notes warm and cool flames are relevant in microgravity because of long residence times, the condition of a vehicle in transit; the record itself does not name transit vehicles.",
+      "environment": "space_station",
+      "reason": "The study aims to verify phenomena observed in the ISS flame extinguishment experiments and extends the original ISS droplet experiments.",
       "sources": [
-        "researchImpacts"
+        "objective"
       ]
     }
   ],
   "generated_by": {
     "agent": "investigator",
     "model": "claude-opus-5-5",
-    "date": "2026-11-15T06:58:22Z"
+    "date": "2026-11-15T08:46:57Z"
   },
   "reviewed_by": null
 }

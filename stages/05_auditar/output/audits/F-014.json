@@ -1,0 +1,457 @@
+{
+  "finding_id": "F-014",
+  "finding_version": 1,
+  "finding_sha256": "96d51937ee0f48b73784131a82df0f979da1179ee1ce606ebb014bb6c8078e1b",
+  "checks": [
+    {
+      "id": "C0",
+      "name": "format",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "Matches schemas/finding.schema.json."
+    },
+    {
+      "id": "C1",
+      "name": "traceability",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "Rows, columns and DOI found: PSI-98: 2 rows in PSI-98_Experimental table_SAFFIRE-1.csv; PSI-99: 9 rows in PSI-99_Experimental table_SAFFIRE-2.csv; PSI-100: 2 rows in PSI-100_Experimental table_SAFFIRE-3.csv"
+    },
+    {
+      "id": "C2",
+      "name": "fidelity",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "psi98_sibal_fabric_o2_max = 21.7 % O2 <- cell '21.5 - 21.7' (Percent O2) at row 1 of PSI-98_Experimental table_SAFFIRE-1.csv; psi98_sibal_fabric_o2_min = 21.5 % O2 <- cell '21.5 - 21.7' (Percent O2) at row 1 of PSI-98_Experimental table_SAFFIRE-1.csv; psi99_cotton_fiberglass_sibal_o2_max = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 5 of PSI-99_Experimental table_SAFFIRE-2.csv; psi99_cotton_fiberglass_sibal_o2_min = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 5 of PSI-99_Experimental table_SAFFIRE-2.csv; psi99_material_cell_empty_o2_max = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 6 of PSI-99_Experimental table_SAFFIRE-2.csv; psi99_material_cell_empty_o2_min = 21.9 % O2 <- cell '22.0 to 21.9' (Percent O2 (Note 1)) at row 9 of PSI-99_Experimental table_SAFFIRE-2.csv; psi99_pmma_nomex_o2_max = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 7 of PSI-99_Experimental table_SAFFIRE-2.csv; psi99_pmma_nomex_o2_min = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 7 of PSI-99_Experimental table_SAFFIRE-2.csv; psi99_pmma_o2_max = 22.1 % O2 <- cell '22.1 to 22.0' (Percent O2 (Note 1)) at row 8 of PSI-99_Experimental table_SAFFIRE-2.csv; psi99_pmma_o2_min = 22.0 % O2 <- cell '22.1 to 22.0' (Percent O2 (Note 1)) at row 8 of PSI-99_Experimental table_SAFFIRE-2.csv; psi99_silicone_o2_max = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 2 of PSI-99_Experimental table_SAFFIRE-2.csv; psi99_silicone_o2_min = 21.5 % O2 <- cell '~ 21.5' (Percent O2 (Note 1)) at row 1 of PSI-99_Experimental table_SAFFIRE-2.csv"
+    },
+    {
+      "id": "C3",
+      "name": "recalculation",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "All 20 values reproduced by running the finding's SQL over data/snapshot (read-only); every source row and column it reports exists in the original CSVs."
+    },
+    {
+      "id": "C4",
+      "name": "units_and_ranges",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "Every value is in a known unit and a possible range."
+    },
+    {
+      "id": "C5",
+      "name": "support",
+      "done_by": "code",
+      "result": "fail",
+      "detail": "13 tests; broad support starts at 30 (provisional)."
+    },
+    {
+      "id": "C6",
+      "name": "tested_range",
+      "done_by": "code",
+      "result": "not_applicable",
+      "detail": "No tested-range rule applies."
+    },
+    {
+      "id": "C7",
+      "name": "data_quality",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "35 of 35 needed cells readable (100.0%); level: clean."
+    },
+    {
+      "id": "C8",
+      "name": "faithful_text",
+      "done_by": "code+model",
+      "result": "fail",
+      "detail": "6 of 20 answers differ from the expected one: Q3/claim, Q4/claim, Q3/summary_student, Q3/summary_professional, Q4/summary_professional, Q8/method."
+    },
+    {
+      "id": "C9",
+      "name": "chart_consistency",
+      "done_by": "code",
+      "result": "not_applicable",
+      "detail": "No chart."
+    }
+  ],
+  "recalculation": [
+    {
+      "value_name": "psi100_sibal_fabric_n_tests",
+      "finding_value": 2.0,
+      "recalculated_value": 2.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi98_sibal_fabric_n_tests",
+      "finding_value": 2.0,
+      "recalculated_value": 2.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi98_sibal_fabric_o2_max",
+      "finding_value": 21.7,
+      "recalculated_value": 21.7,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi98_sibal_fabric_o2_min",
+      "finding_value": 21.5,
+      "recalculated_value": 21.5,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_cotton_fiberglass_sibal_n_tests",
+      "finding_value": 1.0,
+      "recalculated_value": 1.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_cotton_fiberglass_sibal_o2_max",
+      "finding_value": 22.1,
+      "recalculated_value": 22.1,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_cotton_fiberglass_sibal_o2_min",
+      "finding_value": 22.1,
+      "recalculated_value": 22.1,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_material_cell_empty_n_tests",
+      "finding_value": 2.0,
+      "recalculated_value": 2.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_material_cell_empty_o2_max",
+      "finding_value": 22.1,
+      "recalculated_value": 22.1,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_material_cell_empty_o2_min",
+      "finding_value": 21.9,
+      "recalculated_value": 21.9,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_pmma_n_tests",
+      "finding_value": 1.0,
+      "recalculated_value": 1.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_pmma_nomex_n_tests",
+      "finding_value": 1.0,
+      "recalculated_value": 1.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_pmma_nomex_o2_max",
+      "finding_value": 22.1,
+      "recalculated_value": 22.1,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_pmma_nomex_o2_min",
+      "finding_value": 22.1,
+      "recalculated_value": 22.1,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_pmma_o2_max",
+      "finding_value": 22.1,
+      "recalculated_value": 22.1,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_pmma_o2_min",
+      "finding_value": 22.0,
+      "recalculated_value": 22.0,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_silicone_n_tests",
+      "finding_value": 4.0,
+      "recalculated_value": 4.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_silicone_o2_max",
+      "finding_value": 22.1,
+      "recalculated_value": 22.1,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_silicone_o2_min",
+      "finding_value": 21.5,
+      "recalculated_value": 21.5,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "n_tests",
+      "finding_value": 13,
+      "recalculated_value": 13,
+      "unit": "tests",
+      "match": true,
+      "detail": "sum of the cited rows over all evidence"
+    }
+  ],
+  "text_review": [
+    {
+      "question_id": "Q1",
+      "question": "Does every number in the text come from values, n_tests, method params, the cited rows or the recalculation?",
+      "field": "claim",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Every number has a source.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q2",
+      "question": "Do the units of the numbers in the text (%) agree with the units of their sources?",
+      "field": "claim",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Units agree.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q1",
+      "question": "Does every number in the text come from values, n_tests, method params, the cited rows or the recalculation?",
+      "field": "summary_student",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Every number has a source.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q2",
+      "question": "Do the units of the numbers in the text (%) agree with the units of their sources?",
+      "field": "summary_student",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Units agree.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q1",
+      "question": "Does every number in the text come from values, n_tests, method params, the cited rows or the recalculation?",
+      "field": "summary_professional",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Every number has a source.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q2",
+      "question": "Do the units of the numbers in the text (%) agree with the units of their sources?",
+      "field": "summary_professional",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Units agree.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q3",
+      "question": "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? Ignore numbers: they are checked separately.",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "yes",
+      "reason": "The text mentions 'normal air' as a test condition, which is not explicitly listed in the CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS, or LIMITATIONS.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q4",
+      "question": "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', 'materials in space' or 'all PSI tests'.",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": "no",
+      "reason": "The text specifies the materials tested in Saffire-I, Saffire-II, and Saffire-III, which are the cited investigations, but it also mentions general material types like 'SIBAL fabric' and 'silicone' without explicitly limiting the scope to only the cited investigations.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q5",
+      "question": "Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)?",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text describes the materials and oxygen levels used in specific experiments, not the absence of tests leading to a safety conclusion.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q6",
+      "question": "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count.",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text describes combustion experiments conducted near normal air and does not mention lunar or Martian gravity.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q3",
+      "question": "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? Ignore numbers: they are checked separately.",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "yes",
+      "reason": "The text mentions 'cotton-fiberglass fabric' which is not explicitly listed as a material in the evidence or values, although it is referenced in the text.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q4",
+      "question": "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', 'materials in space' or 'all PSI tests'.",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "The text discusses specific experiments (Saffire-I, Saffire-II, Saffire-III) and materials tested within them, which are all part of the cited investigations.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q5",
+      "question": "Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)?",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text discusses the oxygen levels of the tests conducted and compares them to a planned scenario, but it does not state that a lack of testing led to a safety conclusion.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q6",
+      "question": "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count.",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text discusses oxygen levels in combustion tests but makes no mention of lunar or Martian gravity.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q3",
+      "question": "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? Ignore numbers: they are checked separately.",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "yes",
+      "reason": "The text mentions 'SIBAL fabric' which is not explicitly listed as a material in the CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS, or LIMITATIONS sections, although it is referenced in the summary.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q4",
+      "question": "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', 'materials in space' or 'all PSI tests'.",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": "no",
+      "reason": "The text discusses specific test rows within the Saffire investigations (PSI-98, PSI-100, PSI-99), but it also mentions general material types like 'SIBAL fabric', 'silicone', 'cotton-fiberglass SIBAL', 'PMMA', and 'Nomex', which are broader categories than just the cited investigations.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q5",
+      "question": "Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)?",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text describes the presence or absence of tests for specific materials and conditions but does not interpret these absences as a safety conclusion.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q6",
+      "question": "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count.",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The provided text discusses combustion tests conducted in PSI rows but makes no mention of lunar or Martian gravity.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q7",
+      "question": "Does at least one LIMITATIONS item name something specific that this finding does NOT let you conclude (for example an investigation, material, condition or environment it does not cover)? Saying where the data come from is not a limitation.",
+      "field": "limitations",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "The limitations explicitly name several things the finding does not cover, such as enriched oxygen, partial gravity, or BASS/BASS-II investigations.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q8",
+      "question": "Does the SQL in method.params answer the finding's question, and do its filters keep every test they should (for example, rows with NULL are dropped by NOT IN)? The code only checks that the numbers come from the data; a person must read the SQL.",
+      "field": "method",
+      "done_by": "human",
+      "expected": "yes",
+      "answer": null,
+      "attempts": 0,
+      "reason": "Pending. The snapshot covers 21 of 22 PSI tables; a claim about 'PSI' or 'no test' does not see: PSI-142_Experimental table_Data Summary Table.csv."
+    }
+  ],
+  "grade": "C",
+  "reasons": [
+    "C8 failed: the text says more than the evidence supports, or it was not reviewed."
+  ],
+  "send_back_to": null,
+  "audited_by": {
+    "script": "scripts/auditar.py",
+    "model": "gemma4:e4b-it-qat",
+    "model_params": {
+      "think": false,
+      "temperature": 0,
+      "seed": 42,
+      "num_ctx": 8192
+    },
+    "date": "2026-11-15T09:34:23Z"
+  }
+}

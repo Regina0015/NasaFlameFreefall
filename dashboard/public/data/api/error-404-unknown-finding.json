@@ -1,0 +1,7 @@
+{
+  "http_status": 404,
+  "note": "GET /findings/F-999 (does not exist)",
+  "body": {
+    "detail": "F-999 not found in <path on the Auditor PC>"
+  }
+}

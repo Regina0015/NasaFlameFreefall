@@ -1,0 +1,7 @@
+{
+  "http_status": 401,
+  "note": "Any route but /health with a wrong or missing X-API-Key",
+  "body": {
+    "detail": "Missing or wrong X-API-Key header."
+  }
+}

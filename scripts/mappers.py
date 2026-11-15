@@ -291,12 +291,11 @@ def _not_in_table(row: _Row, *fields: str) -> None:
 
 
 def _flame_design_pressure(row: _Row) -> None:
-    """Mean chamber pressure; when that cell is empty, the initial pressure (they differ by about 0.5%
-    in the rows that have both), as the Auditor reads it next to the initial O2."""
-    if (row.cells.get("pmean (atm)") or "").strip():
-        row.number("pressure_atm_min", "pmean (atm)", 1.0, *PRESSURE_RANGE_ATM)
-    elif row.number("pressure_atm_min", "pinit (atm)", 1.0, *PRESSURE_RANGE_ATM) is not None:
-        row.note("pmean (atm) empty: pressure is pinit (atm)")
+    """Flame Design pressure: pmean (atm), or pinit (atm) when pmean is empty (same rule as the Auditor)."""
+    column = "pmean (atm)" if (row.cells.get("pmean (atm)") or "").strip() else "pinit (atm)"
+    row.number("pressure_atm_min", column, 1.0, *PRESSURE_RANGE_ATM)
+    if column == "pinit (atm)" and row.data["pressure_atm_min"] is not None:
+        row.note("pmean (atm) empty: pressure read from pinit (atm)")
     _one_value_range(row, "pressure_atm_min", "pressure_atm_max")
 
 

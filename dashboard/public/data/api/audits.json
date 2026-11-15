@@ -1,0 +1,245 @@
+{
+  "http_status": 200,
+  "note": "GET /audits: grade of every stored finding",
+  "body": {
+    "audits": [
+      {
+        "finding_id": "F-001",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "a5736e8e6d7f59bc1754820e487ad3633bdd1d4fa3f51545b52f8a181e5a0f65",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:29:14Z"
+      },
+      {
+        "finding_id": "F-002",
+        "finding_version": 5,
+        "grade": "C",
+        "failed_checks": [
+          "C7",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "12d2ba4a75dd72b16368f143e65d12c268915585d655ebfc9b33ccaa3a4ef20e",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:29:37Z"
+      },
+      {
+        "finding_id": "F-003",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "0a16ddc934bfbf5aba1b9cc388636ecc5ff04e7b2b463e50b8b423e0ec071096",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:30:01Z"
+      },
+      {
+        "finding_id": "F-004",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "e42aa38de7a6a555d8a46ee63e5d1d4f0444685fd316f83451bb3c9386b58f6f",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:30:24Z"
+      },
+      {
+        "finding_id": "F-005",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "6baf7d2d5504bc7f8c7d76885ffec05021a32b5f231b99fc5e2c748675e86e05",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:30:48Z"
+      },
+      {
+        "finding_id": "F-006",
+        "finding_version": 4,
+        "grade": "C",
+        "failed_checks": [
+          "C7",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "b8566ec1104b046ae24975113997d73c9b26ea488f4dc14317bd50edf24f3a10",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:31:10Z"
+      },
+      {
+        "finding_id": "F-007",
+        "finding_version": 1,
+        "grade": "rejected",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "c17776b6809f3adf9e63df248d42ccc4fc2b43cbb9454342af8241b71a972277",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:31:32Z"
+      },
+      {
+        "finding_id": "F-008",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C7",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "adaa1258fe72f836187ac21a9e4a063c7aa547895c2722bbd3c1ce4683faf91f",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:31:55Z"
+      },
+      {
+        "finding_id": "F-009",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C5",
+          "C7",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "a2972a8dc200067c4f9efe03ab7f27cf7ce24c3ba4baa29ced8dd33884c7700f",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:32:20Z"
+      },
+      {
+        "finding_id": "F-010",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "ea049d14c100e9ea6b0f699d21aebffd8ff32ffedabe6074e5c969f8d636513d",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:33:33Z"
+      },
+      {
+        "finding_id": "F-011",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "0ea3e49517e7bd6c991d2e7ceb2c4d3c6ffd1ac328d6d503d6c49b6d6f802745",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:33:46Z"
+      },
+      {
+        "finding_id": "F-012",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C5",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "8924b8554034a771af119d93d28207e45354e9ce7e68cf93039bce438b486e0c",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:33:56Z"
+      },
+      {
+        "finding_id": "F-013",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C5",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "686e4ce390aeb7fdbcefb56b242fad07909548bbfe0a389a3ba0a2bbbd3ed27c",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:34:12Z"
+      },
+      {
+        "finding_id": "F-014",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C5",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "96d51937ee0f48b73784131a82df0f979da1179ee1ce606ebb014bb6c8078e1b",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:34:23Z"
+      },
+      {
+        "finding_id": "F-016",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "7db3285935ee3307f8804a9a49d66c76b9041fd02620f35b0c6cd5eae8e9b525",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:34:32Z"
+      },
+      {
+        "finding_id": "F-017",
+        "finding_version": 2,
+        "grade": "C",
+        "failed_checks": [
+          "C5",
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "bcc799d385c03cf9cee84c505248d844e4aae6d28157783e4a8a943ac8d4925e",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:34:42Z"
+      },
+      {
+        "finding_id": "F-018",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "44942aa7c227f03af58c4fb4d7dd3d04b19695050a41c862abc934a17c2b78fd",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:34:52Z"
+      },
+      {
+        "finding_id": "F-019",
+        "finding_version": 1,
+        "grade": "rejected",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "3ff1dec34d7bd202d34df3e6060d9c3a707dc3f55b9f6508e7c104bb056cbc99",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:35:02Z"
+      },
+      {
+        "finding_id": "F-020",
+        "finding_version": 1,
+        "grade": "C",
+        "failed_checks": [
+          "C8"
+        ],
+        "stale_audit": false,
+        "finding_sha256": "60476c6ef35fafe6399b9f8c50e0145670cac8d405ef73df42c6944594adde94",
+        "model_used": true,
+        "audited_at": "2026-11-15T09:35:12Z"
+      }
+    ]
+  }
+}

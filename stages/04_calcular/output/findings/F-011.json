@@ -1,0 +1,261 @@
+{
+  "id": "F-011",
+  "version": 1,
+  "question": "How many smoke tests were run in the smoke-detection experiments (SAME, SAME-R, DAFT), and with which materials?",
+  "status": "has_data",
+  "claim": "PSI tables list 109 SAME-R smoke tests (Kapton, Silicone, Lampwick, Teflon, Pyrell) and 8 SAME smoke tests (Teflon, Kapton, Silicone Rubber, Lampwick, Dibutyl Phthalate), while DAFT lists 2 tests that used Arizona Road Dust, not smoke.",
+  "summary_student": "The SAME-R experiment made smoke from five materials in 109 tests: Kapton in 29, Silicone in 22, Lampwick in 20, Pyrell in 20 and Teflon in 18. The earlier SAME experiment ran 8 tests: Teflon in 4, and Kapton, Silicone Rubber, Lampwick and Dibutyl Phthalate in 1 each. DAFT is different: its 2 tests used a fine road dust instead of smoke, to check that detectors can tell dust apart from smoke.",
+  "summary_professional": "Counting rows in the PSI experimental tables (n = 119 rows across the three investigations): SAME-R (PSI-101) has 109 smoke tests, by sample material Kapton 29, Silicone 22, Lampwick 20, Pyrell 20, Teflon 18. SAME (PSI-102) has 8 smoke tests: Teflon 4, Kapton 1, Silicone Rubber 1, Lampwick 1, Dibutyl Phthalate 1. DAFT (PSI-47) has 2 tests with Arizona Road Dust (ARD Fine) aerosolized in nitrogen; the snapshot records no combustion phase for them, so they are dust tests, not smoke tests.",
+  "values": {
+    "psi_47_arizona_road_dust_tests": {
+      "value": 2,
+      "unit": "tests"
+    },
+    "psi_101_kapton_tests": {
+      "value": 29,
+      "unit": "tests"
+    },
+    "psi_102_silicone_rubber_tests": {
+      "value": 1,
+      "unit": "tests"
+    },
+    "psi_102_lampwick_tests": {
+      "value": 1,
+      "unit": "tests"
+    },
+    "psi_101_lampwick_tests": {
+      "value": 20,
+      "unit": "tests"
+    },
+    "psi_101_pyrell_tests": {
+      "value": 20,
+      "unit": "tests"
+    },
+    "psi_102_kapton_tests": {
+      "value": 1,
+      "unit": "tests"
+    },
+    "psi_102_teflon_tests": {
+      "value": 4,
+      "unit": "tests"
+    },
+    "psi_101_silicone_tests": {
+      "value": 22,
+      "unit": "tests"
+    },
+    "psi_101_teflon_tests": {
+      "value": 18,
+      "unit": "tests"
+    },
+    "psi_102_dibutyl_phthalate_tests": {
+      "value": 1,
+      "unit": "tests"
+    },
+    "psi_47_total_tests": {
+      "value": 2,
+      "unit": "tests"
+    },
+    "psi_102_total_tests": {
+      "value": 8,
+      "unit": "tests"
+    },
+    "psi_101_total_tests": {
+      "value": 109,
+      "unit": "tests"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "SELECT lower(regexp_replace(investigation || '_' || regexp_extract(fuel, '^[^(]*') || '_tests', '[^[:alnum:]]+', '_', 'g')) AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.fuel')) AS source_columns FROM tests WHERE investigation IN ('PSI-102','PSI-101','PSI-47') GROUP BY investigation, source_table, fuel UNION ALL SELECT lower(regexp_replace(investigation || '_total_tests', '[^[:alnum:]]+', '_', 'g')) AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.fuel')) AS source_columns FROM tests WHERE investigation IN ('PSI-102','PSI-101','PSI-47') GROUP BY investigation, source_table"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-47",
+      "doi": "10.60555/ztgj-d202",
+      "table": "PSI-47_Experimental table_DAFT.csv",
+      "columns": [
+        "Sample Material"
+      ],
+      "rows": [
+        1,
+        2
+      ]
+    },
+    {
+      "investigation": "PSI-101",
+      "doi": "10.60555/2np7-jv14",
+      "table": "PSI-101_Experimental table_SAME-R.csv",
+      "columns": [
+        "Sample Type"
+      ],
+      "rows": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109
+      ]
+    },
+    {
+      "investigation": "PSI-102",
+      "doi": "10.60555/gd4k-8h62",
+      "table": "PSI-102_Experimental table_SAME.csv",
+      "columns": [
+        "Sample Material"
+      ],
+      "rows": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    }
+  ],
+  "n_tests": 119,
+  "assumptions": [
+    "Each row of a PSI experimental table counts as one test.",
+    "Material names are taken exactly as written in each table; Silicone in SAME-R and Silicone Rubber in SAME are kept as separate labels because the tables name them differently."
+  ],
+  "limitations": [
+    "This counts tests only; it says nothing about detector performance, smoke particle sizes or which material is more hazardous.",
+    "The SAME and SAME-R tables give no oxygen level or pressure, so these tests cannot be compared with lunar base or rover atmospheres.",
+    "Some SAME rows only say they repeat the conditions of earlier rows; the snapshot keeps their material but not copied conditions.",
+    "Only the experimental tables in the PSI snapshot are counted; tests described only in papers, or in other smoke studies such as the PSI-115 ground study, are not included."
+  ],
+  "warnings": [
+    "DAFT tests used dust, not smoke: they should not be counted as smoke tests."
+  ],
+  "environments": [],
+  "tier": 1,
+  "pillar": "detection",
+  "visual_offer": {
+    "chart": {
+      "available": true,
+      "idea": "Grouped bars of the number of tests per material for SAME-R and SAME, with DAFT dust tests shown separately."
+    },
+    "graph": {
+      "available": false,
+      "idea": null
+    },
+    "footnote": "Want a visual? I can draw a bar chart of how many tests each material had in SAME-R and SAME, with the DAFT dust tests shown apart."
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T08:12:32Z"
+  }
+}

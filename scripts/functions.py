@@ -144,7 +144,9 @@ def coverage_by_environment(con: duckdb.DuckDBPyConnection, environment: str, en
     atmosphere = _atmosphere(environments_md, environment)
     o2_min = atmosphere["o2_min_pct"]
     pressure_max_atm = atmosphere["pressure_max_psi"] / PSI_PER_ATM
-    o2_match = f"{O2_HIGH} >= ?"
+    # Inverse flames (the mappers note "burner stream"): their O2 is the burner stream, not the room, so they
+    # never match an atmosphere. The Auditor leaves out the same tables (o2_is_burner_stream in cobertura-tablas.json).
+    o2_match = f"{O2_HIGH} >= ? AND coalesce(problems, '') NOT LIKE '%burner stream%'"
     stats = con.execute(
         f"SELECT phase, count(*) FILTER (WHERE {o2_match}), "
         f"count(*) FILTER (WHERE {o2_match} AND pressure_atm_min <= ?), "
@@ -166,7 +168,8 @@ def coverage_by_environment(con: duckdb.DuckDBPyConnection, environment: str, en
                        f"WHERE phase IS NOT NULL AND {o2_match}", [o2_min]).fetchall()
     formula = ("For each fuel phase, the number of tests whose oxygen reached at least o2_min_pct, how many of them "
                "also ran at or below pressure_max_psi (pressure_atm_min <= pressure_max_psi / 14.6959), and how many "
-               "of them report no pressure. A phase with no test at that oxygen but with tests that report no oxygen is "
+               "of them report no pressure. Inverse-flame tests are left out: their oxygen is the burner stream, not the "
+               "room. A phase with no test at that oxygen but with tests that report no oxygen is "
                "left out of the values: that is no data, not zero.")
     params = {k: atmosphere[k] for k in ("environment", "o2_min_pct", "pressure_max_psi", "source")}
     return _result("coverage_by_environment", params, formula, values, len(used),
@@ -185,6 +188,15 @@ def _sql_value(value, row: int):
 
 VALUE_NAME = re.compile(r"[a-z][a-z0-9_]{0,63}")
 UNIT_TEXT = re.compile(r"[A-Za-z0-9%°/·^()., _-]*")
+# The units the Auditor accepts (scripts/auditar.py, check C4); a test keeps the two tables equal.
+COUNT_UNITS = {"tests", "test", "count", "rows", "days", "test days"}
+POSITIVE_UNITS = {"atm", "psi", "kpa", "pa", "cm/s", "mm/s", "m/s", "mm", "cm", "m", "s", "ms",
+                  "k", "ppm", "w", "kw", "g", "mg"}
+
+
+def _known_unit(unit: str) -> bool:
+    u = unit.strip().lower()
+    return u.startswith("%") or "percent" in u or "fraction" in u or u in COUNT_UNITS or u in POSITIVE_UNITS
 
 
 def _text(value, column: str, row: int) -> str:
@@ -223,7 +235,16 @@ def sql_values(con: duckdb.DuckDBPyConnection, sql: str) -> dict:
         source_columns = row["source_columns"]
         if not isinstance(source_columns, list) or not all(isinstance(c, str) for c in source_columns):
             raise ValueError(f"row {n}: source_columns must be a list of column names")
-        values[name] = {"value": _sql_value(row["value"], n), "unit": unit}
+        if not _known_unit(unit):
+            raise ValueError(f"row {n}: unit {unit!r} is not one the Auditor accepts: counts use tests, rows, days "
+                             "or test days; oxygen uses % O2; measures use atm, psi, kPa, Pa, cm/s, mm/s, m/s, mm, "
+                             "cm, m, s, ms, K, ppm, W, kW, g or mg")
+        value = _sql_value(row["value"], n)
+        if unit.strip().lower() in COUNT_UNITS and (value != len(rows) or len(set(rows)) != len(rows)):
+            raise ValueError(f"row {n}: {name} = {value} {unit}, but a count must equal the number of source_rows "
+                             f"({len(set(rows))} distinct listed). List exactly the rows counted; if none match, "
+                             "drop the value and say so in limitations")
+        values[name] = {"value": value, "unit": unit}
         group = groups.setdefault((investigation, table), {"rows": set(), "columns": set()})
         group["rows"].update(rows)
         group["columns"].update(part for c in source_columns for part in c.split(SOURCE_SEPARATOR) if part)

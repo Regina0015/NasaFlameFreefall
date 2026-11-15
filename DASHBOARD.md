@@ -107,6 +107,7 @@ Ground studies (PSI-60, PSI-62, PSI-115, PSI-117, PSI-142) have no test rows of 
 | Detection | `#d95926` (orange) | `#eb6834` |
 | Suppression | `#199e70` (aqua) | `#1baf7a` |
 | Not reviewed yet | `--text-faint` gray | `--text-faint` gray |
+| None (`pillar = none`: PSI states no fire-safety use, e.g. PSI-22, PSI-159) | hollow gray circle | hollow gray circle |
 
   The light aqua is below 3:1 on white, so node labels must always be visible (or the table view offered).
 - **Size = number of tests** (area proportional, `sqrt` scale). Ground studies: small hollow circle.
@@ -173,3 +174,29 @@ A panel next to the chat: "what if the data were read differently?". It shows wh
 - Real accounts come from Supabase Auth (email and password). For the demo, create the accounts in Supabase (Authentication → Users → Add user, "Auto Confirm User"). "Explore demo" works without an account.
 - Student and Professional only change how results are worded; they never change what someone can read (the database policies decide that).
 - The local demo accounts in `.env.local` only work when Supabase is not configured; they can be removed.
+
+## 8. Auditor API: real responses to build against
+
+The Auditor runs on its own PC behind an HTTP gateway (`api/`). Real responses, captured from that gateway on 2026-11-15, are in `dashboard/public/data/api/` (one file per call: `{http_status, note, body}`). Build the findings views against these files first; the shapes are the contract.
+
+**Never call the gateway from the browser.** Every route except `/health` needs the `X-API-Key` header, and anything in a `VITE_` variable ends up in the public bundle. Read grades through a server: the Vite dev server (like the chat in `dashboard/chat/`), or the `findings` table in Supabase once findings and audits are loaded there.
+
+| Call | File | Use it for |
+|---|---|---|
+| `GET /health` (no key) | `health.json` | A status chip: "Auditor online / model ready". `status` is `ok` or `degraded` |
+| `GET /findings` | `findings.json` | The findings list. Rejected findings are left out; `rejected_not_shown` says how many |
+| `GET /findings?include_rejected=true` | `findings-include-rejected.json` | Professional view only, if you show rejected ones at all |
+| `GET /findings/F-001` | `finding-F-001.json` | One finding with its grade |
+| `GET /audits` | `audits.json` | Grade of every stored finding (no finding text) |
+| `GET /audits/F-001` | `audit-F-001.json` | Full proof: `audit.checks` (C0 to C9 with `result` and `detail`), `audit.recalculation`, `audit.text_review` |
+| `GET /audits/F-007`, `/audits/F-019` | `audit-F-007.json`, `audit-F-019.json` | Knowledge-gap findings (`status: no_data`) |
+| wrong key | `error-401-wrong-key.json` | Show "Auditor not reachable", never a grade |
+| unknown id | `error-404-unknown-finding.json` | Show "Not found" |
+
+**Fields of a findings row:** `finding_id`, `finding_version`, `grade` (`A`, `B`, `C`, `no_data`, `rejected` or `pending audit`), `failed_checks` (list such as `["C5", "C8"]`), `stale_audit` (true: the finding changed after its audit, so show "Not audited yet"), `model_used` (false: the text review did not run), `audited_at`, and `finding` (the full finding, fields in section 1).
+
+**Rules:**
+- A grade is shown only when `grade` is one of the five grades and `stale_audit` is false. `pending audit`, an error or an unreachable gateway all show "Not audited yet", never a grade.
+- `failed_checks` in plain words for the student view: C5 = "based on few tests", C7 = "some table cells were unclear", C8 = "the text review did not pass". The professional view lists every check with its `detail`.
+- `rejected` findings are not published (section 1). A `no_data` finding with C8 failed comes back `rejected` until its text passes the review.
+- Results of every finding sent through the gateway: `battery-results.json`.

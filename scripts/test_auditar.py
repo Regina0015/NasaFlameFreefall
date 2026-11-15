@@ -178,6 +178,16 @@ class TestAudit(Base):
         self.assertIsNone(a["send_back_to"])
         self.assertEqual(a["audited_by"]["model"], "fake-model")
 
+    def test_c4_zero_flow_is_possible_but_zero_pressure_is_not(self):
+        # SAME-R lists tests at 0 cm/s inlet velocity (no flow); a pressure of 0 is still impossible.
+        def c4(value, unit):
+            f = base_finding()
+            f["values"]["x"] = {"value": value, "unit": unit}
+            return self.result(self.audit(f), "C4")
+        self.assertEqual(c4(0.0, "cm/s"), "pass")
+        self.assertEqual(c4(-1.0, "cm/s"), "fail")
+        self.assertEqual(c4(0.0, "atm"), "fail")
+
     def test_c2_points_to_original_cell(self):
         a = self.audit(base_finding())
         c2 = next(c for c in a["checks"] if c["id"] == "C2")
@@ -517,6 +527,13 @@ class TestCoverageByEnvironment(Base):
         self.assertEqual(self.result(a, "C3"), "fail")
         c3 = next(c for c in a["checks"] if c["id"] == "C3")["detail"]
         self.assertIn("Flame Design", c3)  # la tabla no citada sí tenía una prueba al 45%
+
+    def test_burner_stream_table_is_not_a_room_atmosphere(self):
+        # Inverse flames: XO2 is the burner stream, not the chamber, so they never match an environment.
+        self.cov["tables"][self.GAS2]["o2_is_burner_stream"] = True
+        self.reload()
+        self.assertEqual(self.result(self.audit(self.finding(gas_match=2, with_gas2=False)), "C3"), "pass")
+        self.assertEqual(self.result(self.audit(self.finding()), "C3"), "fail")
 
     def test_zero_with_unknown_o2_fails_c6(self):
         f = self.finding()

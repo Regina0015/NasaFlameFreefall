@@ -54,7 +54,7 @@ class O2RangeTest(FixtureCase):
         self.assertEqual(groups[("PSI-69", "t.csv")]["columns"], {"N2 col", "CO2 col"})
 
     def test_sql_values_splits_joined_source_columns(self):
-        c = sql_values(self.con, "SELECT 'x' AS name, 1.0 AS value, 'u' AS unit, investigation, source_table, "
+        c = sql_values(self.con, "SELECT 'x' AS name, 1.0 AS value, 'tests' AS unit, investigation, source_table, "
                                  "[source_row] AS source_rows, ['A | B', 'C'] AS source_columns FROM tests "
                                  "WHERE investigation = 'PSI-25' LIMIT 1")
         self.assertEqual(c["evidence"][0]["columns"], ["A", "B", "C"])
@@ -108,6 +108,19 @@ class CoverageTest(FixtureCase):
         self.assertFalse([k for k in v if k.startswith(("smoke_", "solid_"))])
         self.assertEqual(v["droplet_o2_match"]["value"], 1)  # every droplet has O2: a real count stays
 
+    def test_coverage_leaves_out_burner_stream_oxygen(self):
+        # Inverse flames: the O2 value is the burner stream, not the room, so it is not an atmosphere.
+        self.con.close()
+        inverse = dict(fixture_test("PSI-159", "inverse.csv", 1, "gas", 40.0, 0.5),
+                       problems="inverse flame: O2 is the burner stream, not the chamber")
+        normal = fixture_test("PSI-159", "normal.csv", 1, "gas", 40.0, 0.5)
+        self.snap = make_fixture_snapshot(self.root / "snap3", extra_tests=[PSI99_SOLID, inverse, normal])
+        self.con = open_snapshot(self.snap, user_root=self.root / "user")
+        c = coverage_by_environment(self.con, "lunar_base", ENV_MD)
+        self.assertEqual((c["values"]["gas_o2_match"]["value"], c["values"]["gas_o2_and_pressure_match"]["value"]), (1, 1))
+        self.assertNotIn("inverse.csv", [e["table"] for e in c["evidence"]])
+        self.assertIn("burner stream", c["method"]["formula"])
+
     def test_coverage_unknown_environment(self):
         with self.assertRaisesRegex(ValueError, "no sourced atmosphere for space_station"):
             coverage_by_environment(self.con, "space_station", ENV_MD)
@@ -124,7 +137,7 @@ class SqlValuesTest(FixtureCase):
         self.assertEqual((ok["values"]["psi25_o2_max"]["value"], ok["n_tests"]), (22.2, 2))
         self.assertEqual((ok["method"]["function"], ok["method"]["params"]), ("sql_query", {"sql": SQL_OK}))
         self.assertEqual(ok["evidence"][0]["columns"], [BASS2_O2])
-        empty = sql_values(self.con, "SELECT 'x' AS name, 1.0 AS value, 'u' AS unit, investigation, source_table, "
+        empty = sql_values(self.con, "SELECT 'x' AS name, 1.0 AS value, 'tests' AS unit, investigation, source_table, "
                                      "[source_row] AS source_rows, ['c'] AS source_columns FROM tests WHERE o2_pct_max > 90")
         self.assertEqual((empty["values"], empty["n_tests"], empty["evidence"]), ({}, 0, []))
         with self.assertRaises(ValueError):
@@ -134,14 +147,35 @@ class SqlValuesTest(FixtureCase):
         with self.assertRaisesRegex(ValueError, "missing column\\(s\\): name, unit"):
             sql_values(self.con, "SELECT 1 AS value, 'PSI-25' AS investigation, 't' AS source_table, [1] AS source_rows, ['c'] AS source_columns")
 
+    def test_sql_values_rejects_units_the_auditor_does_not_know(self):
+        # Auditor C4 rejects any unit outside its table; catch it before the finding is written.
+        sql = (f"SELECT 'k' AS name, 2.0 AS value, 'distinct O2 levels' AS unit, 'PSI-25' AS investigation, "
+               f"'{BASS2_TABLE}' AS source_table, [1] AS source_rows, ['c'] AS source_columns")
+        with self.assertRaisesRegex(ValueError, "unit 'distinct O2 levels' is not one the Auditor accepts"):
+            sql_values(self.con, sql)
+
+    def test_sql_values_count_must_equal_its_rows(self):
+        # Auditor C3: a count lists exactly the rows it counted (F-010 v1 and F-013 returned 0 with rows).
+        base = (f"SELECT 'k' AS name, {{value}} AS value, 'tests' AS unit, 'PSI-25' AS investigation, "
+                f"'{BASS2_TABLE}' AS source_table, [1, 2] AS source_rows, ['c'] AS source_columns")
+        self.assertEqual(sql_values(self.con, base.format(value=2))["values"]["k"]["value"], 2)
+        for bad in (0, 1, 3):
+            with self.assertRaisesRegex(ValueError, "count must equal the number of source_rows"):
+                sql_values(self.con, base.format(value=bad))
+
+    def test_sql_values_units_match_the_auditor_table(self):
+        from scripts import auditar, functions
+        self.assertEqual(functions.COUNT_UNITS, auditar.COUNT_UNITS)
+        self.assertEqual(functions.POSITIVE_UNITS, auditar.POSITIVE_UNITS)
+
     def test_sql_values_decimal_becomes_float(self):
-        c = sql_values(self.con, f"SELECT 'k' AS name, 1.5 AS value, 'u' AS unit, 'PSI-25' AS investigation, '{BASS2_TABLE}' AS source_table, "
+        c = sql_values(self.con, f"SELECT 'k' AS name, 1.5 AS value, 'cm/s' AS unit, 'PSI-25' AS investigation, '{BASS2_TABLE}' AS source_table, "
                                  "[1] AS source_rows, ['c'] AS source_columns")
         self.assertEqual(c["values"]["k"]["value"], 1.5)
         self.assertIsInstance(c["values"]["k"]["value"], float)
 
     def test_sql_values_rejects_bad_rows(self):
-        base = ("SELECT {name} AS name, {value} AS value, 'u' AS unit, 'PSI-25' AS investigation, 't' AS source_table, "
+        base = ("SELECT {name} AS name, {value} AS value, 'tests' AS unit, 'PSI-25' AS investigation, 't' AS source_table, "
                 "{rows} AS source_rows, ['c'] AS source_columns")
         for name, value, rows in [("'a'", "'text'", "[1]"), ("'a'", "1", "[0]"), ("'a'", "1", "'1'"), ("NULL", "1", "[1]")]:
             with self.assertRaises(ValueError, msg=(name, value, rows)):

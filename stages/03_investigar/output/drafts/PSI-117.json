@@ -1,28 +1,28 @@
 {
   "id": "PSI-117",
   "summary_student": {
-    "text": "This was a computer study that used data from the Flame Extinguishment Experiment on the space station, where tiny drops of liquid fuel burned with very weak, low-temperature cool flames. It tested how gentle heating and slow air drift change whether these flames start, flicker, turn into hot flames or go out. That helps predict how fuel fires behave and end in microgravity, which matters for spacecraft fire safety.",
-    "sources": ["objective", "approach", "researchImpacts"]
+    "text": "This was a computer study that used data from fuel droplets burned on the International Space Station in the FLEX experiment. It simulated 'cool flames', very weak flames around a burning droplet, and how gentle heating or drifting air makes them flicker, turn into hot flames, or go out. The record says this could improve fire-safety models for spacecraft.",
+    "sources": ["approach", "objective", "researchImpacts"]
   },
   "summary_professional": {
-    "text": "Ground investigation building a 3-D OpenFOAM CFD model of n-alkane droplet cool flames in microgravity, coupling variable-density Navier-Stokes flow with low-temperature chemistry, heat and mass transfer and radiation, validated against ISS FLEX measurements. Three forcing modes were simulated for large and sub-millimeter droplets: convection alone (droplet drift), imposed heat flux, and both combined, with parameter sweeps over forcing amplitude and frequency, ambient composition (including ozone-assisted cases) and pressure. Extracted observables were ignition delay, oscillation frequency and amplitude, and stand-off and extinction diameters, used to build stability maps of cool-flame onset, persistence and quenching.",
-    "sources": ["approach", "hypothesis", "objective"]
+    "text": "Ground investigation building a 3-D OpenFOAM CFD model of n-alkane droplet cool flames in microgravity, coupling variable-density Navier-Stokes flow with low-temperature chemistry, heat and mass transfer and radiation, validated against ISS FLEX measurements. Simulations imposed convection alone (droplet drift), heat flux, and combined convection plus heating on large (1–4 mm) and sub-millimeter (~0.5 mm) droplets, sweeping forcing amplitude and frequency, ambient composition (including ozone-assisted cases) and pressure. Extracted observables were ignition delay, oscillation frequency and amplitude, and stand-off and extinction diameters, used to build stability maps for cool-flame onset, persistence and quenching.",
+    "sources": ["approach", "objective", "hypothesis", "10.1016/j.proci.2022.07.094"]
   },
   "pillar": {
     "value": "prevention",
-    "reason": "The record says the work could improve spacecraft fire-safety modeling of cool-flame and extinction behavior and help define safer operating envelopes and materials; it does not test a detector or suppression system.",
-    "sources": ["researchImpacts", "objective"]
+    "reason": "The record states the work could improve spacecraft fire-safety modeling by resolving cool-flame and extinction behavior and help define safer operating envelopes and materials.",
+    "sources": ["researchImpacts"]
   },
   "environments": [
     {
-      "environment": "space_station",
-      "reason": "The model is validated against and reconciled with FLEX measurements from the ISS; the flight program field of this ground study is not stated in PSI.",
-      "sources": ["approach", "objective"]
+      "environment": "transit_vehicle",
+      "reason": "The record names spacecraft fire-safety modeling as a space benefit.",
+      "sources": ["researchImpacts"]
     },
     {
-      "environment": "transit_vehicle",
-      "reason": "The study maps droplet cool-flame stability in microgravity, the condition of a vehicle in transit; the record itself does not name transit vehicles.",
-      "sources": ["objective", "hypothesis"]
+      "environment": "space_station",
+      "reason": "The model was validated against ISS FLEX flight measurements.",
+      "sources": ["approach", "objective"]
     }
   ],
   "model": "claude-opus-5-5"

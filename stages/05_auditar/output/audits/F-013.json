@@ -1,0 +1,377 @@
+{
+  "finding_id": "F-013",
+  "finding_version": 2,
+  "finding_sha256": "686e4ce390aeb7fdbcefb56b242fad07909548bbfe0a389a3ba0a2bbbd3ed27c",
+  "checks": [
+    {
+      "id": "C0",
+      "name": "format",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "Matches schemas/finding.schema.json."
+    },
+    {
+      "id": "C1",
+      "name": "traceability",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "Rows, columns and DOI found: PSI-25: 3 rows in PSI-25_Experimental table_BASS-II.csv; PSI-26: 6 rows in PSI-26_Experimental table_BASS.csv; PSI-99: 1 rows in PSI-99_Experimental table_SAFFIRE-2.csv"
+    },
+    {
+      "id": "C2",
+      "name": "fidelity",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "psi25_nomex_o2_min = 21.0 % O2 <- cell '21' (Calibrated initial O2 % by vol) at row 24 of PSI-25_Experimental table_BASS-II.csv; psi99_nomex_o2_min = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 7 of PSI-99_Experimental table_SAFFIRE-2.csv; psi25_nomex_o2_max = 22.2 % O2 <- cell '22.2' (Calibrated initial O2 % by vol) at row 23 of PSI-25_Experimental table_BASS-II.csv; psi99_nomex_o2_max = 22.1 % O2 <- cell '~ 22.1' (Percent O2 (Note 1)) at row 7 of PSI-99_Experimental table_SAFFIRE-2.csv"
+    },
+    {
+      "id": "C3",
+      "name": "recalculation",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "All 10 values reproduced by running the finding's SQL over data/snapshot (read-only); every source row and column it reports exists in the original CSVs."
+    },
+    {
+      "id": "C4",
+      "name": "units_and_ranges",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "Every value is in a known unit and a possible range."
+    },
+    {
+      "id": "C5",
+      "name": "support",
+      "done_by": "code",
+      "result": "fail",
+      "detail": "10 tests; broad support starts at 30 (provisional)."
+    },
+    {
+      "id": "C6",
+      "name": "tested_range",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "['lunar_base']: the partial-gravity warning is present"
+    },
+    {
+      "id": "C7",
+      "name": "data_quality",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "22 of 22 needed cells readable (100.0%); level: clean."
+    },
+    {
+      "id": "C8",
+      "name": "faithful_text",
+      "done_by": "code+model",
+      "result": "fail",
+      "detail": "6 of 20 answers differ from the expected one: Q4/claim, Q3/summary_student, Q4/summary_student, Q3/summary_professional, Q4/summary_professional, Q8/method."
+    },
+    {
+      "id": "C9",
+      "name": "chart_consistency",
+      "done_by": "code",
+      "result": "not_applicable",
+      "detail": "No chart."
+    }
+  ],
+  "recalculation": [
+    {
+      "value_name": "psi25_nomex_tests",
+      "finding_value": 3.0,
+      "recalculated_value": 3.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi26_nomex_tests",
+      "finding_value": 6.0,
+      "recalculated_value": 6.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_nomex_tests",
+      "finding_value": 1.0,
+      "recalculated_value": 1.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi25_nomex_o2_min",
+      "finding_value": 21.0,
+      "recalculated_value": 21.0,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_nomex_o2_min",
+      "finding_value": 22.1,
+      "recalculated_value": 22.1,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi25_nomex_o2_max",
+      "finding_value": 22.2,
+      "recalculated_value": 22.2,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_nomex_o2_max",
+      "finding_value": 22.1,
+      "recalculated_value": 22.1,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi25_nomex_tests_below_threshold",
+      "finding_value": 3.0,
+      "recalculated_value": 3.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "psi99_nomex_tests_below_threshold",
+      "finding_value": 1.0,
+      "recalculated_value": 1.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "n_tests",
+      "finding_value": 10,
+      "recalculated_value": 10,
+      "unit": "tests",
+      "match": true,
+      "detail": "sum of the cited rows over all evidence"
+    }
+  ],
+  "text_review": [
+    {
+      "question_id": "Q1",
+      "question": "Does every number in the text come from values, n_tests, method params, the cited rows or the recalculation?",
+      "field": "claim",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Every number has a source.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q2",
+      "question": "Do the units of the numbers in the text (%) agree with the units of their sources?",
+      "field": "claim",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Units agree.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q1",
+      "question": "Does every number in the text come from values, n_tests, method params, the cited rows or the recalculation?",
+      "field": "summary_student",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Every number has a source.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q2",
+      "question": "Do the units of the numbers in the text (%) agree with the units of their sources?",
+      "field": "summary_student",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Units agree.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q1",
+      "question": "Does every number in the text come from values, n_tests, method params, the cited rows or the recalculation?",
+      "field": "summary_professional",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Every number has a source.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q2",
+      "question": "Do the units of the numbers in the text (%) agree with the units of their sources?",
+      "field": "summary_professional",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Units agree.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q3",
+      "question": "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? Ignore numbers: they are checked separately.",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text mentions 'Nomex' as a fuel, which is present in the evidence, values, and assumptions, but it does not mention any other specific fuel, material, experiment, investigation, or test condition not covered by the provided context.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q4",
+      "question": "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', 'materials in space' or 'all PSI tests'.",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": "no",
+      "reason": "The text refers to 'the 10 Nomex tests' without explicitly limiting them to the cited investigations.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q5",
+      "question": "Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)?",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text states that PSI cannot determine safety because the existing tests do not cover the specified oxygen level, which is a statement about the scope of the data, not a conclusion about safety based on the absence of data.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q6",
+      "question": "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count.",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text explicitly states that none of the tests mention pressure or partial gravity, which includes lunar or Martian gravity.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q3",
+      "question": "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? Ignore numbers: they are checked separately.",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "yes",
+      "reason": "The text mentions 'Nomex' as a fuel, which is present in the evidence, values, and assumptions, but the text also mentions 'air close to normal Earth air' which is not explicitly listed as a condition in the cited sections.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q4",
+      "question": "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', 'materials in space' or 'all PSI tests'.",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": "no",
+      "reason": "The text discusses Nomex samples burned in space across BASS-II, BASS, and Saffire-II, which are the cited investigations, but it makes general statements about the tests conducted, not limiting itself to specific counts or scopes within those investigations.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q5",
+      "question": "Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)?",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text explicitly states that the lack of certain tests means the data cannot determine safety, rather than making a definitive safety claim based on the absence of testing.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q6",
+      "question": "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count.",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text explicitly states that no Nomex test was run in lunar gravity, and it does not describe how combustion behaves under lunar or Martian gravity.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q3",
+      "question": "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? Ignore numbers: they are checked separately.",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "yes",
+      "reason": "The text mentions 'PSI tests table' which is not explicitly listed in the cited investigations, evidence, values, assumptions, or limitations.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q4",
+      "question": "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', 'materials in space' or 'all PSI tests'.",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": "no",
+      "reason": "The text discusses '10 microgravity Nomex tests' and refers to them by their PSI designations (PSI-25, PSI-26, PSI-99), which are linked to the cited investigations, but it also makes general statements about the scope of these tests (e.g., 'No Nomex row states ambient pressure or a test outcome') that are not strictly limited to the named investigations.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q5",
+      "question": "Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)?",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text describes the scope of testing and notes that a specific condition lies outside the tested range, but it does not draw a safety conclusion based on the absence of data.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q6",
+      "question": "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count.",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "no",
+      "answer": "no",
+      "reason": "The text only discusses microgravity tests and does not mention lunar or Martian gravity conditions.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q7",
+      "question": "Does at least one LIMITATIONS item name something specific that this finding does NOT let you conclude (for example an investigation, material, condition or environment it does not cover)? Saying where the data come from is not a limitation.",
+      "field": "limitations",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "The limitations explicitly name several things the finding does not cover, such as Nomex burning at 34% O2, reduced habitat pressure, or lunar gravity.",
+      "attempts": 1
+    },
+    {
+      "question_id": "Q8",
+      "question": "Does the SQL in method.params answer the finding's question, and do its filters keep every test they should (for example, rows with NULL are dropped by NOT IN)? The code only checks that the numbers come from the data; a person must read the SQL.",
+      "field": "method",
+      "done_by": "human",
+      "expected": "yes",
+      "answer": null,
+      "attempts": 0,
+      "reason": "Pending. The snapshot covers 21 of 22 PSI tables; a claim about 'PSI' or 'no test' does not see: PSI-142_Experimental table_Data Summary Table.csv."
+    }
+  ],
+  "grade": "C",
+  "reasons": [
+    "C8 failed: the text says more than the evidence supports, or it was not reviewed."
+  ],
+  "send_back_to": null,
+  "audited_by": {
+    "script": "scripts/auditar.py",
+    "model": "gemma4:e4b-it-qat",
+    "model_params": {
+      "think": false,
+      "temperature": 0,
+      "seed": 42,
+      "num_ctx": 8192
+    },
+    "date": "2026-11-15T09:34:12Z"
+  }
+}

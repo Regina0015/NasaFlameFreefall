@@ -1,0 +1,138 @@
+{
+  "id": "F-013",
+  "version": 2,
+  "question": "Is Nomex fabric safe to use inside a lunar habitat at 34% oxygen?",
+  "status": "has_data",
+  "claim": "PSI cannot say whether Nomex is safe at 34% O2: of the 10 Nomex tests, the ones that state oxygen were run between 21.0 and 22.2% O2, all below 34%, and none states pressure or partial gravity.",
+  "summary_student": "NASA burned Nomex samples in space 10 times across BASS-II, BASS and Saffire-II, but every test that recorded its oxygen level used air close to normal Earth air, between 21.0 and 22.2% oxygen. No Nomex test was run at 34% oxygen, at reduced habitat pressure or in lunar gravity, so this data cannot tell you whether Nomex is safe or unsafe in a lunar habitat.",
+  "summary_professional": "The PSI tests table holds 10 microgravity Nomex tests: 3 in PSI-25 (BASS-II), 6 in PSI-26 (BASS) and 1 in PSI-99 (Saffire-II, combined PMMA and Nomex sample). PSI-25 Nomex tests span 21.0 to 22.2% O2 (calibrated initial O2) and the PSI-99 test is at 22.1% O2 (approximate, derived from CO2 production); all 3 PSI-25 and the 1 PSI-99 tests with stated O2 are below the 34% O2 threshold of the question, while the 6 PSI-26 tests do not state O2. No Nomex row states ambient pressure or a test outcome, so the 34% O2 lunar-habitat condition lies outside the tested range.",
+  "values": {
+    "psi25_nomex_tests": {
+      "value": 3.0,
+      "unit": "tests"
+    },
+    "psi26_nomex_tests": {
+      "value": 6.0,
+      "unit": "tests"
+    },
+    "psi99_nomex_tests": {
+      "value": 1.0,
+      "unit": "tests"
+    },
+    "psi25_nomex_o2_min": {
+      "value": 21.0,
+      "unit": "% O2"
+    },
+    "psi99_nomex_o2_min": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi25_nomex_o2_max": {
+      "value": 22.2,
+      "unit": "% O2"
+    },
+    "psi99_nomex_o2_max": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi25_nomex_tests_below_threshold": {
+      "value": 3.0,
+      "unit": "tests"
+    },
+    "psi99_nomex_tests_below_threshold": {
+      "value": 1.0,
+      "unit": "tests"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "SELECT lower(replace(investigation, '-', '')) || '_nomex_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.fuel')) AS source_columns FROM tests WHERE lower(fuel) LIKE '%nomex%' GROUP BY investigation, source_table UNION ALL SELECT lower(replace(investigation, '-', '')) || '_nomex_o2_min' AS name, min(o2_pct_min) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_min')) AS source_columns FROM tests WHERE lower(fuel) LIKE '%nomex%' AND o2_pct_min IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT lower(replace(investigation, '-', '')) || '_nomex_o2_max' AS name, max(o2_pct_max) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) AS source_columns FROM tests WHERE lower(fuel) LIKE '%nomex%' AND o2_pct_max IS NOT NULL GROUP BY investigation, source_table UNION ALL SELECT lower(replace(investigation, '-', '')) || '_nomex_tests_below_threshold' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) AS source_columns FROM tests WHERE lower(fuel) LIKE '%nomex%' AND o2_pct_max IS NOT NULL AND o2_pct_max < 34 GROUP BY investigation, source_table"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-25",
+      "doi": "10.60555/4qc4-de67",
+      "table": "PSI-25_Experimental table_BASS-II.csv",
+      "columns": [
+        "Calibrated initial O2 % by vol",
+        "Fuel Sample Material"
+      ],
+      "rows": [
+        23,
+        24,
+        25
+      ]
+    },
+    {
+      "investigation": "PSI-26",
+      "doi": "10.60555/58h4-dy80",
+      "table": "PSI-26_Experimental table_BASS.csv",
+      "columns": [
+        "Fuel Sample Material"
+      ],
+      "rows": [
+        14,
+        24,
+        25,
+        39,
+        57,
+        58
+      ]
+    },
+    {
+      "investigation": "PSI-99",
+      "doi": "10.60555/2chp-m469",
+      "table": "PSI-99_Experimental table_SAFFIRE-2.csv",
+      "columns": [
+        "Material",
+        "Percent O2 (Note 1)"
+      ],
+      "rows": [
+        7
+      ]
+    }
+  ],
+  "n_tests": 10,
+  "assumptions": [
+    "Every row whose fuel name contains Nomex was counted as a Nomex test, including the Nomex blend and Nomex III samples of BASS and the combined PMMA and Nomex sample of Saffire-II (PSI-99).",
+    "PSI-25 oxygen is read from the Calibrated initial O2 % by vol column; PSI-99 oxygen is the approximate Percent O2 (Note 1) value, which the table says is derived from measured CO2 production.",
+    "The 34% O2 level is taken from the question as the lunar habitat condition to compare against."
+  ],
+  "limitations": [
+    "No Nomex test in PSI reached 34% O2, so these data cannot show how Nomex burns, or whether it burns at all, at that oxygen level; no test there means no data, not safe or unsafe.",
+    "The 6 PSI-26 (BASS) Nomex tests do not state their oxygen level, so they cannot be placed relative to 34% O2.",
+    "No Nomex row states ambient pressure, so the effect of a reduced habitat pressure is not covered.",
+    "All Nomex tests were in microgravity; there is no Nomex test in lunar or other partial gravity in PSI.",
+    "The Nomex rows carry no outcome field (such as extinction or sustained burning), so this finding counts tests and oxygen levels only and does not report flammability results."
+  ],
+  "warnings": [
+    "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+  ],
+  "environments": [
+    "lunar_base"
+  ],
+  "tier": 1,
+  "pillar": "prevention",
+  "visual_offer": {
+    "chart": {
+      "available": true,
+      "idea": "Oxygen levels of each Nomex test in BASS-II and Saffire-II as points per investigation, with a dashed line at the 34% O2 lunar habitat level of the question and a note that the BASS Nomex tests state no O2."
+    },
+    "graph": {
+      "available": true,
+      "idea": "Proof graph linking this finding to BASS-II, BASS and Saffire-II, their test tables and DOIs, and the shared Nomex fuel between them."
+    },
+    "footnote": "Want a visual? I can draw a chart of the oxygen levels of every Nomex test against the 34% O2 habitat level, or a graph linking the three investigations that tested Nomex."
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T08:21:58Z"
+  }
+}

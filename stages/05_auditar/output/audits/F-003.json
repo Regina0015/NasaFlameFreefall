@@ -1,7 +1,7 @@
 {
   "finding_id": "F-003",
   "finding_version": 2,
-  "finding_sha256": "29d4348c52a817070939fda1fec28b846b170fe4e2906cd97051b69188f08d75",
+  "finding_sha256": "0a16ddc934bfbf5aba1b9cc388636ecc5ff04e7b2b463e50b8b423e0ec071096",
   "checks": [
     {
       "id": "C0",
@@ -29,7 +29,7 @@
       "name": "recalculation",
       "done_by": "code",
       "result": "pass",
-      "detail": "All 7 values reproduced by running the finding's SQL over data\\snapshot (read-only); every source row and column it reports exists in the original CSVs."
+      "detail": "All 7 values reproduced by running the finding's SQL over data/snapshot (read-only); every source row and column it reports exists in the original CSVs."
     },
     {
       "id": "C4",
@@ -64,7 +64,7 @@
       "name": "faithful_text",
       "done_by": "code+model",
       "result": "fail",
-      "detail": "13 of 20 answers differ from the expected one: Q3/claim, Q4/claim, Q5/claim, Q6/claim, Q3/summary_student, Q4/summary_student, Q5/summary_student, Q6/summary_student, Q3/summary_professional, Q4/summary_professional, Q5/summary_professional, Q6/summary_professional, Q7/limitations. 13 unanswered (model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>); needs manual review. 1 model flag(s) dismissed by a person: Q8/method (Regina Flores)."
+      "detail": "3 of 20 answers differ from the expected one: Q4/summary_student, Q3/summary_professional, Q8/method."
     },
     {
       "id": "C9",
@@ -199,9 +199,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text mentions 'FLEX droplet flames' which is consistent with the cited investigation's objective regarding 'FLEX (Flame Extinguishment Experiment)' and the evidence referencing 'FLEX' and 'FLEX droplet fuels'.",
+      "attempts": 1
     },
     {
       "question_id": "Q4",
@@ -209,9 +209,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The text refers to specific experimental conditions (FLEX droplet flames with various diluents) and cites only one investigation (FLEX (PSI-69)), suggesting the scope is limited to that investigation's findings.",
+      "attempts": 1
     },
     {
       "question_id": "Q5",
@@ -219,9 +219,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text presents observed outcomes of tests rather than making claims based on a lack of testing.",
+      "attempts": 1
     },
     {
       "question_id": "Q6",
@@ -229,9 +229,9 @@
       "field": "claim",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text discusses combustion behavior under unspecified conditions, but it does not mention lunar or Martian gravity.",
+      "attempts": 1
     },
     {
       "question_id": "Q3",
@@ -239,9 +239,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text mentions 'burning fuel droplets' which is a general description, but the cited evidence and limitations specify the fuels as 'heptane and methanol', which are named in the evidence/limitations.",
+      "attempts": 1
     },
     {
       "question_id": "Q4",
@@ -249,9 +249,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text states that the phenomenon happened in 'most tests' without specifying that these tests were limited only to the FLEX (PSI-69) investigation.",
+      "attempts": 1
     },
     {
       "question_id": "Q5",
@@ -259,9 +259,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text describes the outcome of tests conducted, not the absence of tests.",
+      "attempts": 1
     },
     {
       "question_id": "Q6",
@@ -269,9 +269,9 @@
       "field": "summary_student",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text only discusses combustion in space, not specifically under lunar or Martian gravity.",
+      "attempts": 1
     },
     {
       "question_id": "Q3",
@@ -279,9 +279,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The text mentions 'liquid fuels' in the summary, which is a general category, but the cited investigations and evidence specify 'FLEX droplet fuels (heptane and methanol)' as the material tested.",
+      "attempts": 1
     },
     {
       "question_id": "Q4",
@@ -289,9 +289,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The text specifically details results from the FLEX (PSI-69) test, which is the only investigation cited.",
+      "attempts": 1
     },
     {
       "question_id": "Q5",
@@ -299,9 +299,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The text reports the number of tests conducted and the resulting extinction rates for different conditions, not the absence of tests as a safety conclusion.",
+      "attempts": 1
     },
     {
       "question_id": "Q6",
@@ -309,9 +309,9 @@
       "field": "summary_professional",
       "done_by": "model",
       "expected": "no",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "no",
+      "reason": "The provided text only details combustion tests conducted under specific atmospheric conditions (N2, N2+CO2, N2+He) and does not mention lunar or Martian gravity.",
+      "attempts": 1
     },
     {
       "question_id": "Q7",
@@ -319,9 +319,9 @@
       "field": "limitations",
       "done_by": "model",
       "expected": "yes",
-      "answer": null,
-      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
-      "attempts": 0
+      "answer": "yes",
+      "reason": "The limitations explicitly name specific things the finding does not cover, such as oxygen level, pressure, droplet size, $\text{CO}_2$ or helium suppression, and solid materials.",
+      "attempts": 1
     },
     {
       "question_id": "Q8",
@@ -331,11 +331,7 @@
       "expected": "yes",
       "answer": null,
       "attempts": 0,
-      "reason": "Pending. The snapshot covers 21 of 22 PSI tables; a claim about 'PSI' or 'no test' does not see: PSI-142_Experimental table_Data Summary Table.csv.",
-      "dismissed": {
-        "reviewer": "Regina Flores",
-        "note": "The SQL answers the question: it counts FLEX tests per diluent and those that ended in extinction. All 274 PSI-69 tests have a diluent, so no row is dropped by the filter."
-      }
+      "reason": "Pending. The snapshot covers 21 of 22 PSI tables; a claim about 'PSI' or 'no test' does not see: PSI-142_Experimental table_Data Summary Table.csv."
     }
   ],
   "grade": "C",
@@ -345,8 +341,13 @@
   "send_back_to": null,
   "audited_by": {
     "script": "scripts/auditar.py",
-    "model": null,
-    "model_params": null,
-    "date": "2026-11-15T08:01:57Z"
+    "model": "gemma4:e4b-it-qat",
+    "model_params": {
+      "think": false,
+      "temperature": 0,
+      "seed": 42,
+      "num_ctx": 8192
+    },
+    "date": "2026-11-15T09:30:01Z"
   }
 }

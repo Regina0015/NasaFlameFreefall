@@ -40,6 +40,20 @@ def save(finding: dict, dir: Path = FINDINGS_DIR) -> Path:
     return path
 
 
+def save_new(finding: dict, dir: Path = FINDINGS_DIR) -> Path:
+    """Save a new finding under the first free id, never over a file saved meanwhile (two /ask runs at once)."""
+    dir = Path(dir)
+    dir.mkdir(parents=True, exist_ok=True)
+    while True:
+        path = dir / f"{check_id(finding.get('id'))}.json"
+        try:
+            with open(path, "x", encoding="utf-8", newline="\n") as f:
+                f.write(json.dumps(finding, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
+            return path
+        except FileExistsError:
+            finding["id"] = next_id(dir)
+
+
 def bump_version(finding: dict, now: str, dir: Path = FINDINGS_DIR) -> dict:
     """Copy the saved file to history/F-001.v<N>.json and return a copy with version N + 1 dated `now`."""
     fid = check_id(finding.get("id"))

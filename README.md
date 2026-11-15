@@ -73,14 +73,11 @@ Setup: `uv sync` (needs uv and Python 3.12+); tests: `uv run python -m unittest 
 | F-001, F-006, F-008, F-009 | C | C8 (needs Ollama) |
 | F-003, F-004, F-005 | C | C8, and a person answers Q8 (does the SQL answer the question?) in `stages/05_auditar/output/reviews/F-XXX.json` |
 | F-007 | rejected | C8 and Q8: a no-data finding must pass the text review |
-| F-002 (v3) | rejected | C3: 20 PSI-10 gas tests lack pressure in the database (see below), then C8 |
+| F-002 (v5) | C | C7 (0.2% of the cells it needs are unreadable) and C8. Inverse flames are left out: their oxygen is the burner stream, not the room |
 
 **Waiting on teammates**
 
-- **Database owner:**
-  - Add the pressure fix to your copy of the PSI-10 mapper: `_flame_design_pressure` in `scripts/mappers.py` reads `pmean (atm)` and, only when it is empty, `pinit (atm)`, noting it in `problems`. The two differ by about 0.5% in the 187 rows that have both. It fills the pressure of 20 tests (0.93 atm), so `gas_pressure_unknown` in F-002 goes from 36 to 16 and matches the Auditor; the 66 tests at lunar oxygen and pressure do not change. Copy only that function: your mapper is newer than the repository one (it treats PSI-69 "0 mmHg" as not recorded, which this one does not do yet). Then reload the database; we run `pull_db` and regenerate F-002.
-  - Add the findings table (and audits) to `supabase/schema.sql`; until then the dashboard findings section shows sample data.
-  - `load_snapshot.py` is not in the repository yet.
+- **Database owner:** done: the pressure fix, the `findings` table in `supabase/schema.sql` and `scripts/load_snapshot.py` are merged, and the database matches `pull_db`. Next: load the findings and their audits into the `findings` table.
 - **Team:** review three Investigator records against PSI, every line of `tier-review.md`, and the use of `transit_vehicle`; then run `push_investigations --apply`. Tier changes go in `_config/tiers.md`.
 - **Auditor and model:** see "Connecting the Auditor to a teammate's model" below.
 
@@ -109,6 +106,10 @@ The official path stays fixed: each finding uses one documented interpretation, 
   - Tests with no oxygen or no pressure: leave them out (no data) or show them as their own group.
   - Tier filter: Tier 1 only, or all investigations.
 - **Show next to each result:** how many tests each choice adds or drops, and which investigations they come from.
+
+## Auditor gateway
+
+`api/` exposes the Auditor over HTTP so the Calculator and Chatbot PCs can reach it: `POST /audit`, `GET /audits`, `GET /findings`, `GET /health`. Every route except `/health` needs the `X-API-Key` header. Start it on the Wi-Fi/LAN address of the Auditor's PC (`ip -4 addr show wlp0s20f3`): `uv run uvicorn api.main:app --host 192.168.1.128 --port 8000` (set `API_KEY` in `.env`). Binding to that address means `localhost` does not work on that PC: use the LAN address there too. Open the port to the LAN only: `sudo ufw allow from 192.168.1.0/24 to any port 8000 proto tcp`. Router DHCP can change the address: reserve it in the router, or update `base_url` and `AUDITOR_URL` when it changes. To test across PCs, import `postman/NasaFlameFreefall.postman_collection.json` and `postman/local.postman_environment.json`, then set `base_url` and `api_key`. The Calculator PC runs `uv run python -m scripts.audit_client F-001`, and the Chatbot PC reads grades through `scripts/chat_tools.py`; both need `AUDITOR_URL=http://192.168.1.128:8000` and `AUDITOR_API_KEY` (the chatbot's launcher must export them: `chat_tools` does not read `.env`). Received findings and their audits are kept in `stages/05_auditar/output/gateway/` (git-ignored).
 
 ## Notes
 

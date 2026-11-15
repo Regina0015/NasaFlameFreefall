@@ -1,2 +1,6 @@
 # Raw NASA files must stay byte-exact so their SHA-256 in manifest.csv keeps matching
 stages/01_ingesta/output/psi/** -text
+
+# Findings and audits must stay byte-exact: the Auditor gateway grades the SHA-256 of these exact bytes
+stages/04_calcular/output/findings/** -text
+stages/05_auditar/output/audits/** -text
