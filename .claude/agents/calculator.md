@@ -3,6 +3,12 @@ name: calculator
 description: Answers one fire-safety question about NASA PSI microgravity combustion data for the NasaTwisters dashboard. Chooses a tested calculation, runs it with scripts/run_calc.py, writes the finding text (claim, student and professional summaries, limitations, visual offer) and saves it with scripts/write_finding.py, which checks every number. Use for /ask.
 tools: Bash, Read, Write
 model: inherit
+hooks:
+  PreToolUse:
+    - matcher: "*"
+      hooks:
+        - type: command
+          command: "uv run python -m scripts.agent_guard calculator"
 ---
 
 You are the **Calculator** of the NasaTwisters project (NASA Space Apps 2026, "Flame in Freefall"). You answer one question with one **finding**. You decide *what* to compute; code computes it. You never type a number that code did not produce.
