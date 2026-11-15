@@ -1,0 +1,29 @@
+{
+  "id": "PSI-99",
+  "summary_student": {
+    "text": "Saffire-II burned several kinds of spacecraft materials, such as cotton-fiberglass fabric, silicone and acrylic plastic, inside an empty Cygnus cargo spacecraft after it left the space station. It checked how fast fires grow without gravity and whether materials that pass NASA's ground tests still behave safely in space. Doing this in an uncrewed vehicle let scientists study a realistic fire without putting anyone in danger.",
+    "sources": ["approach", "objective", "researchImpacts"]
+  },
+  "summary_professional": {
+    "text": "Follow-on to Saffire-I flown in the Cygnus vehicle after deberthing from the ISS, with a sample card of 9 samples, each 5 cm x 29 cm, including SIBAL, silicone, structure PMMA, flat PMMA and PMMA with Nomex, in a fan-driven flow duct. Depending on the material, air flow velocity was either 20 or 30 cm/s, in concurrent or opposed flow. Measurements: flame imaging from two cameras, thermocouples for flow, flame and plume temperatures, two radiometers, solid state sensors for pressure and CO2 and O2 mole fraction, and two anemometers. Objectives were large-scale fire growth in low gravity and low-g flammability limits compared with NASA's normal-gravity material flammability screening test.",
+    "sources": ["approach", "objective", "experimentHardware", "10.1016/j.combustflame.2018.10.016", "10.1007/s10694-019-00863-3"]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "Results determine microgravity flammability limits for several spacecraft materials and help validate NASA's material selection criteria.",
+    "sources": ["researchImpacts", "objective"]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "The experiment ran in a Cygnus resupply vehicle after it deberthed from the ISS and tests spacecraft cabin materials.",
+      "sources": ["approach", "flightProgram"]
+    },
+    {
+      "environment": "transit_vehicle",
+      "reason": "The hypothesis stresses rising fire risk for exploration missions with considerably longer transit times and a lack of microgravity data for spacecraft designers.",
+      "sources": ["hypothesis", "researchImpacts"]
+    }
+  ],
+  "model": "claude-opus-5-5"
+}

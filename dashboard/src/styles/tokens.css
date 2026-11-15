@@ -1,0 +1,95 @@
+/* Shared design tokens. Components use these names only; no raw colors elsewhere.
+   Dark is the default; light is applied with <html data-theme="light">. */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces: graphite and blue-gray */
+  --bg: #0a0f15;
+  --bg-raised: #0e141c;
+  --surface: #121a23;
+  --surface-2: #18222d;
+  --surface-inset: #0c1219;
+  --border: #243241;
+  --border-strong: #3b4e62;
+
+  /* Text */
+  --text: #e6edf3;
+  --text-muted: #a3b3c2;
+  --text-faint: #7d8fa1;
+
+  /* Accent: cyan details */
+  --accent: #53d8ed;
+  --accent-strong: #7fe4f3;
+  --accent-ink: #04222a;
+  --accent-soft: rgba(83, 216, 237, 0.12);
+
+  /* Status. Red is reserved for critical alerts and labeled demonstrations. */
+  --danger: #ff7b72;
+  --danger-soft: rgba(255, 123, 114, 0.12);
+  --notice: #e3b866;
+  --notice-soft: rgba(227, 184, 102, 0.1);
+
+  --focus: #9aeaf6;
+  --grid-line: rgba(120, 160, 190, 0.07);
+  --stage-glow: rgba(83, 216, 237, 0.1);
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+
+  /* Type */
+  --font-sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, 'Liberation Mono', monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: clamp(1.6rem, 1.1rem + 1.6vw, 2.35rem);
+
+  /* Spacing: 4px rhythm */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --control-height: 2.75rem;
+
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #e9eef3;
+  --bg-raised: #f1f5f8;
+  --surface: #ffffff;
+  --surface-2: #f4f7fa;
+  --surface-inset: #e4eaf0;
+  --border: #cbd5df;
+  --border-strong: #93a4b5;
+
+  --text: #15202b;
+  --text-muted: #46586a;
+  --text-faint: #5d6f81;
+
+  --accent: #0a6e82;
+  --accent-strong: #085768;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(10, 110, 130, 0.1);
+
+  --danger: #b42318;
+  --danger-soft: rgba(180, 35, 24, 0.08);
+  --notice: #7a5200;
+  --notice-soft: rgba(160, 110, 0, 0.1);
+
+  --focus: #0a6e82;
+  --grid-line: rgba(40, 70, 100, 0.08);
+  --stage-glow: rgba(10, 110, 130, 0.1);
+  --shadow: 0 14px 32px rgba(30, 50, 70, 0.14);
+}

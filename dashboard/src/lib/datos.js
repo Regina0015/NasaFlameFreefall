@@ -15,9 +15,11 @@ export function useTabla(tabla) {
       try {
         let filas
         let origen
-        if (supabase) {
-          const { data, error } = await supabase.from(tabla).select('*')
-          if (error) throw error
+        // Table names follow the database (investigations, tests, relations...).
+        // A table the database does not have yet (PGRST205) falls back to the sample file.
+        const { data, error } = supabase ? await supabase.from(tabla).select('*') : { data: null, error: null }
+        if (error && error.code !== 'PGRST205') throw error
+        if (supabase && !error) {
           filas = data
           origen = 'supabase'
         } else {

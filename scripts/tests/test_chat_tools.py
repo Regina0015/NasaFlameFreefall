@@ -73,6 +73,19 @@ class CheckEnvironmentTest(ChatToolsCase):
         self.assertEqual(r["warnings"], [LUNAR_WARNING])
         self.assertEqual(r["method"]["function"], "coverage_by_environment")
 
+    def test_phase_with_tests_lacking_o2_is_no_data_not_zero(self):
+        self.con.close()
+        smoke = fixture_test("PSI-102", "smoke.csv", 1, "smoke", None)
+        self.snap = make_fixture_snapshot(self.root / "snap2", extra_tests=[GAS, smoke])
+        self.con = open_snapshot(self.snap, user_root=self.root / "user")
+        r = chat_tools.check_environment(self.con, {"environment": "lunar_base"})
+        by = {p["phase"]: p for p in r["by_phase"]}
+        self.assertIsNone(by["smoke"]["reach_o2"])
+        self.assertTrue(by["smoke"]["no_data"])
+        self.assertIn("No data for smoke: some of its tests report no oxygen.", r["gaps"])
+        self.assertNotIn("No smoke test reached 30% O2.", r["gaps"])
+        self.assertIn("No solid test reached 30% O2.", r["gaps"])  # every fixture solid has O2: a real zero
+
     def test_unsourced_and_reference_environments_are_not_evaluated(self):
         self.assertEqual(chat_tools.check_environment(self.con, {"environment": "mars_base"})["status"], "no_source")
         self.assertEqual(chat_tools.check_environment(self.con, {"environment": "space_station"})["status"], "no_source")

@@ -21,7 +21,7 @@ from scripts.paths import ROOT
 AGENTS = {
     "calculator": {"modules": ("scripts.query", "scripts.run_calc", "scripts.write_finding"),
                    "drafts": ROOT / "stages" / "04_calcular" / "output" / "drafts"},
-    "investigator": {"modules": ("scripts.write_investigation", "scripts.build_snapshot"),
+    "investigator": {"modules": ("scripts.write_investigation",),
                      "drafts": ROOT / "stages" / "03_investigar" / "output" / "drafts"},
 }
 PREFIX = ["uv", "run", "python", "-m"]

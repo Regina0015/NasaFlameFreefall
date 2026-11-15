@@ -1,0 +1,29 @@
+{
+  "id": "PSI-115",
+  "summary_student": {
+    "text": "This was a computer study, not a flight experiment: it simulated the smoke given off when a heated material vaporizes, in Earth gravity and in microgravity. It used a setup similar to the Smoke Aerosol Measurement Experiment flown in space. Smoke behaves differently without gravity, so understanding it helps build smoke detectors that work on spacecraft.",
+    "sources": ["approach", "objective", "title", "researchImpacts"]
+  },
+  "summary_professional": {
+    "text": "Ground investigation using direct numerical simulation (Navier-Stokes nodal approach) of the formation and growth of dibutyl-phthalate (DBP) smoke particles from pyrolysis vapor expelled by a heated sample, in a geometry similar to the SAME experiments. Two low cross-flow velocities were considered, slow enough that buoyancy matters in gravity, comparing Earth-gravity and microgravity cases. Outputs were particle size distributions and their dependence on thermophoresis, particle settling and flow geometry, plus instantaneous scalar fields of particle accumulation and growth in buoyant and non-buoyant wakes. Flight hardware: not stated in PSI.",
+    "sources": ["approach", "objective", "hypothesis"]
+  },
+  "pillar": {
+    "value": "detection",
+    "reason": "The record states that models characterizing smoke particles would directly lead to better smoke detection devices.",
+    "sources": ["researchImpacts"]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "The simulations reproduce a geometry similar to the SAME smoke experiments and target microgravity smoke; this ground study has no flight program of its own.",
+      "sources": ["approach", "title"]
+    },
+    {
+      "environment": "transit_vehicle",
+      "reason": "The study quantifies how microgravity smoke differs from Earth-gravity smoke, the condition of a vehicle in transit; the record itself does not name transit vehicles.",
+      "sources": ["objective"]
+    }
+  ],
+  "model": "claude-opus-5-5"
+}

@@ -1,0 +1,62 @@
+{
+  "id": "PSI-142",
+  "acronym": "",
+  "label": "Quantitative Studies of Cool Flame Transitions at Radiation / Stretch Extinction Using Counterflow Flames",
+  "title": "Quantitative Studies of Cool Flame Transitions at Radiation / Stretch Extinction Using Counterflow Flames",
+  "doi": "10.60555/80qf-vj95",
+  "type": "ground",
+  "subarea": "Spacecraft Fire Safety",
+  "platform": "Not Applicable",
+  "hardware": "Principal Investigator Laboratory Hardware",
+  "scope": "psi",
+  "tier": 1,
+  "tier_reason": "Team list, Tier 1. Ground study; PSI subarea: Spacecraft Fire Safety. Uses FLEX flight data.",
+  "boost_environments": [],
+  "summary_student": {
+    "text": "This ground study used results from the Flame Extinguishment Experiment on the space station, where fuel drops kept burning as weak, low-temperature cool flames after the hot flame went out. With computer models and laboratory flames, it looked at when hot flames turn into cool flames and when flames stop burning. Knowing these limits helps judge when a fire in a spacecraft can keep going.",
+    "sources": [
+      "objective",
+      "hypothesis",
+      "approach"
+    ]
+  },
+  "summary_professional": {
+    "text": "Ground investigation using FLEX flight conditions to study oxygen-concentration effects on cool-flame extinction limits with three numerical schemes: spark-assisted flame propagation of n-heptane/air, one-dimensional freely propagating dimethyl ether (DME) flames with arc-length continuation, and DME/air cool-flame regimes and burning limits at elevated pressure (up to 20 atm). Ground experiments used ozone-sensitized counterflow flames. Targeted measurements were extinction limits, flame temperature and species distributions, to build a flammability-limit diagram for diffusional cool flames including radiation, diffusion and convection.",
+    "sources": [
+      "approach",
+      "objective",
+      "10.1016/j.pecs.2019.100787"
+    ]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "The work maps flammability and extinction limits of cool and hot flames as functions of oxygen concentration, dilution and pressure, which defines when a flame can be sustained.",
+    "sources": [
+      "objective",
+      "hypothesis"
+    ]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "The study uses FLEX data from the ISS and aims to verify phenomena observed in the ISS flame extinguishment experiments; the record lists no flight program for this ground study itself.",
+      "sources": [
+        "objective",
+        "approach"
+      ]
+    },
+    {
+      "environment": "transit_vehicle",
+      "reason": "The record notes warm and cool flames are relevant in microgravity because of long residence times, the condition of a vehicle in transit; the record itself does not name transit vehicles.",
+      "sources": [
+        "researchImpacts"
+      ]
+    }
+  ],
+  "generated_by": {
+    "agent": "investigator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T06:58:22Z"
+  },
+  "reviewed_by": null
+}

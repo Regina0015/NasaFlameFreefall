@@ -12,7 +12,7 @@ Reads each PSI investigation record, summarizes and classifies it, and proposes 
 3. `uv run python -m scripts.write_investigation PSI-XX` checks the draft (schema, sources, every number present in the PSI record) and saves the record.
 4. The agent checks each tier against the rules in `_config/tiers.md` and lists disagreements in `output/tier-review.md`. It never changes a tier.
 5. The agent proposes questions the test tables can answer in `output/questions.json`.
-6. `uv run python -m scripts.build_snapshot` puts the reviewed records and the relations into `data/snapshot/`.
+6. `uv run python -m scripts.push_investigations` shows what would change in the database; after a person reviews the records, they run it with `--apply`, which updates the database and copies it into `data/snapshot/` (the database is the source of truth).
 
 ## Limits
 - No number that is not in the PSI record.

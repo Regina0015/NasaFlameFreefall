@@ -27,6 +27,10 @@ class GuardTest(unittest.TestCase):
             self.assertIsNone(check("calculator", bash(command)), command)
         self.assertIsNone(check("investigator", bash("uv run python -m scripts.write_investigation PSI-25 PSI-69")))
 
+    def test_investigator_cannot_touch_the_snapshot_or_the_database(self):
+        for module in ("build_snapshot", "pull_db", "push_investigations --apply"):
+            self.assertIsNotNone(check("investigator", bash(f"uv run python -m scripts.{module}")), module)
+
     def test_other_commands_are_blocked(self):
         for command in ("rm -rf stages", "git push", "uv run python -c 'print(1)'", "uv run python -m scripts.fetch_psi",
                         "uv run python -m scripts.write_investigation PSI-25", "  ", "",

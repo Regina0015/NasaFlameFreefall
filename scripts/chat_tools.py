@@ -225,12 +225,18 @@ def check_environment(con: duckdb.DuckDBPyConnection, args: dict, environments_m
     v = calc["values"]
     for phase in sorted(totals):
         key = phase_key(phase)
-        phases.append({"phase": phase, "n_tests": totals[phase],
-                       "reach_o2": v.get(f"{key}_o2_match", {}).get("value", 0),
-                       "reach_o2_and_pressure": v.get(f"{key}_o2_and_pressure_match", {}).get("value", 0),
-                       "reach_o2_pressure_unknown": v.get(f"{key}_pressure_unknown", {}).get("value", 0)})
-    both = sum(p["reach_o2_and_pressure"] for p in phases)
-    gaps = [f"No {p['phase']} test reached {params['o2_min_pct']:g}% O2." for p in phases if p["reach_o2"] == 0]
+        if f"{key}_o2_match" not in v:  # left out by coverage_by_environment: some tests report no O2
+            phases.append({"phase": phase, "n_tests": totals[phase], "no_data": True, "reach_o2": None,
+                           "reach_o2_and_pressure": None, "reach_o2_pressure_unknown": None})
+            continue
+        phases.append({"phase": phase, "n_tests": totals[phase], "no_data": False,
+                       "reach_o2": v[f"{key}_o2_match"]["value"],
+                       "reach_o2_and_pressure": v[f"{key}_o2_and_pressure_match"]["value"],
+                       "reach_o2_pressure_unknown": v[f"{key}_pressure_unknown"]["value"]})
+    both = sum(p["reach_o2_and_pressure"] or 0 for p in phases)
+    gaps = [f"No data for {p['phase']}: some of its tests report no oxygen." if p["no_data"]
+            else f"No {p['phase']} test reached {params['o2_min_pct']:g}% O2."
+            for p in phases if p["no_data"] or p["reach_o2"] == 0]
     return {
         "environment": environment,
         "status": "evaluated",

@@ -1,0 +1,57 @@
+{
+  "id": "PSI-68",
+  "acronym": "FLEX-2",
+  "label": "FLEX-2",
+  "title": "Flame Extinguishment Experiment - 2",
+  "doi": "10.60555/byp8-h018",
+  "type": "flight",
+  "subarea": "Spacecraft Fire Safety",
+  "platform": "International Space Station (ISS)",
+  "hardware": "Combustion Integrated Rack (CIR), Multi-user Droplet Combustion Appartatus (MDCA)",
+  "scope": "psi",
+  "tier": 1,
+  "tier_reason": "Team list, Tier 1. PSI subarea: Spacecraft Fire Safety. Flame extinguishment of droplets.",
+  "boost_environments": [],
+  "summary_student": {
+    "text": "Small drops of liquid fuel, including mixtures of two fuels, were burned on the International Space Station in different gas mixtures and pressures. Without gravity, hot gases do not rise, so scientists can see clearly how a flame around a drop grows, makes soot and goes out. Knowing when and why flames go out helps understand how fires can be put out in spacecraft.",
+    "sources": [
+      "approach",
+      "flightProgram",
+      "objective",
+      "hypothesis"
+    ]
+  },
+  "summary_professional": {
+    "text": "FLEX-2 burned free-floating or fiber-supported pure and bi-component fuel droplets, single or in binary linear arrays, in the MDCA inside the CIR. Pressure was varied between 0.5 atm and 3.0 atm and O2 between 0.1 and 0.4 mole fraction with diluent balance; independent variables were fuel type, ambient gas composition, pressure, initial droplet diameter, droplet translation velocity, and droplet spacing. Flame evolution was tracked with high speed photography and color video, with chamber pressure and temperature recorded, to study liquid-phase mixing, extinction mechanisms and boundaries, soot formation and soot-shell dynamics.",
+    "sources": [
+      "approach",
+      "objective",
+      "experimentHardware",
+      "10.1007/s12217-014-9372-2"
+    ]
+  },
+  "pillar": {
+    "value": "suppression",
+    "reason": "The investigation is the Flame Extinguishment Experiment - 2 and studies flame extinction mechanisms and their boundaries, including in droplet arrays.",
+    "sources": [
+      "title",
+      "objective"
+    ]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "The tests were flown on the International Space Station in the Combustion Integrated Rack.",
+      "sources": [
+        "flightProgram",
+        "experimentHardware"
+      ]
+    }
+  ],
+  "generated_by": {
+    "agent": "investigator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T06:58:25Z"
+  },
+  "reviewed_by": null
+}

@@ -13,7 +13,7 @@ Everything in this project is in **English**: code, comments, documents, agent o
 | `CONTEXT.md` | Which stage to open for each kind of task |
 | `stages/NN_name/` | One step of the pipeline. Each has `CONTEXT.md` (its contract), `references/` (fixed rules) and `output/` (what it produces) |
 | `_config/` | Shared context for every agent: challenge summary, tier table, environments, audiences, confidence grade, data schema, models |
-| `data/snapshot/` | The data the Calculator reads: `tests.csv`, `investigations.csv`, `relations.csv`, `catalog.md` (column meanings and units) |
+| `data/snapshot/` | The data the Calculator reads, copied from the database with `scripts.pull_db` (the database wins): `tests.csv`, `investigations.csv`, `relations.csv`, `catalog.md` (column meanings and units) |
 | `data/user/` | Per-user datasets (phase 2). Git-ignored; never mixed into the PSI layer |
 | `scripts/` | Python tools that do all deterministic work: download, normalize, query, calculate, check, chart |
 | `.claude/agents/` | Agent instructions: `investigator.md`, `calculator.md` |
@@ -45,6 +45,7 @@ uv sync                                                    # install the pinned 
 uv run python -m unittest discover -s scripts/tests -t .   # run all tests
 uv run python -m scripts.fetch_psi                         # download PSI records and test tables
 uv run python -m scripts.build_snapshot                    # rebuild data/snapshot/
+uv run python -m scripts.pull_db                           # copy the database (Supabase) into data/snapshot/; --check only compares
 ```
 
 Agent commands (Claude Code):

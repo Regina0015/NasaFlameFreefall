@@ -1,0 +1,55 @@
+{
+  "id": "PSI-60",
+  "acronym": "",
+  "label": "Computational and Experimental Analysis of SPICE Data Sets",
+  "title": "Computational and Experimental Analysis of SPICE Data Sets",
+  "doi": "10.60555/mzjm-yv57",
+  "type": "ground",
+  "subarea": "Gaseous",
+  "platform": "",
+  "hardware": "",
+  "scope": "psi",
+  "tier": 2,
+  "tier_reason": "Team list, Tier 2. Ground study; PSI subarea: Gaseous.",
+  "boost_environments": [],
+  "summary_student": {
+    "text": "This ground study re-analyzed photos of gas flames from an earlier experiment and combined them with computer models to understand soot, the black particles that make smoke. Flames in weightlessness behave differently from flames on Earth and can produce more soot. Better soot predictions support safer fire detection and suppression on long space missions.",
+    "sources": [
+      "objective",
+      "approach",
+      "hypothesis",
+      "researchImpacts"
+    ]
+  },
+  "summary_professional": {
+    "text": "Ground investigation that analyzed over 1600 raw DSLR (Nikon NEF) images from the SPICE data in PSI using color-ratio pyrometry to derive soot temperature fields, with SPICE absolute light calibration used to obtain soot volume fractions. A coupled flow-species-soot model with radiation re-absorption and discrete-sectional aggregate formation was run for Yale and ACME burner configurations in normal and microgravity. Sensitivity analyses covered radiation, scattering, boundary conditions and heat transfer to the burner. Fuel and oxygen conditions are not stated in PSI.",
+    "sources": [
+      "objective",
+      "approach",
+      "10.1080/00102202.2022.2041621"
+    ]
+  },
+  "pillar": {
+    "value": "detection",
+    "reason": "The study models soot formation and smoke point behavior; the record says the results support safer fire detection, and soot is what smoke detectors sense.",
+    "sources": [
+      "researchImpacts",
+      "objective"
+    ]
+  },
+  "environments": [
+    {
+      "environment": "transit_vehicle",
+      "reason": "The record states the results support safer fire detection and suppression critical for long-duration missions in spacecraft.",
+      "sources": [
+        "researchImpacts"
+      ]
+    }
+  ],
+  "generated_by": {
+    "agent": "investigator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T06:58:25Z"
+  },
+  "reviewed_by": null
+}

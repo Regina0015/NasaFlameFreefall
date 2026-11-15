@@ -17,7 +17,7 @@ from pathlib import Path
 from scripts import contract
 from scripts.cells import read_table
 from scripts.cli import utf8_output
-from scripts.investigations import derive_relations, facts, load_investigator_records, load_tiers
+from scripts.investigations import derive_relations, facts, load_investigator_records, load_tiers, reviewed_fields
 from scripts.mappers import MAPPERS
 from scripts.paths import CONFIG_DIR, INVESTIGATOR_OUT, PSI_DIR, SNAPSHOT_DIR
 
@@ -26,7 +26,14 @@ CAVEATS = [
     "A row can hold several values (FLEX-2 condition matrix, BRE test days): o2/pressure min and max then differ, and `problems` says so.",
     "FLEX headers lost their subscripts in PSI's file: `O` = O2, `N` = N2, `CO` = CO2 (FLEX tested CO2 and He as diluents).",
     "CFI-G inverse flames: the O2 value is the burner (oxidizer) stream, not the chamber.",
-    "BASS-II, Saffire-II, BRE and SAME-R tables do not give a pressure; those cells are empty.",
+    "Only FLEX, FLEX-2, CFI, CFI-G and Flame Design give a pressure; in every other table those cells are empty.",
+    "BASS, SPICE, SLICE, SAME, SAME-R, Saffire-III, DAFT and the ACME test-day tables (CLD, E-FIELD, s-Flame) do not give O2; s-Flame states it only as text (`Atmosphere*`).",
+    "Test-day tables (BRE, CLD, E-FIELD, s-Flame, SLICE): each row is a day of several tests, and `problems` says so. E-FIELD rows that only continue the Notes column are skipped.",
+    "Flame Design inverse flames: the table has no Fuel column; fuel is read from the header XC2H4 and the O2 value is the burner stream, not the chamber.",
+    "SAME rows 5-8 say 'same conditions as 1-4': only the material is kept; the conditions are not copied.",
+    "SPICE lists some tests twice with identical cells; both rows are kept as they are in PSI's file.",
+    "Not tests and therefore skipped: PSI-142 (an index of publication figures) and Saffire-I pre-test flow-visualization rows (F1C1, F1C2).",
+    "DAFT is a dust instrument test with no combustion: phase is empty.",
     "Values outside physical ranges (O2 0-100 %, pressure 0-50 atm, flow 0-1000 cm/s) are left empty and noted in `problems`; the original cell stays in `raw`.",
     "Row numbers: the first data row after the header is 1. Column names are the CSV header with repeated whitespace collapsed.",
 ]
@@ -117,10 +124,7 @@ def build_investigations(records: list[dict], tiers: dict[str, dict], investigat
                    boost_environments=",".join(tier.get("boost", [])) or None)
         reviewed = investigator.get(row["id"])
         if reviewed:
-            row.update(pillar=reviewed["pillar"]["value"],
-                       environments=",".join(e["environment"] for e in reviewed["environments"]) or None,
-                       summary_student=reviewed["summary_student"]["text"],
-                       summary_professional=reviewed["summary_professional"]["text"])
+            row.update(reviewed_fields(reviewed))
         rows.append(row)
     return rows
 

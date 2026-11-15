@@ -1,0 +1,24 @@
+{
+  "id": "PSI-159",
+  "summary_student": {
+    "text": "Gas fuels such as propane, n-butane and n-pentane were burned from small ball-shaped burners on the International Space Station to make cool flames, which burn at much lower temperatures than normal flames. The team studied when these flames appear, when they go out and when they jump to ordinary hot flames. The record presents this mainly as engine research; its fire-safety use is not stated in PSI, but it shows how flames can survive in unusual low-temperature forms.",
+    "sources": ["hypothesis", "objective", "approach", "researchImpacts"]
+  },
+  "summary_professional": {
+    "text": "Spherical porous-burner diffusion flames aboard the ISS (ACME, Combustion Integrated Rack) burning propane, n-butane and n-pentane, in normal and inverse configurations. Reactant dilution, flow rate and pressure were varied to cover a broad range of Zst and Tad, aiming to establish steady cool diffusion flames and their extinction and transition to hot flames. Diagnostics included cameras, radiometers, photomultiplier tubes and thermocouples, supported by CFD with a chemical kinetics mechanism compared against the ISS measurements.",
+    "sources": ["approach", "hypothesis", "objective", "experimentHardware", "10.1016/j.proci.2022.07.015"]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "The investigation determines the conditions under which cool diffusion flames exist, extinguish or transition to hot flames, which relates to flammability; the record frames the impact as engine efficiency and does not state a fire-safety pillar.",
+    "sources": ["objective", "hypothesis", "researchImpacts"]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "The flames were burned aboard the International Space Station in the Combustion Integrated Rack.",
+      "sources": ["flightProgram", "experimentHardware"]
+    }
+  ],
+  "model": "claude-opus-5-5"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "PSI-100",
+  "summary_student": {
+    "text": "Saffire-III burned a cotton and fiberglass fabric inside an empty Cygnus cargo spacecraft after it left the space station, with air blowing faster than in the first Saffire test. It studied how quickly a large fire spreads without gravity and how materials compare with NASA's ground safety tests. This helps engineers choose safer materials for spacecraft where escaping a fire is hard.",
+    "sources": ["approach", "objective", "researchImpacts"]
+  },
+  "summary_professional": {
+    "text": "Follow-on to Saffire-I in the Cygnus vehicle after deberthing from the ISS, again using SIBAL as the sample material. Tests were run at a flow velocity of 30 cm/s compared to 20 cm/s in Saffire-I, with concurrent or opposed flow. Measurements: flame imaging from two cameras, thermocouples for flow, flame and plume temperatures, two radiometers for flame radiation, solid state sensors for pressure and CO2 and O2 mole fraction, and two anemometers for flow velocity. Sample dimensions are not stated in PSI.",
+    "sources": ["approach", "experimentHardware", "objective"]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "The objectives target low-g flammability limits compared with NASA's normal-gravity material flammability screening test, which supports material selection to prevent fires.",
+    "sources": ["objective", "researchImpacts"]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "Flown under the International Space Station program in a cargo vehicle after it deberthed from the ISS.",
+      "sources": ["flightProgram", "approach"]
+    },
+    {
+      "environment": "transit_vehicle",
+      "reason": "The hypothesis stresses rising fire risk as exploration missions venture further from Earth with longer transit times.",
+      "sources": ["hypothesis"]
+    }
+  ],
+  "model": "claude-opus-5-5"
+}

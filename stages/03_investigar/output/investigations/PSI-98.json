@@ -1,0 +1,64 @@
+{
+  "id": "PSI-98",
+  "acronym": "SAFFIRE-I",
+  "label": "SAFFIRE-I",
+  "title": "Spacecraft Fire Safety Experiment-I",
+  "doi": "10.60555/0t15-1z43",
+  "type": "flight",
+  "subarea": "Spacecraft Fire, Smoke Distribution",
+  "platform": "International Space Station (ISS)",
+  "hardware": "Saffire 1 enclosure in Cygnus",
+  "scope": "psi",
+  "tier": 1,
+  "tier_reason": "Team list, Tier 1. PSI subarea: Spacecraft Fire, Smoke Distribution. Large-scale solid fire.",
+  "boost_environments": [],
+  "summary_student": {
+    "text": "Saffire-I set fire to a large sheet of cotton and fiberglass fabric inside an empty Cygnus cargo spacecraft after it left the space station, so no crew was at risk. It measured how fast a big fire grows without gravity and whether materials burn differently in space than in the ground tests NASA uses to pick safe materials. This matters because fire safety on spacecraft is still designed mostly from fires on Earth.",
+    "sources": [
+      "approach",
+      "objective",
+      "hypothesis"
+    ]
+  },
+  "summary_professional": {
+    "text": "Large-scale flame spread over a Sibal composite fabric (75% cotton, 25% fiberglass by weight), approximately 0.94 meters long and 0.4 meters wide, mounted on a sample card in the middle of a fan-driven flow duct in the Cygnus vehicle after it deberthed from the ISS. The test was run at an air flow velocity of 20 cm/s. Measurements: flame imaging from two cameras, thermocouples for flow, flame and plume temperatures, two radiometers for flame radiation, solid state sensors for pressure and CO2 and O2 mole fraction, and two anemometers for flow velocity. Objectives were the growth rate of a large fire in low gravity and low-g flammability limits compared with NASA's normal-gravity material flammability screening test.",
+    "sources": [
+      "approach",
+      "objective",
+      "experimentHardware",
+      "10.1016/j.combustflame.2018.10.012"
+    ]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "Results determine microgravity flammability limits for spacecraft materials and help validate NASA's material selection criteria, which is about preventing fires through material choice.",
+    "sources": [
+      "researchImpacts",
+      "objective"
+    ]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "Flown under the International Space Station program; the experiment ran in a cargo vehicle after it left the ISS and addresses spacecraft fire safety design.",
+      "sources": [
+        "flightProgram",
+        "approach"
+      ]
+    },
+    {
+      "environment": "transit_vehicle",
+      "reason": "The hypothesis stresses that risk grows for exploration missions with longer transit times and a lack of microgravity fire data for spacecraft designers.",
+      "sources": [
+        "hypothesis",
+        "researchImpacts"
+      ]
+    }
+  ],
+  "generated_by": {
+    "agent": "investigator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T06:58:23Z"
+  },
+  "reviewed_by": null
+}

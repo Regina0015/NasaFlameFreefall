@@ -5,13 +5,27 @@
   "description": "Result of auditing one version of one finding. Produced by stage 05 (scripts/auditar.py). Grade rules: _config/confidence.md. Question list: stages/05_auditar/references/lista-revision.md.",
   "type": "object",
   "required": [
-    "finding_id", "finding_version", "finding_sha256", "checks", "recalculation",
-    "text_review", "grade", "reasons", "send_back_to", "audited_by"
+    "finding_id",
+    "finding_version",
+    "finding_sha256",
+    "checks",
+    "recalculation",
+    "text_review",
+    "grade",
+    "reasons",
+    "send_back_to",
+    "audited_by"
   ],
   "additionalProperties": false,
   "properties": {
-    "finding_id": { "type": "string", "pattern": "^F-[0-9]{3}$" },
-    "finding_version": { "type": "integer", "minimum": 1 },
+    "finding_id": {
+      "type": "string",
+      "pattern": "^F-[0-9]{3}$"
+    },
+    "finding_version": {
+      "type": "integer",
+      "minimum": 1
+    },
     "finding_sha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$",
@@ -22,14 +36,50 @@
       "minItems": 10,
       "items": {
         "type": "object",
-        "required": ["id", "name", "done_by", "result", "detail"],
+        "required": [
+          "id",
+          "name",
+          "done_by",
+          "result",
+          "detail"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "enum": ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9"] },
-          "name": { "type": "string" },
-          "done_by": { "enum": ["code", "model", "code+model"] },
-          "result": { "enum": ["pass", "fail", "not_applicable"] },
-          "detail": { "type": "string", "description": "What was compared and what came out" }
+          "id": {
+            "enum": [
+              "C0",
+              "C1",
+              "C2",
+              "C3",
+              "C4",
+              "C5",
+              "C6",
+              "C7",
+              "C8",
+              "C9"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "done_by": {
+            "enum": [
+              "code",
+              "model",
+              "code+model"
+            ]
+          },
+          "result": {
+            "enum": [
+              "pass",
+              "fail",
+              "not_applicable"
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "description": "What was compared and what came out"
+          }
         }
       }
     },
@@ -38,64 +88,205 @@
       "description": "One entry per number of the finding that was recomputed from the original CSV cells.",
       "items": {
         "type": "object",
-        "required": ["value_name", "finding_value", "recalculated_value", "unit", "match"],
+        "required": [
+          "value_name",
+          "finding_value",
+          "recalculated_value",
+          "unit",
+          "match"
+        ],
         "additionalProperties": false,
         "properties": {
-          "value_name": { "type": "string", "description": "Key in finding.values, or n_tests" },
-          "finding_value": { "type": ["number", "null"] },
-          "recalculated_value": { "type": ["number", "null"], "description": "In the same unit as the finding value" },
-          "unit": { "type": "string" },
-          "match": { "type": "boolean" },
-          "detail": { "type": "string" }
+          "value_name": {
+            "type": "string",
+            "description": "Key in finding.values, or n_tests"
+          },
+          "finding_value": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "recalculated_value": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "In the same unit as the finding value"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "match": {
+            "type": "boolean"
+          },
+          "detail": {
+            "type": "string"
+          }
         }
       }
     },
     "text_review": {
       "type": "array",
-      "description": "Check C8, question by question. Q1-Q2 are answered by code, Q3-Q7 by the local model.",
+      "description": "Check C8, question by question. Q1-Q2 are answered by code, Q3-Q7 by the local model, Q8 (sql_query findings) only by a person in output/reviews/F-XXX.json.",
       "items": {
         "type": "object",
-        "required": ["question_id", "question", "field", "done_by", "expected", "answer", "reason", "attempts"],
+        "required": [
+          "question_id",
+          "question",
+          "field",
+          "done_by",
+          "expected",
+          "answer",
+          "reason",
+          "attempts"
+        ],
         "additionalProperties": false,
         "properties": {
-          "question_id": { "enum": ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"] },
-          "question": { "type": "string" },
-          "field": { "enum": ["claim", "summary_student", "summary_professional", "limitations"] },
-          "done_by": { "enum": ["code", "model"] },
-          "expected": { "enum": ["yes", "no"] },
-          "answer": { "enum": ["yes", "no", null], "description": "null when the model did not answer" },
-          "reason": { "type": "string" },
-          "attempts": { "type": "integer", "minimum": 0, "maximum": 2 },
+          "question_id": {
+            "enum": [
+              "Q1",
+              "Q2",
+              "Q3",
+              "Q4",
+              "Q5",
+              "Q6",
+              "Q7",
+              "Q8"
+            ]
+          },
+          "question": {
+            "type": "string"
+          },
+          "field": {
+            "enum": [
+              "claim",
+              "summary_student",
+              "summary_professional",
+              "limitations",
+              "method"
+            ]
+          },
+          "done_by": {
+            "enum": [
+              "code",
+              "model",
+              "human"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "yes",
+              "no"
+            ]
+          },
+          "answer": {
+            "enum": [
+              "yes",
+              "no",
+              null
+            ],
+            "description": "null when the model did not answer"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
           "dismissed": {
             "type": "object",
             "description": "Present when a person dismissed this model flag as a false alarm (output/reviews/F-XXX.json)",
-            "required": ["reviewer", "note"],
+            "required": [
+              "reviewer",
+              "note"
+            ],
             "additionalProperties": false,
-            "properties": { "reviewer": { "type": "string" }, "note": { "type": "string" } }
+            "properties": {
+              "reviewer": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          },
+          "confirmed": {
+            "type": "object",
+            "description": "Present when a person confirmed this model flag as a real problem (output/reviews/F-XXX.json)",
+            "required": [
+              "reviewer",
+              "note"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "reviewer": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              }
+            }
           }
         }
       }
     },
-    "grade": { "enum": ["A", "B", "C", "no_data", "rejected"] },
+    "grade": {
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "no_data",
+        "rejected"
+      ]
+    },
     "reasons": {
       "type": "array",
       "minItems": 1,
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "description": "Why this grade, in short sentences"
     },
     "send_back_to": {
-      "enum": ["04_calcular", null],
+      "enum": [
+        "04_calcular",
+        null
+      ],
       "description": "Stage the finding goes back to when it is rejected; null otherwise"
     },
     "audited_by": {
       "type": "object",
-      "required": ["script", "model", "model_params", "date"],
+      "required": [
+        "script",
+        "model",
+        "model_params",
+        "date"
+      ],
       "additionalProperties": false,
       "properties": {
-        "script": { "type": "string" },
-        "model": { "type": ["string", "null"], "description": "Model that answered Q3-Q7; null if it was not run" },
-        "model_params": { "type": ["object", "null"] },
-        "date": { "type": "string", "format": "date-time" }
+        "script": {
+          "type": "string"
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Model that answered Q3-Q7; null if it was not run"
+        },
+        "model_params": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time"
+        }
       }
     }
   }

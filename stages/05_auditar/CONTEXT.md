@@ -4,12 +4,14 @@ Comprueba cada hallazgo por un camino distinto al que lo produjo y le asigna un 
 
 ## Entradas
 - Capa 4 (trabajo): `../04_calcular/output/findings/F-XXX.json` (forma en `schemas/finding.schema.json`, detalle en `docs/calculator-output.md`)
-- Capa 4 (trabajo): `../01_ingesta/output/tablas/` (los CSV **originales**, no los normalizados)
-- Capa 4 (trabajo): `../01_ingesta/output/fichas/` (para confirmar DOI, acrónimo y que la tabla pertenece a la investigación)
-- Capa 4 (trabajo): `../01_ingesta/output/manifiesto.json` (opcional: nombre original del CSV → archivo guardado)
+- Capa 4 (trabajo): `../01_ingesta/output/psi/`, con los CSV **originales** (no los normalizados) y las fichas `PSI-XX.json` (para confirmar DOI, acrónimo y que la tabla pertenece a la investigación). Es la ruta por defecto de `--tables` y `--fiches`.
+- Capa 4 (trabajo): `../01_ingesta/output/psi/manifest.csv` (opcional; los CSV se guardan con su nombre original de PSI)
 - Capa 3 (referencia): `../../_config/confidence.md`
 - Capa 3 (referencia): `references/lista-revision.md` (preguntas fijas para la revisión del texto)
 - Capa 3 (referencia): `references/unidades-columnas.json` (unidad de columnas de O2 cuyo encabezado no la dice, p. ej. `XO2` de CFI-G; cada entrada vale solo con `approved_by`)
+- Capa 3 (referencia): `references/cobertura-tablas.json` (fase de cada investigación y, para cada tabla de PSI, su columna de O2, su columna de presión con unidad y qué filas son pruebas; vale solo con `approved_by`). Lo usa el recálculo de `coverage_by_environment`
+- Capa 3 (referencia): `../../_config/environments.md` (atmósfera de cada ambiente; se lee con código propio y debe coincidir con `method.params`)
+- Capa 4 (trabajo): `../../data/snapshot/` (tablas normalizadas del Calculador). Solo para reproducir los hallazgos `sql_query`; todo lo que el SQL dice haber usado se comprueba contra los CSV originales. Necesita `duckdb` (por ejemplo, el venv `~/prueba-auditor/venv`); sin él, C3 falla con un aviso
 
 ## Proceso
 
@@ -19,10 +21,10 @@ Script: `scripts/auditar.py`. Pruebas: `scripts/test_auditar.py`.
 0. **Formato** (C0): el hallazgo cumple `schemas/finding.schema.json` y el nombre del archivo coincide con su `id`.
 1. **Trazabilidad** (C1): cada fila y columna citada existe en el CSV original; el DOI coincide con la ficha PSI; la tabla aparece en la ficha.
 2. **Fidelidad** (C2): cada mínimo o máximo reportado es exactamente una celda del CSV original; se anota en qué fila está.
-3. **Recálculo** (C3): repetir el cálculo con código propio, leyendo las celdas originales. `rows: "all"` son todas las filas con algo escrito (las completamente vacías no son pruebas; la numeración no cambia). En `o2_range`, una celda aproximada (`~ 22.1`) o con varios valores (`22.1 to 22.0`, `21; 26.5; 40`) se lee como esos valores; nada más se interpreta (`3400%` queda ilegible: el auditor nunca corrige datos). Las llaves de `values` terminadas en `_n_tests` se comparan con las filas citadas. Cada función del catálogo de la etapa 04 necesita su recalculador en `auditar.py` (`RECALCULATORS`); sin él, C3 falla. `n_tests` debe ser igual a la suma de filas citadas.
+3. **Recálculo** (C3): repetir el cálculo con código propio, leyendo las celdas originales. Una llave de `values` con el prefijo de una investigación (`psi159_…`) se compara con el total de esa investigación: si cita varias tablas (CFI-G: Normal e Inverse), mínimo de los mínimos, máximo de los máximos y suma de los conteos. `rows: "all"` son todas las filas con algo escrito (las completamente vacías no son pruebas; la numeración no cambia). En `o2_range`, una celda aproximada (`~ 22.1`) o con varios valores (`22.1 to 22.0`, `21; 26.5; 40`) se lee como esos valores; nada más se interpreta (`3400%` queda ilegible: el auditor nunca corrige datos). Las llaves de `values` terminadas en `_n_tests` se comparan con las filas citadas. `sql_query` se **reproduce** (el SQL del hallazgo corre sobre el snapshot, solo lectura: un único SELECT, sin acceso a archivos, con límite de tiempo) y se **ancla**: cada fila y columna que el SQL reporta existe en el CSV original y no está vacía, cada conteo es igual a su número de filas, cada mínimo o máximo es una celda original, y las filas usadas están en la evidencia. Si el SQL responde la pregunta lo decide una persona (Q8). `coverage_by_environment` se recalcula recorriendo **todas** las tablas de `cobertura-tablas.json`, no solo las citadas: así se comprueban también los ceros, y las filas citadas deben ser exactamente las que cumplen el umbral (O2 más alto de la prueba ≥ `o2_min_pct`; presión más baja ≤ `pressure_max_psi`, convertida desde atm, bar o mmHg). Cada función del catálogo de la etapa 04 necesita su recalculador en `auditar.py` (`RECALCULATORS`); sin él, C3 falla. `n_tests` debe ser igual a la suma de filas citadas.
 4. **Unidades y rangos** (C4): porcentajes entre 0 y 100, fracciones entre 0 y 1, presiones positivas, conteos enteros. Una unidad desconocida falla hasta que se agregue a la tabla del auditor.
 5. **Soporte** (C5): cuántas pruebas respaldan el hallazgo.
-6. **Rango probado** (C6): el cálculo no predice condiciones no probadas; si el hallazgo menciona base lunar o marciana, lleva la advertencia de que PSI no tiene datos de gravedad parcial.
+6. **Rango probado** (C6): el cálculo no predice condiciones no probadas; si el hallazgo menciona base lunar o marciana, lleva la advertencia de que PSI no tiene datos de gravedad parcial. En `coverage_by_environment`, un cero de una fase con pruebas sin dato de O2 (p. ej. BASS no tiene columna de O2) no es un cero: C6 falla.
 7. **Calidad de datos** (C7): qué porción de las celdas necesarias se pudo leer. Limpio = todas legibles y exactas; problemas menores = al menos 90% legibles, o alguna aproximada o con varios valores; muchas = menos de 90%.
 9. **Gráfica** (C9): cada número de `chart.data.values` (y cada `datum`) sale de `values`, de los parámetros o del recálculo.
 

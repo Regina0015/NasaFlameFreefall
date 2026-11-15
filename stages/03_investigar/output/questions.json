@@ -1,0 +1,65 @@
+[
+  {
+    "question": "How many tests of each fuel phase reached the lunar habitat atmosphere (30% oxygen or more, at or below 10.2 psi)?",
+    "tables": ["tests"],
+    "columns": ["phase", "o2_pct_max", "pressure_atm_min"],
+    "pillar": "prevention",
+    "environments": ["lunar_base", "pressurized_rover"]
+  },
+  {
+    "question": "What is the highest oxygen level at which any solid material was burned in PSI, and in which investigation?",
+    "tables": ["tests", "investigations"],
+    "columns": ["phase", "o2_pct_max", "investigation", "fuel"],
+    "pillar": "prevention",
+    "environments": ["space_station", "lunar_base"]
+  },
+  {
+    "question": "Which solid materials were tested in the Saffire experiments, and at what oxygen levels?",
+    "tables": ["tests"],
+    "columns": ["investigation", "fuel", "o2_pct_min", "o2_pct_max"],
+    "pillar": "prevention",
+    "environments": ["space_station", "transit_vehicle"]
+  },
+  {
+    "question": "At what air flow speeds were flames tested, per fuel phase?",
+    "tables": ["tests"],
+    "columns": ["phase", "flow_cm_s"],
+    "pillar": "prevention",
+    "environments": ["space_station", "transit_vehicle"]
+  },
+  {
+    "question": "How many smoke tests were run in the smoke-detection experiments (SAME, SAME-R, DAFT), and with which materials?",
+    "tables": ["tests", "investigations"],
+    "columns": ["phase", "investigation", "fuel", "pillar"],
+    "pillar": "detection",
+    "environments": ["space_station", "transit_vehicle"]
+  },
+  {
+    "question": "How many droplet tests ended in flame extinction, per diluent gas (N2, N2+CO2, N2+He)?",
+    "tables": ["tests"],
+    "columns": ["phase", "outcome", "diluent"],
+    "pillar": "suppression",
+    "environments": ["space_station"]
+  },
+  {
+    "question": "Across FLEX and FLEX-2, at what oxygen levels did droplet flames go out (extinction)?",
+    "tables": ["tests"],
+    "columns": ["investigation", "outcome", "o2_pct_min", "o2_pct_max"],
+    "pillar": "suppression",
+    "environments": ["space_station", "lunar_base"]
+  },
+  {
+    "question": "Is there any PSI combustion test at lunar or Mars gravity?",
+    "tables": ["tests"],
+    "columns": ["gravity"],
+    "pillar": "prevention",
+    "environments": ["lunar_base", "mars_base"]
+  },
+  {
+    "question": "Which investigations share the same fuel or hardware, so their results can be compared?",
+    "tables": ["relations", "investigations"],
+    "columns": ["from_id", "to_id", "type", "source"],
+    "pillar": "prevention",
+    "environments": ["space_station"]
+  }
+]

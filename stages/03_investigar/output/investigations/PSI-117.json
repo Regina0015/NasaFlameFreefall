@@ -1,0 +1,63 @@
+{
+  "id": "PSI-117",
+  "acronym": "",
+  "label": "Effect of External Thermo-Convective Perturbation on Cool Flame Dynamics: A Multidimensional Multi-Physics CFD Analysis",
+  "title": "Effect of External Thermo-Convective Perturbation on Cool Flame Dynamics: A Multidimensional Multi-Physics CFD Analysis",
+  "doi": "10.60555/gz0q-b577",
+  "type": "ground",
+  "subarea": "Droplet",
+  "platform": "",
+  "hardware": "",
+  "scope": "psi",
+  "tier": 2,
+  "tier_reason": "Team list, Tier 2. Ground study; PSI subarea: Droplet.",
+  "boost_environments": [],
+  "summary_student": {
+    "text": "This was a computer study that used data from the Flame Extinguishment Experiment on the space station, where tiny drops of liquid fuel burned with very weak, low-temperature cool flames. It tested how gentle heating and slow air drift change whether these flames start, flicker, turn into hot flames or go out. That helps predict how fuel fires behave and end in microgravity, which matters for spacecraft fire safety.",
+    "sources": [
+      "objective",
+      "approach",
+      "researchImpacts"
+    ]
+  },
+  "summary_professional": {
+    "text": "Ground investigation building a 3-D OpenFOAM CFD model of n-alkane droplet cool flames in microgravity, coupling variable-density Navier-Stokes flow with low-temperature chemistry, heat and mass transfer and radiation, validated against ISS FLEX measurements. Three forcing modes were simulated for large and sub-millimeter droplets: convection alone (droplet drift), imposed heat flux, and both combined, with parameter sweeps over forcing amplitude and frequency, ambient composition (including ozone-assisted cases) and pressure. Extracted observables were ignition delay, oscillation frequency and amplitude, and stand-off and extinction diameters, used to build stability maps of cool-flame onset, persistence and quenching.",
+    "sources": [
+      "approach",
+      "hypothesis",
+      "objective"
+    ]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "The record says the work could improve spacecraft fire-safety modeling of cool-flame and extinction behavior and help define safer operating envelopes and materials; it does not test a detector or suppression system.",
+    "sources": [
+      "researchImpacts",
+      "objective"
+    ]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "The model is validated against and reconciled with FLEX measurements from the ISS; the flight program field of this ground study is not stated in PSI.",
+      "sources": [
+        "approach",
+        "objective"
+      ]
+    },
+    {
+      "environment": "transit_vehicle",
+      "reason": "The study maps droplet cool-flame stability in microgravity, the condition of a vehicle in transit; the record itself does not name transit vehicles.",
+      "sources": [
+        "objective",
+        "hypothesis"
+      ]
+    }
+  ],
+  "generated_by": {
+    "agent": "investigator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T06:58:22Z"
+  },
+  "reviewed_by": null
+}

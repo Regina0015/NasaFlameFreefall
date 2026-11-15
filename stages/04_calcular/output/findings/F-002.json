@@ -1,11 +1,11 @@
 {
   "id": "F-002",
-  "version": 2,
+  "version": 3,
   "question": "How many tests of each fuel phase reached the lunar habitat atmosphere (30% oxygen or more, at or below 10.2 psi)?",
   "status": "has_data",
-  "claim": "No solid-fuel or smoke test reached the lunar habitat's 30% oxygen; 32 droplet and 246 gas-flame tests did, and only 8 droplet and 48 gas tests also ran at or below 10.2 psi.",
-  "summary_student": "No solid material, like plastic or fabric, has been burned in space at the oxygen level planned for a Moon base. Some liquid-droplet and gas flames were tested that high, and fewer of them at the base's lower pressure.",
-  "summary_professional": "Tests with O2 at or above 30%: solid 0, smoke 0, droplet 32, gas 246 (n = 278). Of these, at or below 10.2 psi: droplet 8, gas 48; 16 gas tests report no pressure.",
+  "claim": "Of the PSI tests that reached 30% oxygen or more, 8 of 32 droplet tests and 66 of 468 gas tests also ran at or below 10.2 psi; for solids and smoke there is no data, because some of their tests report no oxygen.",
+  "summary_student": "NASA tested many droplet and gas flames at 30% oxygen or more, the oxygen level planned for a lunar habitat, but only some of those tests were also run at the habitat's lower pressure of 10.2 psi or less: 8 droplet tests and 66 gas tests. For solid materials and smoke, the tables do not report the oxygen level of every test, so this count gives no answer for them; that is not the same as zero, and it says nothing about whether solids are safe or unsafe.",
+  "summary_professional": "Applying the lunar_base atmosphere (O2 at least 30%, pressure at most 10.2 psi) to the PSI tests table: droplet phase, 32 tests reached the O2 threshold, of which 8 also met the pressure limit and 0 report no pressure (PSI-68 FLEX-2, PSI-69 FLEX). Gas phase, 468 tests reached the O2 threshold, of which 66 also met the pressure limit and 36 report no pressure (PSI-10 Flame Design, PSI-159 CFI-G, PSI-20 ACME BRE). Total n = 500 tests at or above the O2 threshold. Solid and smoke phases are omitted from the values because some of their tests report no O2: the result for them is no data, not zero.",
   "values": {
     "droplet_o2_match": {
       "value": 32,
@@ -20,39 +20,15 @@
       "unit": "tests"
     },
     "gas_o2_match": {
-      "value": 246,
+      "value": 468,
       "unit": "tests"
     },
     "gas_o2_and_pressure_match": {
-      "value": 48,
+      "value": 66,
       "unit": "tests"
     },
     "gas_pressure_unknown": {
-      "value": 16,
-      "unit": "tests"
-    },
-    "smoke_o2_match": {
-      "value": 0,
-      "unit": "tests"
-    },
-    "smoke_o2_and_pressure_match": {
-      "value": 0,
-      "unit": "tests"
-    },
-    "smoke_pressure_unknown": {
-      "value": 0,
-      "unit": "tests"
-    },
-    "solid_o2_match": {
-      "value": 0,
-      "unit": "tests"
-    },
-    "solid_o2_and_pressure_match": {
-      "value": 0,
-      "unit": "tests"
-    },
-    "solid_pressure_unknown": {
-      "value": 0,
+      "value": 36,
       "unit": "tests"
     }
   },
@@ -65,9 +41,253 @@
       "pressure_max_psi": 10.2,
       "source": "Challenge text, \"Spacesuits and oxygen concentration\""
     },
-    "formula": "For each fuel phase, the number of tests whose oxygen reached at least o2_min_pct, how many of them also ran at or below pressure_max_psi (pressure_atm_min <= pressure_max_psi / 14.6959), and how many of them report no pressure."
+    "formula": "For each fuel phase, the number of tests whose oxygen reached at least o2_min_pct, how many of them also ran at or below pressure_max_psi (pressure_atm_min <= pressure_max_psi / 14.6959), and how many of them report no pressure. A phase with no test at that oxygen but with tests that report no oxygen is left out of the values: that is no data, not zero."
   },
   "evidence": [
+    {
+      "investigation": "PSI-10",
+      "doi": "10.60555/w4zy-bt45",
+      "table": "PSI-10_Experimental table_Flame Design_Inverse Flame.csv",
+      "columns": [
+        "XO2",
+        "pmean (atm)"
+      ],
+      "rows": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        21,
+        22,
+        23,
+        24,
+        27,
+        33,
+        34,
+        35,
+        38,
+        39,
+        40,
+        41,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        78,
+        79,
+        80,
+        81,
+        83,
+        84,
+        85,
+        90,
+        91,
+        92,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120
+      ]
+    },
+    {
+      "investigation": "PSI-10",
+      "doi": "10.60555/w4zy-bt45",
+      "table": "PSI-10_Experimental table_Flame Design_Normal Flame.csv",
+      "columns": [
+        "XO2 (init)",
+        "pmean (atm)"
+      ],
+      "rows": [
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207
+      ]
+    },
     {
       "investigation": "PSI-20",
       "doi": "10.60555/vb93-3y72",
@@ -102,7 +322,16 @@
         "Ambient Pressure (atm)",
         "Oxygen Mole Fraction"
       ],
-      "rows": "all"
+      "rows": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
     },
     {
       "investigation": "PSI-69",
@@ -392,16 +621,19 @@
       ]
     }
   ],
-  "n_tests": 278,
+  "n_tests": 500,
   "assumptions": [
-    "Uses each test's highest oxygen value and lowest pressure.",
-    "Mole fraction and volume fraction are treated as equal (ideal gas).",
-    "The lunar habitat atmosphere (30% oxygen, 10.2 psi) is taken from the challenge text."
+    "The lunar habitat atmosphere is taken from the challenge text: 30% oxygen or more at 10.2 psi or less.",
+    "A test meets the pressure limit when its lowest reported ambient pressure is at or below 10.2 psi.",
+    "Oxygen mole fraction and volume fraction are treated as equal (ideal gas), as in the snapshot catalog.",
+    "Each row of the tests table is counted as one test; for the ACME BRE test-day table a row is a day of several tests."
   ],
   "limitations": [
-    "CFI-G inverse flames report the oxygen of the burner stream, not of the surrounding gas, so some gas tests counted here did not burn in a 30% oxygen atmosphere.",
-    "No solid test at 30% oxygen means no data, not that solids are safe or unsafe at that level.",
-    "All of these tests ran in microgravity; lunar gravity was not tested."
+    "No conclusion can be drawn for solid or smoke tests: some of them report no oxygen, so the answer for those phases is no data, not zero, and this finding does not say solids are safe or unsafe.",
+    "For CFI-G and Flame Design inverse flames the oxygen value is the burner (oxidizer) stream, not the chamber atmosphere, so those tests do not reproduce a habitat cabin atmosphere.",
+    "The ACME BRE gas tests report no pressure, so they are counted as reaching the oxygen threshold but cannot be said to meet the pressure limit.",
+    "Counting tests that reached the atmosphere says nothing about flammability limits, flame spread or extinction outcomes at those conditions.",
+    "All tests are in microgravity or Earth gravity; none was run at lunar gravity."
   ],
   "warnings": [
     "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
@@ -414,104 +646,19 @@
   "visual_offer": {
     "chart": {
       "available": true,
-      "idea": "Grouped bars per fuel phase: tests at or above 30% oxygen, and those also at or below 10.2 psi."
+      "idea": "Grouped bars per fuel phase (droplet, gas) showing tests that reached 30% oxygen, tests that also ran at or below 10.2 psi, and tests with no reported pressure, with solid and smoke marked as no data."
     },
     "graph": {
-      "available": false,
-      "idea": null
+      "available": true,
+      "idea": "A proof graph linking this finding to the investigations behind it (PSI-10, PSI-20, PSI-68, PSI-69, PSI-159) and the hardware families they share."
     },
-    "footnote": "Want a visual? I can draw a chart of how many tests of each fuel phase reached the lunar habitat atmosphere."
+    "footnote": "Want a visual? I can draw a chart comparing, for droplet and gas tests, how many reached 30% oxygen and how many of those also ran at or below 10.2 psi, with solids and smoke shown as no data."
   },
-  "chart": {
-    "config": {
-      "view": {
-        "continuousWidth": 300,
-        "continuousHeight": 300
-      }
-    },
-    "data": {
-      "values": [
-        {
-          "phase": "droplet",
-          "o2_match": 32,
-          "o2_and_pressure_match": 8
-        },
-        {
-          "phase": "gas",
-          "o2_match": 246,
-          "o2_and_pressure_match": 48
-        },
-        {
-          "phase": "smoke",
-          "o2_match": 0,
-          "o2_and_pressure_match": 0
-        },
-        {
-          "phase": "solid",
-          "o2_match": 0,
-          "o2_and_pressure_match": 0
-        }
-      ]
-    },
-    "mark": {
-      "type": "bar"
-    },
-    "encoding": {
-      "color": {
-        "field": "measure",
-        "legend": {
-          "labelExpr": "datum.label == 'o2_match' ? 'Oxygen at or above the target' : 'Oxygen at or above the target, pressure at or below it'",
-          "orient": "bottom"
-        },
-        "title": null,
-        "type": "nominal"
-      },
-      "tooltip": [
-        {
-          "field": "phase",
-          "title": "Phase",
-          "type": "nominal"
-        },
-        {
-          "field": "tests",
-          "title": "Tests",
-          "type": "quantitative"
-        }
-      ],
-      "x": {
-        "field": "phase",
-        "title": "Fuel phase",
-        "type": "nominal"
-      },
-      "xOffset": {
-        "field": "measure",
-        "type": "nominal"
-      },
-      "y": {
-        "field": "tests",
-        "title": "Tests",
-        "type": "quantitative"
-      }
-    },
-    "title": "Tests within the lunar base atmosphere (tests)",
-    "transform": [
-      {
-        "fold": [
-          "o2_match",
-          "o2_and_pressure_match"
-        ],
-        "as": [
-          "measure",
-          "tests"
-        ]
-      }
-    ],
-    "$schema": "https://vega.github.io/schema/vega-lite/v6.4.1.json"
-  },
+  "chart": null,
   "graph": null,
   "generated_by": {
     "agent": "calculator",
     "model": "claude-opus-5-5",
-    "date": "2026-11-15T00:11:40Z"
+    "date": "2026-11-15T06:35:45Z"
   }
 }

@@ -1,0 +1,65 @@
+{
+  "id": "PSI-47",
+  "acronym": "DAFT / DAFT-2",
+  "label": "DAFT / DAFT-2",
+  "title": "Dust and Aerosol Measurement Feasibility Test / Dust and Aerosol Measurement Feasibility Test-2",
+  "doi": "10.60555/ztgj-d202",
+  "type": "flight",
+  "subarea": "Spacecraft Fire Safety",
+  "platform": "International Space Station (ISS)",
+  "hardware": "TSI P-Trak",
+  "scope": "psi",
+  "tier": 1,
+  "tier_reason": "Team list, Tier 1. PSI subarea: Spacecraft Fire Safety. Dust versus smoke.",
+  "boost_environments": [],
+  "summary_student": {
+    "text": "Nothing was burned in this investigation: astronauts on the International Space Station tested whether a commercial particle counter, modified for weightlessness, could count tiny dust particles correctly. The counter normally relies on gravity, so this test checked it before it was used to measure smoke in a later experiment. Reliable smoke and particle measurement is the basis for better fire detectors on spacecraft.",
+    "sources": [
+      "objective",
+      "hypothesis",
+      "flightProgram",
+      "researchImpacts"
+    ]
+  },
+  "summary_professional": {
+    "text": "DAFT / DAFT-2 was a risk-reduction test for SAME: a TSI P-Trak condensation nuclei counter was modified for microgravity by redesigning the condenser tube to recycle isopropyl alcohol by capillary forces and removing the mercury orientation switch. Arizona Red Dust was aerosolized with GN2 into 15-liter Mylar bags as an aerosol standard. On orbit, P-Trak particle counts were compared against a DustTrak control designed for microgravity. No combustion was involved; the measured quantity was aerosol particle count.",
+    "sources": [
+      "approach",
+      "objective",
+      "hypothesis",
+      "experimentHardware"
+    ]
+  },
+  "pillar": {
+    "value": "detection",
+    "reason": "The investigation validated an aerosol particle counter in microgravity to support smoke measurement and the development of fire and smoke detection systems.",
+    "sources": [
+      "objective",
+      "researchImpacts",
+      "10.4271/2005-01-2930"
+    ]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "Tested on the International Space Station, and the record says it impacts fire and smoke detection systems for the station.",
+      "sources": [
+        "flightProgram",
+        "researchImpacts"
+      ]
+    },
+    {
+      "environment": "transit_vehicle",
+      "reason": "The record states that extended duration missions with larger vessels and future spacecraft will need more reliable and sensitive fire detection.",
+      "sources": [
+        "researchImpacts"
+      ]
+    }
+  ],
+  "generated_by": {
+    "agent": "investigator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T06:58:25Z"
+  },
+  "reviewed_by": null
+}

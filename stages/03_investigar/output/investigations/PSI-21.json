@@ -1,0 +1,57 @@
+{
+  "id": "PSI-21",
+  "acronym": "ACME CLD Flame",
+  "label": "ACME CLD Flame",
+  "title": "Advanced Combustion via Microgravity Experiments / Coflow Laminar Diffusion Flame",
+  "doi": "10.60555/23e1-9950",
+  "type": "flight",
+  "subarea": "Flames of gaseous fuel",
+  "platform": "International Space Station (ISS)",
+  "hardware": "Combustion Integrated Rack (CIR), ACME",
+  "scope": "psi",
+  "tier": 2,
+  "tier_reason": "Team list, Tier 2. PSI subarea: Flames of gaseous fuel.",
+  "boost_environments": [],
+  "summary_student": {
+    "text": "Methane and ethylene gas flames, surrounded by a gentle stream of air, were burned aboard the International Space Station. The researchers measured flame shape, temperature, soot and the point where weak flames go out, to check and improve computer models of flames. Knowing what makes a flame go out is important for putting out fires.",
+    "sources": [
+      "objective",
+      "approach",
+      "researchImpacts",
+      "flightProgram"
+    ]
+  },
+  "summary_professional": {
+    "text": "Coflow laminar diffusion flames of methane and ethylene were studied in ACME in the Combustion Integrated Rack on the ISS, as a function of fuel velocity and fuel dilution, from weak dilute flames to long-residence-time sooting flames. Dilute flames were characterized by OH* and CH* chemiluminescence imaging of lift-off height, flame shape and extinction limits, with thin-filament pyrometry for gas temperatures in soot-free regions. Sooting flames were characterized by soot luminosity and laser extinction to obtain soot temperatures and soot volume fractions. The data serve as benchmarks for computational models with detailed kinetics and soot sub-models.",
+    "sources": [
+      "objective",
+      "approach",
+      "hypothesis",
+      "experimentHardware",
+      "10.1080/00102202.2022.2041621"
+    ]
+  },
+  "pillar": {
+    "value": "suppression",
+    "reason": "The record states that understanding the factors that affect flame extinction in diffusion flames is critical in the suppression of fires, and extinction limits of weak flames are one of the measured objectives.",
+    "sources": [
+      "researchImpacts",
+      "objective"
+    ]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "Tests were run aboard the International Space Station, so they describe gas-flame behavior and extinction in station microgravity. The record names no specific crew-atmosphere condition.",
+      "sources": [
+        "flightProgram"
+      ]
+    }
+  ],
+  "generated_by": {
+    "agent": "investigator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T06:58:54Z"
+  },
+  "reviewed_by": null
+}

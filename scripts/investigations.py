@@ -72,6 +72,14 @@ def load_tiers(path: Path) -> dict[str, dict]:
     }
 
 
+def reviewed_fields(record: dict) -> dict:
+    """The investigations columns an Investigator record fills (the rest are copied from PSI)."""
+    return {"pillar": record["pillar"]["value"],
+            "environments": ",".join(e["environment"] for e in record["environments"]) or None,
+            "summary_student": record["summary_student"]["text"],
+            "summary_professional": record["summary_professional"]["text"]}
+
+
 def load_investigator_records(directory: Path) -> dict[str, dict]:
     """Investigator records (stages/03_investigar/output/investigations/*.json); empty if none."""
     folder = Path(directory) / "investigations"

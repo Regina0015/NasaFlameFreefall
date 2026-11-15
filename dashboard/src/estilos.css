@@ -1,14 +1,5 @@
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
-}
-
-main {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 1.5rem;
-}
+/* Styles of the earlier prototype sections (src/secciones/). Base and layout
+   rules now live in styles/tokens.css and styles/app.css. */
 
 button[aria-pressed='true'] {
   font-weight: 700;

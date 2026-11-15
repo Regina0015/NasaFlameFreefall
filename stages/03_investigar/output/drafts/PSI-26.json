@@ -1,0 +1,29 @@
+{
+  "id": "PSI-26",
+  "summary_student": {
+    "text": "Samples of solid materials, such as a cotton and fiberglass fabric, Nomex fabric and Ultem, were set on fire inside a glovebox aboard the International Space Station while a fan blew air past them. The team watched how fast and how big the flames grew, and tested how well an inert gas, similar to the one used on the station, put them out. This matters because the materials chosen for spacecraft today are tested on Earth, where fire behaves differently.",
+    "sources": ["approach", "objective", "researchImpacts", "flightProgram"]
+  },
+  "summary_professional": {
+    "text": "Solid fuels, including fabric of 75% cotton and 25% fiberglass by mass, Nomex fabric and Ultem, plus sphere and cylinder samples, were ignited by a Kanthal wire in a small flow duct (76 mm x 76 mm cross section) in the Microgravity Science Glovebox on the ISS. Air flowed along the fuel surface in opposed or concurrent direction, at speeds as high as 40 cm/s. Flame size, shape, color, spread rate and quenching were recorded from top and edge views, and nitrogen was assessed as an extinguishing agent across materials, geometries, preheating and flow. Oxygen concentration and pressure of the tests are not stated in PSI.",
+    "sources": ["approach", "objective", "researchImpacts", "experimentHardware", "10.1016/j.firesaf.2015.11.011"]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "The first objective is to bridge the gap between the normal-gravity NASA-STD-6001 Test 1 used for spacecraft material selection and actual material flammability in microgravity. Suppression is a second objective: the effectiveness of an inert gaseous extinguishing agent similar to that used on ISS.",
+    "sources": ["objective", "researchImpacts"]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "Tests were run aboard the International Space Station, and the extinguishing agent assessed is similar to the one used on ISS.",
+      "sources": ["flightProgram", "objective"]
+    },
+    {
+      "environment": "transit_vehicle",
+      "reason": "The record says the results inform spacecraft material selection and will guide novel spacecraft design and the safety of future crewed missions.",
+      "sources": ["researchImpacts"]
+    }
+  ],
+  "model": "claude-opus-5-5"
+}

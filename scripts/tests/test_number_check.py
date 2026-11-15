@@ -1,6 +1,6 @@
 import unittest
 
-from scripts.numbers import canonical, collect, numbers_in
+from scripts.number_check import canonical, collect, numbers_in
 
 
 class NumbersInTest(unittest.TestCase):

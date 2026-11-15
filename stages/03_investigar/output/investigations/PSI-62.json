@@ -1,0 +1,64 @@
+{
+  "id": "PSI-62",
+  "acronym": "",
+  "label": "Concurrent Flame Spread Modeling using Flamelet Generated Manifolds in Microgravity with Comparison to BASS Experiments using Two-Color Tomography",
+  "title": "Concurrent Flame Spread Modeling using Flamelet Generated Manifolds in Microgravity with Comparison to BASS Experiments using Two-Color Tomography",
+  "doi": "10.60555/e9xp-ex83",
+  "type": "ground",
+  "subarea": "Spacecraft Fire Safety",
+  "platform": "",
+  "hardware": "",
+  "scope": "psi",
+  "tier": 1,
+  "tier_reason": "Team list, Tier 1. Ground study; PSI subarea: Spacecraft Fire Safety. Models BASS flight data.",
+  "boost_environments": [],
+  "summary_student": {
+    "text": "This ground study built computer models of how flames spread along solid materials, such as acrylic plastic and wax, in weightlessness. The models were checked against photos from earlier space station fire experiments (BASS and BASS-II). The goal is to predict which spacecraft materials can burn, so that safer materials can be chosen.",
+    "sources": [
+      "approach",
+      "objective",
+      "researchImpacts"
+    ]
+  },
+  "summary_professional": {
+    "text": "Ground investigation that implemented an unsteady flamelet generated manifold (UFGM) model in a fully coupled fluid-solid framework to simulate concurrent flame spread over charring and ablating solids in microgravity. Benchmarks were BASS and BASS-II geometries: PMMA flat sheets, spheres and rods, plus wax cylinders. BASS imagery was post-processed with two-color tomography to reconstruct 3D soot and temperature fields, and flame geometry, temperature distribution, soot volume fraction and flame spread rate were compared to predictions, including the Goldilocks flammability zone reported by Olson and Ferkul.",
+    "sources": [
+      "approach",
+      "hypothesis",
+      "objective",
+      "10.1016/j.combustflame.2017.03.001",
+      "10.1016/j.combustflame.2023.112939"
+    ]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "The long-term goal is accurate prediction of flammability limits for spacecraft materials, a tool for screening new materials before they are used.",
+    "sources": [
+      "objective",
+      "researchImpacts"
+    ]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "The model is validated against BASS and BASS-II experiment imagery and targets flammability limits of spacecraft materials; flight location of those experiments is not stated in this record.",
+      "sources": [
+        "objective",
+        "approach"
+      ]
+    },
+    {
+      "environment": "transit_vehicle",
+      "reason": "The record states the tools improve hazard assessment for long-duration space missions and confined spacecraft habitats.",
+      "sources": [
+        "researchImpacts"
+      ]
+    }
+  ],
+  "generated_by": {
+    "agent": "investigator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T06:58:25Z"
+  },
+  "reviewed_by": null
+}
