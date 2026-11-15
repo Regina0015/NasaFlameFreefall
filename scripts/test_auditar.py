@@ -555,6 +555,108 @@ class TestCoverageByEnvironment(Base):
             self.assertEqual(set(cov["tables"]), on_disk)
 
 
+HAVE_DUCKDB = A._import_duckdb() is not None
+
+
+class TestSqlQuery(Base):
+    """sql_query: reproducir el SQL sobre un snapshot y anclar cada fila en el CSV original."""
+    SQL = ("SELECT 'psi25_high_o2' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, "
+           "list(source_row ORDER BY source_row) AS source_rows, ['Calibrated  initial O2 % by vol'] AS source_columns "
+           "FROM tests WHERE o2_pct_max >= 20 GROUP BY investigation, source_table "
+           "UNION ALL SELECT 'psi25_o2_min', min(o2_pct_min), '% O2', investigation, source_table, "
+           "list(source_row ORDER BY source_row), ['Calibrated  initial O2 % by vol'] FROM tests GROUP BY investigation, source_table")
+
+    def setUp(self):
+        super().setUp()
+        d = Path(self.tmp.name) / "snapshot"
+        d.mkdir()
+        self.snap = d
+        self.write_snapshot([(1, 22.2), (2, 21.0), (3, 13.6), (4, 18.2)])
+        self.sources.snapshot_dir = d
+
+    def write_snapshot(self, rows):
+        lines = ["test_id,investigation,source_table,source_row,o2_pct_min,o2_pct_max,gravity"]
+        lines += [f"PSI-25-T0-R{r},PSI-25,{TABLE},{r},{o2},{o2},microgravity" for r, o2 in rows]
+        (self.snap / "tests.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    def finding(self, high=2, o2_min=13.6, rows=(1, 2, 3, 4), sql=None, status="has_data"):
+        f = base_finding()
+        f["status"] = status
+        f["method"] = {"script": "scripts/functions.py", "function": "sql_query",
+                       "params": {"sql": sql or self.SQL}, "formula": "The values returned by the SQL query."}
+        f["values"] = {} if status == "no_data" else {"psi25_high_o2": {"value": high, "unit": "tests"},
+                                                      "psi25_o2_min": {"value": o2_min, "unit": "% O2"}}
+        f["evidence"] = [] if status == "no_data" else [dict(f["evidence"][0], rows=list(rows))]
+        f["n_tests"] = 0 if status == "no_data" else len(rows)
+        f["claim"] = "2 of the 4 BASS-II tests had 20% oxygen or more; the lowest was 13.6%."
+        f["summary_professional"] = "BASS-II: 2 tests at ≥20% O2 (n = 4); minimum 13.6%."
+        return f
+
+    def test_sql_literals(self):
+        self.assertEqual(A.sql_number_literals("SELECT 'psi25_x', count(*) FROM tests WHERE o2 >= 20 AND t = 'PSI-25' "
+                                               "AND p <= 0.69 AND c2h4 = 1"), [20.0, 0.69, 1.0])
+
+    def test_without_duckdb_c3_fails_clearly(self):
+        real = A._import_duckdb
+        A._import_duckdb = lambda: None
+        try:
+            a = self.audit(self.finding())
+        finally:
+            A._import_duckdb = real
+        self.assertEqual(self.result(a, "C3"), "fail")
+        self.assertIn("duckdb is not installed", next(c for c in a["checks"] if c["id"] == "C3")["detail"])
+
+    @unittest.skipUnless(HAVE_DUCKDB, "duckdb not installed")
+    def test_reproduces_and_grounds(self):
+        a = self.audit(self.finding())
+        self.assertEqual(self.result(a, "C3"), "pass")
+        self.assertIn("reproduced by running the finding's SQL", next(c for c in a["checks"] if c["id"] == "C3")["detail"])
+        self.assertEqual(self.result(a, "C2"), "pass")  # 13.6 es la celda de la fila 3
+        q8 = [t for t in a["text_review"] if t["question_id"] == "Q8"]
+        self.assertEqual(len(q8), 1)
+        self.assertEqual(self.result(a, "C8"), "fail")  # Q8 queda pendiente hasta que una persona lo lea
+
+    @unittest.skipUnless(HAVE_DUCKDB, "duckdb not installed")
+    def test_wrong_value_fails(self):
+        self.assertEqual(self.result(self.audit(self.finding(high=3)), "C3"), "fail")
+
+    @unittest.skipUnless(HAVE_DUCKDB, "duckdb not installed")
+    def test_snapshot_row_missing_from_original_fails(self):
+        self.write_snapshot([(1, 22.2), (2, 21.0), (3, 13.6), (9, 25.0)])
+        a = self.audit(self.finding(high=3, rows=(1, 2, 3, 9)))
+        self.assertEqual(self.result(a, "C3"), "fail")
+        self.assertIn("do not exist", next(c for c in a["checks"] if c["id"] == "C3")["detail"])
+
+    @unittest.skipUnless(HAVE_DUCKDB, "duckdb not installed")
+    def test_rows_not_in_evidence_fail(self):
+        a = self.audit(self.finding(rows=(1, 2)))
+        self.assertIn("does not cite", next(c for c in a["checks"] if c["id"] == "C3")["detail"])
+
+    @unittest.skipUnless(HAVE_DUCKDB, "duckdb not installed")
+    def test_only_select_is_allowed(self):
+        a = self.audit(self.finding(sql="CREATE TABLE x AS SELECT 1"))
+        self.assertEqual(self.result(a, "C3"), "fail")
+        self.assertIn("exactly one SELECT", next(c for c in a["checks"] if c["id"] == "C3")["detail"])
+
+    @unittest.skipUnless(HAVE_DUCKDB, "duckdb not installed")
+    def test_no_data_with_rows_fails(self):
+        sql = self.SQL.split(" UNION ALL ")[0]
+        f = self.finding(sql=sql, status="no_data")
+        self.assertIn("no-data finding, but its SQL returns", next(c for c in self.audit(f)["checks"] if c["id"] == "C3")["detail"])
+
+    @unittest.skipUnless(HAVE_DUCKDB, "duckdb not installed")
+    def test_q8_can_be_dismissed_by_a_person(self):
+        import hashlib
+        f = self.finding()
+        sha = hashlib.sha256(json.dumps(f).encode()).hexdigest()
+        review = {"finding_id": "F-001", "finding_sha256": sha, "flags": [
+            {"question_id": "Q8", "field": "method", "model_reason": "x", "decision": "dismiss",
+             "reviewer": "Diego", "note": "the SQL counts BASS-II tests at >= 20% O2, as the question asks"}]}
+        a = self.audit(f, review=review)
+        self.assertEqual(self.result(a, "C8"), "pass")
+        self.assertEqual(a["grade"], "B")  # 4 pruebas: soporte limitado
+
+
 class TestHumanReview(Base):
     @staticmethod
     def sha(finding):

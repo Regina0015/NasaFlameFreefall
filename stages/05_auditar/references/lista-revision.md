@@ -15,8 +15,11 @@ Las preguntas exactas que se mandan al modelo están en `scripts/auditar.py` (`M
 | Q5 | Modelo | Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)? | no | cada campo |
 | Q6 | Modelo | Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count. | no | cada campo |
 | Q7 | Modelo | Does at least one LIMITATIONS item name something specific that this finding does NOT let you conclude (for example an investigation, material, condition or environment it does not cover)? Saying where the data come from is not a limitation. | yes | una vez |
+| Q8 | **Persona** | Does the SQL in method.params answer the finding's question, and do its filters keep every test they should (for example, rows with NULL are dropped by NOT IN)? | yes | una vez, solo en hallazgos `sql_query` |
 
-Son 19 respuestas por hallazgo (6 de código y 13 del modelo). C8 pasa solo si todas son las esperadas.
+Son 19 respuestas por hallazgo (6 de código y 13 del modelo), más Q8 en los hallazgos `sql_query`. C8 pasa solo si todas son las esperadas.
+
+Q8 la crea el código como pendiente y solo una persona la cierra, en `output/reviews/F-XXX.json` (`dismiss` si el SQL está bien, `confirm` si no). El motivo de Q8 dice qué parte de PSI ve el snapshot: si faltan tablas, un hallazgo que hable de "PSI" o de "ninguna prueba" no las vio.
 
 El modelo recibe además `CITED INVESTIGATIONS`: acrónimo, ID, título y los primeros 400 caracteres del objetivo de cada investigación citada, tomados de la ficha PSI. Así Q3 y Q4 tienen contra qué comparar (por ejemplo, "solid fuels" en BASS-II).
 

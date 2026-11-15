@@ -49,6 +49,19 @@ PSI_DIR = ROOT / "stages/01_ingesta/output/psi"  # etapa 01: CSV originales y fi
 REFERENCES = ROOT / "stages/05_auditar/references"
 COVERAGE_FILE = REFERENCES / "cobertura-tablas.json"   # fase, columna de O2 y de presión de cada tabla PSI
 ENVIRONMENTS_MD = ROOT / "_config/environments.md"     # atmósfera de cada ambiente habitado
+SNAPSHOT_DIR = ROOT / "data/snapshot"                  # tablas normalizadas del Calculador (para sql_query)
+# Tipos de las columnas del snapshot que no son texto (copiados de scripts/contract.py, sin importarlo).
+SNAPSHOT_TYPES = {
+    "tests": {"source_row": "INTEGER", "o2_pct_min": "DOUBLE", "o2_pct_max": "DOUBLE",
+              "pressure_atm_min": "DOUBLE", "pressure_atm_max": "DOUBLE", "flow_cm_s": "DOUBLE"},
+    "investigations": {"tier": "INTEGER"},
+}
+SQL_COLUMNS = ("name", "value", "unit", "investigation", "source_table", "source_rows", "source_columns")
+SQL_TIMEOUT_S = 30
+SQL_MAX_ROWS = 10_000
+HUMAN_SQL_QUESTION = ("Does the SQL in method.params answer the finding's question, and do its filters keep every "
+                      "test they should (for example, rows with NULL are dropped by NOT IN)? The code only checks "
+                      "that the numbers come from the data; a person must read the SQL.")
 PRESSURE_TO_PSI = {"psi": 1.0, "atm": 14.6959, "bar": 14.5038, "kpa": 0.145038, "mmhg": 0.0193368, "torr": 0.0193368}
 
 # --- Umbrales PROVISIONALES (ver _config/confidence.md; el equipo puede cambiarlos) ---
@@ -344,6 +357,7 @@ class Sources:
         self.units = load_units(units_path)
         self.coverage_path = Path(coverage_path) if coverage_path else None
         self.environments_path = Path(environments_path) if environments_path else None
+        self.snapshot_dir = SNAPSHOT_DIR
         self._tables: dict[str, tuple[Table | None, str]] = {}
         self._fiches: dict[str, dict | None] = {}
 
@@ -460,7 +474,7 @@ def close(a: float | None, b: float | None, exact: bool = False) -> bool:
 class Known:
     """Un número con fuente, contra el que se comparan textos y gráficas."""
     value: float
-    kind: str   # percent | fraction | other
+    kind: str   # percent | fraction | other | any (número del SQL: la unidad no se sabe)
     label: str
 
 
@@ -488,7 +502,7 @@ def check_text_numbers(text: str, known: list[Known]) -> tuple[list[str], list[s
     for m in _TEXT_NUM.finditer(text):
         num, has_pct = m.group(1), bool(m.group(2))
         as_pct = [k for k in known
-                  if (k.kind == "percent" and text_matches(num, k.value))
+                  if (k.kind in ("percent", "any") and text_matches(num, k.value))
                   or (k.kind == "fraction" and text_matches(num, k.value * 100))]
         any_src = as_pct or [k for k in known if text_matches(num, k.value)]
         if not any_src:
@@ -560,8 +574,12 @@ class Recalc:
     used_percent_values: list[tuple[str, int, float]] = field(default_factory=list)
     tested_range_ok: bool | None = None
     tested_range_detail: str = ""
-    # Recalculadores que nombran sus resultados igual que 'values' (coverage_by_environment):
+    # Recalculadores que nombran sus resultados igual que 'values' (coverage_by_environment, sql_query):
     named: dict[str, float] | None = None
+    fidelity_notes: list[str] = field(default_factory=list)     # C2 cuando el recalculador lo hace solo
+    fidelity_problems: list[str] = field(default_factory=list)
+    human_checks: list[tuple[str, str]] = field(default_factory=list)  # (pregunta, contexto) para una persona
+    c3_summary: str = ""                                         # cómo se recalculó, para el detalle de C3
 
 
 def recalc_o2_range(finding: dict, sources: Sources) -> Recalc:
@@ -811,9 +829,177 @@ def recalc_coverage_by_environment(finding: dict, sources: Sources) -> Recalc:
     return out
 
 
+def _import_duckdb():
+    """DuckDB solo hace falta para sql_query; el resto del auditor es biblioteca estándar."""
+    try:
+        import duckdb
+        return duckdb
+    except ImportError:
+        return None
+
+
+def open_snapshot_readonly(duckdb, snapshot_dir: Path):
+    """Carga cada CSV del snapshot como tabla, con código propio, y cierra la conexión:
+    sin acceso a archivos externos y con la configuración bloqueada."""
+    con = duckdb.connect(":memory:")
+    found = sorted(Path(snapshot_dir).glob("*.csv"))
+    if not found:
+        raise FileNotFoundError(f"no CSV files in {_show(snapshot_dir)}")
+    for path in found:
+        lit = "'" + str(path).replace("'", "''") + "'"
+        source = f"read_csv({lit}, header = true, all_varchar = true)"
+        cols = [d[0] for d in con.execute(f"SELECT * FROM {source} LIMIT 0").description]
+        types = SNAPSHOT_TYPES.get(path.stem, {})
+        select = ", ".join(f'CAST("{c}" AS {types[c]}) AS "{c}"' if c in types else f'"{c}"' for c in cols)
+        con.execute(f'CREATE TABLE "{path.stem}" AS SELECT {select} FROM {source}')
+    con.execute("SET memory_limit = '2GB'")
+    con.execute("SET enable_external_access = false")
+    con.execute("SET lock_configuration = true")
+    return con
+
+
+def run_select(duckdb, con, sql: str) -> tuple[list[str], list[tuple]]:
+    """Una sola sentencia SELECT, con límite de tiempo y de filas."""
+    import threading
+    statements = duckdb.extract_statements(sql)
+    if len(statements) != 1 or statements[0].type != duckdb.StatementType.SELECT:
+        raise ValueError("method.params.sql must be exactly one SELECT statement")
+    timer = threading.Timer(SQL_TIMEOUT_S, con.interrupt)
+    timer.start()
+    try:
+        cur = con.execute(sql)
+        rows = cur.fetchmany(SQL_MAX_ROWS + 1)
+    finally:
+        timer.cancel()
+    if len(rows) > SQL_MAX_ROWS:
+        raise ValueError(f"the SQL returned more than {SQL_MAX_ROWS} rows")
+    return [d[0] for d in cur.description], rows
+
+
+def recalc_sql_query(finding: dict, sources: Sources) -> Recalc:
+    """sql_query: 'reproducir y anclar'.
+    1. Reproducir: correr el SQL del hallazgo sobre el snapshot del Calculador (solo lectura).
+    2. Anclar: cada fila y columna que el SQL dice haber usado existe en el CSV ORIGINAL y no está vacía;
+       cada conteo es igual a su número de filas; cada mínimo o máximo es una celda original.
+    3. Que el SQL responda la pregunta no lo puede saber el código: queda una pregunta para una persona (Q8)."""
+    out = Recalc(named={})
+    out.human_checks.append((HUMAN_SQL_QUESTION, "Pending: a person must read the SQL and dismiss this alert if it "
+                                                 "is right."))
+    duckdb = _import_duckdb()
+    if duckdb is None:
+        out.problems.append("duckdb is not installed in this Python; run the auditor with the venv "
+                            "that has it (for example ~/prueba-auditor/venv/bin/python)")
+        return out
+    sql = finding["method"]["params"].get("sql")
+    if not isinstance(sql, str) or not sql.strip():
+        out.problems.append("method.params.sql is missing")
+        return out
+    try:
+        con = open_snapshot_readonly(duckdb, sources.snapshot_dir)
+        try:
+            columns, records = run_select(duckdb, con, sql)
+        finally:
+            con.close()
+    except Exception as e:  # cualquier error de DuckDB o del snapshot: no se pudo reproducir
+        out.problems.append(f"could not run the SQL over {_show(sources.snapshot_dir)}: {type(e).__name__}: {e}")
+        return out
+    missing = [c for c in SQL_COLUMNS if c not in columns]
+    if missing:
+        out.problems.append(f"the SQL result lacks column(s) {missing}")
+        return out
+    # Contexto para quien revise Q8: qué parte de PSI ve el snapshot.
+    try:
+        con = open_snapshot_readonly(duckdb, sources.snapshot_dir)
+        try:
+            in_snapshot = {r[0] for r in con.execute("SELECT DISTINCT source_table FROM tests").fetchall()}
+        finally:
+            con.close()
+        absent = [t for t in sources.table_names() if t not in in_snapshot]
+        if absent:
+            out.human_checks[0] = (HUMAN_SQL_QUESTION,
+                                   f"Pending. The snapshot covers {len(in_snapshot)} of {len(sources.table_names())} "
+                                   f"PSI tables; a claim about 'PSI' or 'no test' does not see: {', '.join(absent)}.")
+    except Exception:
+        pass
+    idx = {c: columns.index(c) for c in SQL_COLUMNS}
+    if finding["status"] == "no_data" and records:
+        out.problems.append(f"no-data finding, but its SQL returns {len(records)} row(s)")
+    used: dict[str, set[int]] = {}
+    for rec in records:
+        name, value, unit = rec[idx["name"]], rec[idx["value"]], rec[idx["unit"]]
+        inv, tname, rows, cols = (rec[idx["investigation"]], rec[idx["source_table"]],
+                                  rec[idx["source_rows"]], rec[idx["source_columns"]])
+        if name in out.named:
+            out.problems.append(f"the SQL returns the name {name!r} twice")
+            continue
+        out.named[name] = None if value is None else float(value)
+        if name not in finding["values"]:
+            out.problems.append(f"the SQL returns {name} = {value} but the finding does not report it")
+        table, err = sources.table(str(tname))
+        if table is None:
+            out.problems.append(f"{name}: source table {tname!r}: {err}")
+            continue
+        if not str(tname).startswith(f"{inv}_"):
+            out.problems.append(f"{name}: table {tname} does not belong to {inv}")
+        rows = list(rows or [])
+        blank = {r for r in range(1, len(table.rows) + 1) if not any(c.strip() for c in table.rows[r - 1])}
+        bad = [r for r in rows if not isinstance(r, int) or not 1 <= r <= len(table.rows) or r in blank]
+        if bad:
+            out.problems.append(f"{name}: rows {bad[:5]} do not exist (or are empty) in the original {tname}")
+        used.setdefault(str(tname), set()).update(r for r in rows if isinstance(r, int))
+        names = [c for part in (cols or []) for c in str(part).split(" | ") if c]
+        idxs = []
+        for c in names:
+            i = table.col_index(c)
+            if i is None:
+                out.problems.append(f"{name}: column {c!r} is not in the header of the original {tname}")
+            else:
+                idxs.append((c, i))
+        good = [r for r in rows if r not in bad]
+        for _, i in idxs:
+            for r in good:
+                out.cells_total += 1
+                out.cells_readable += bool(table.cell(r, i).strip())
+        if unit in COUNT_UNITS:
+            if value != len(rows) or len(set(rows)) != len(rows):
+                out.problems.append(f"{name} = {value} {unit} but the SQL lists {len(set(rows))} distinct rows")
+        elif value is not None and unit_kind(str(unit)) == "percent":
+            hits = []
+            for c, i in idxs:
+                u, _ = column_unit(sources, str(tname), table.header[i])
+                if u is None:
+                    continue
+                scale = 100.0 if u == "fraction" else 1.0
+                for r in good:
+                    vals, kind = parse_o2_cell(table.cell(r, i))
+                    if any(abs(v * scale - float(value)) <= max(RECALC_REL_TOL * abs(float(value)), 1e-9)
+                           for v in vals):
+                        hits.append((r, c, table.cell(r, i).strip()))
+            if hits:
+                r, c, txt = hits[0]
+                out.fidelity_notes.append(f"{name} = {value} {unit} <- cell '{txt}' ({c}) at row {r} of {tname}")
+            else:
+                out.fidelity_problems.append(f"{name} = {value} {unit} is not an original cell of {tname} "
+                                             f"in columns {names}")
+    # Las filas que usó el SQL deben estar en la evidencia.
+    cited: dict[str, set[int]] = {}
+    for ev in finding["evidence"]:
+        t, _ = sources.table(ev["table"])
+        if t is not None:
+            cited.setdefault(ev["table"], set()).update(cited_rows(t, ev["rows"])[0])
+    for tname, rws in used.items():
+        extra = sorted(rws - cited.get(tname, set()))
+        if extra:
+            out.problems.append(f"the SQL uses rows of {tname} that the evidence does not cite: {extra[:5]}")
+    out.c3_summary = (f"All {{n}} values reproduced by running the finding's SQL over {_show(sources.snapshot_dir)} "
+                      "(read-only); every source row and column it reports exists in the original CSVs")
+    return out
+
+
 RECALCULATORS = {
     "o2_range": recalc_o2_range,
     "coverage_by_environment": recalc_coverage_by_environment,
+    "sql_query": recalc_sql_query,
 }
 
 
@@ -993,6 +1179,12 @@ class _ModelSlot:
             return None, 0
 
 
+def sql_number_literals(sql: str) -> list[float]:
+    """Números escritos en el SQL, fuera de los textos entre comillas ('PSI-25' no cuenta)."""
+    bare = re.sub(r"'(?:[^']|'')*'|\"(?:[^\"]|\"\")*\"", " ", sql)
+    return [float(m) for m in re.findall(r"(?<![A-Za-z0-9_.])\d+(?:\.\d+)?(?![A-Za-z0-9_])", bare)]
+
+
 def _known_numbers(finding: dict, recalc: Recalc | None, row_counts: dict[str, int]) -> list[Known]:
     known = []
     for k, v in finding["values"].items():
@@ -1002,6 +1194,10 @@ def _known_numbers(finding: dict, recalc: Recalc | None, row_counts: dict[str, i
     for path, x in _numbers_in(finding["method"]["params"], "params"):
         kind = "percent" if re.search(r"(pct|percent)", path.lower()) else "other"
         known.append(Known(x, kind, path))
+    sql = finding["method"]["params"].get("sql")
+    if isinstance(sql, str):  # los números del SQL (umbrales) también son parámetros del método
+        for x in sql_number_literals(sql):
+            known.append(Known(x, "any", "number in method.params.sql"))
     for inv, n in row_counts.items():
         known.append(Known(float(n), "other", f"cited rows of {inv}"))
     if recalc and recalc.named:
@@ -1018,6 +1214,13 @@ def _check(cid: str, result: str, detail: str) -> dict:
     return {"id": cid, "name": CHECK_NAMES[cid], "done_by": CHECK_DONE_BY[cid], "result": result, "detail": detail}
 
 
+def is_review_flag(t: dict) -> bool:
+    """Lo que una persona puede confirmar o descartar: una alerta del modelo, o una pregunta para una persona."""
+    if t["done_by"] == "human":
+        return True
+    return t["done_by"] == "model" and t["answer"] is not None and t["answer"] != t["expected"]
+
+
 def apply_review(text_review: list[dict], review: dict | None, finding_sha: str) -> str:
     """Marca como 'dismissed' las alertas del modelo que una persona descartó.
     Devuelve una nota si la revisión no se pudo usar. Nunca toca respuestas de código."""
@@ -1031,7 +1234,7 @@ def apply_review(text_review: list[dict], review: dict | None, finding_sha: str)
     decisions = {(r["question_id"], r["field"]): r for r in review["flags"]}
     incomplete = []
     for t in text_review:
-        if t["done_by"] != "model" or t["answer"] is None or t["answer"] == t["expected"]:
+        if not is_review_flag(t):
             continue
         r = decisions.get((t["question_id"], t["field"]))
         if r and r["decision"] in ("dismiss", "confirm"):
@@ -1053,7 +1256,7 @@ def review_template(audit: dict, existing: dict | None) -> dict | None:
         keep = {(r.get("question_id"), r.get("field")): r for r in existing.get("flags", []) if isinstance(r, dict)}
     flags = []
     for t in audit["text_review"]:
-        if t["done_by"] == "model" and t["answer"] is not None and t["answer"] != t["expected"]:
+        if is_review_flag(t):
             old = keep.get((t["question_id"], t["field"]))
             flags.append(old or {"question_id": t["question_id"], "field": t["field"], "model_reason": t["reason"],
                                  "decision": "pending", "reviewer": "", "note": ""})
@@ -1144,7 +1347,7 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
     # --- C3 (y C2, C7): recálculo independiente ---------------------------------
     func = finding["method"]["function"]
     recalc = None
-    if finding["status"] == "no_data" and not finding["evidence"]:
+    if finding["status"] == "no_data" and not finding["evidence"] and func != "sql_query":
         for cid in ("C2", "C3", "C7"):
             checks[cid] = _check(cid, "not_applicable", "No-data finding without evidence: nothing to recompute.")
     elif func not in RECALCULATORS:
@@ -1230,8 +1433,12 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
             c3_problems.append(f"n_tests = {finding['n_tests']} but the evidence cites {total_rows} rows")
         checks["C3"] = _check("C3", "fail" if c3_problems else "pass",
                               "; ".join(c3_problems) if c3_problems else
-                              f"All {len(recalculation)} numbers recomputed from the original cells match "
-                              f"(relative tolerance {RECALC_REL_TOL:g}, counts exact).")
+                              (recalc.c3_summary.format(n=len(recalculation)) + "." if recalc.c3_summary else
+                               f"All {len(recalculation)} numbers recomputed from the original cells match "
+                               f"(relative tolerance {RECALC_REL_TOL:g}, counts exact)."))
+        if recalc.named is not None:
+            c2_problems += recalc.fidelity_problems
+            c2_notes += recalc.fidelity_notes
         checks["C2"] = _check("C2", "fail" if c2_problems else ("pass" if c2_notes else "not_applicable"),
                               "; ".join(c2_problems or c2_notes) or "No extreme value to compare with a single cell.")
         # C7: calidad de las celdas que hicieron falta
@@ -1321,11 +1528,14 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
                             "expected": expected, "answer": out["answer"] if out else None,
                             "reason": out["reason"] if out else (slot.error or "no valid answer after 2 attempts"),
                             "attempts": attempts})
+    for question, context in (recalc.human_checks if recalc else []):
+        text_review.append({"question_id": "Q8", "question": question, "field": "method", "done_by": "human",
+                            "expected": "yes", "answer": None, "attempts": 0, "reason": context})
     review_note = apply_review(text_review, review, hashlib.sha256(file_bytes).hexdigest())
     dismissed = [t for t in text_review if t.get("dismissed")]
     wrong = [f"{t['question_id']}/{t['field']}" for t in text_review
              if t["answer"] != t["expected"] and not t.get("dismissed")]
-    unanswered = [t for t in text_review if t["answer"] is None]
+    unanswered = [t for t in text_review if t["answer"] is None and t["done_by"] == "model"]
     if wrong:
         detail = f"{len(wrong)} of {len(text_review)} answers differ from the expected one: {', '.join(wrong)}"
         if unanswered:
@@ -1434,10 +1644,9 @@ def write_summary(path: Path, audits: list[dict], unreadable: list[str], model_n
                           f"{t['answer'] or '—'} | {t['reason'].replace('|', '/')} | "
                           + (f"dismissed by {t['dismissed']['reviewer']}" if t.get("dismissed") else
                              f"confirmed by {t['confirmed']['reviewer']}" if t.get("confirmed") else
-                             "pending" if t["done_by"] == "model" and t["answer"] is not None else "—")
+                             "pending" if is_review_flag(t) else "—")
                           + " |" for t in wrong]
-                if any(t["done_by"] == "model" and t["answer"] is not None
-                       and not t.get("dismissed") and not t.get("confirmed") for t in wrong):
+                if any(is_review_flag(t) and not t.get("dismissed") and not t.get("confirmed") for t in wrong):
                     lines += ["", f"Model flags marked *pending* can be confirmed or dismissed in "
                                   f"`output/reviews/{a['finding_id']}.json` (decision, reviewer, note); "
                                   f"then run `auditar.py` again. Code answers cannot be dismissed."]
@@ -1455,6 +1664,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--units", type=Path, default=REFERENCES / "unidades-columnas.json")
     ap.add_argument("--coverage", type=Path, default=COVERAGE_FILE)
     ap.add_argument("--environments", type=Path, default=ENVIRONMENTS_MD)
+    ap.add_argument("--snapshot", type=Path, default=SNAPSHOT_DIR, help="Calculator snapshot, for sql_query")
     ap.add_argument("--only", help="audit only this finding id, e.g. F-001")
     ap.add_argument("--no-model", action="store_true", help="do not call the local model (C8 fails, manual review)")
     args = ap.parse_args(argv)
@@ -1474,6 +1684,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     sources = Sources(args.tables, args.fiches, args.manifest, args.units, args.coverage, args.environments)
+    sources.snapshot_dir = args.snapshot
     audit_schema = load_schema("audit.schema.json")
     audits_dir = args.out / "audits"
     reviews_dir = args.out / "reviews"
