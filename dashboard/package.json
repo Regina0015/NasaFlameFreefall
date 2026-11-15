@@ -8,13 +8,17 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test chat/*.test.js",
+    "export:habitat": "node tools/export-habitat.mjs",
     "probe-model": "node --env-file-if-exists=.env.local chat/probe-model.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "three": "^0.170.0"
+    "three": "^0.170.0",
+    "vega": "^6.4.0",
+    "vega-embed": "^7.3.0",
+    "vega-lite": "^6.5.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.3.0",

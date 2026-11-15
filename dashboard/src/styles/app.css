@@ -1,4 +1,4 @@
-/* Base, shared controls, login page and preview shell. Colors come from tokens.css. */
+/* Base and shared controls. Colors come from tokens.css. */
 
 *,
 *::before,
@@ -263,7 +263,9 @@ p {
   position: absolute;
   inset: 0;
   display: grid;
-  place-items: center;
+  align-content: center;
+  justify-items: center;
+  gap: var(--space-3);
   padding: var(--space-5);
   text-align: center;
   font-family: var(--font-mono);
@@ -411,210 +413,6 @@ textarea:disabled {
   color: var(--text-muted);
 }
 
-/* Preview shell */
-
-.shell {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
-.shell-bar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-5);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.shell-bar-end {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.shell-grid {
-  flex: 1;
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-5) var(--space-5);
-  grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr) minmax(16rem, 20rem);
-  grid-template-rows: minmax(26rem, 1fr) auto;
-  grid-template-areas:
-    'left stage right'
-    'legacy legacy legacy';
-}
-
-.shell-stage {
-  grid-area: stage;
-  position: relative;
-  min-height: 26rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.shell-stage > .stage-backdrop,
-.shell-stage > .stage-frame {
-  z-index: -1;
-}
-
-.shell-stage > .stage-frame {
-  inset: var(--space-2);
-}
-
-.shell-stage > .stage-model {
-  inset: 3.5rem 0 2.5rem;
-}
-
-.shell-stage-top {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  padding: var(--space-5) var(--space-5) 0;
-}
-
-.shell-stage-note {
-  position: absolute;
-  left: var(--space-5);
-  right: var(--space-5);
-  bottom: var(--space-5);
-}
-
-.shell-side {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  min-width: 0;
-}
-
-.shell-side-left {
-  grid-area: left;
-}
-
-.shell-side-right {
-  grid-area: right;
-}
-
-.shell-side-right .panel {
-  flex: 1;
-}
-
-.panel {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-}
-
-.panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--border);
-}
-
-.panel-head h2 {
-  font-size: var(--text-sm);
-  font-weight: 650;
-  letter-spacing: 0.02em;
-}
-
-.panel-body {
-  display: grid;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  font-size: var(--text-sm);
-}
-
-.assistant-form {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.legacy {
-  grid-area: legacy;
-}
-
-.legacy summary .tag {
-  white-space: normal;
-}
-
-.legacy summary {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  min-height: var(--control-height);
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--text-sm);
-  font-weight: 650;
-  cursor: pointer;
-}
-
-.legacy-sections {
-  padding: 0 var(--space-4) var(--space-4);
-  border-top: 1px solid var(--border);
-  font-size: var(--text-sm);
-  overflow-wrap: anywhere;
-}
-
-.legacy-sections h2 {
-  margin-top: var(--space-4);
-  font-size: var(--text-md);
-}
-
-/* Responsive */
-
-@media (max-width: 1100px) {
-  .shell-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: auto;
-    grid-template-areas:
-      'stage stage'
-      'left right'
-      'legacy legacy';
-  }
-}
-
-@media (max-width: 700px) {
-  .shell-bar,
-  .shell-grid {
-    padding-inline: var(--space-4);
-  }
-
-  .shell-grid {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'stage'
-      'left'
-      'right'
-      'legacy';
-  }
-
-  .shell-stage {
-    min-height: 22rem;
-  }
-
-  .shell-stage > .stage-model {
-    inset: 6.5rem 0 4rem;
-  }
-
-  .brand-sub {
-    display: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   * {
     transition-duration: 0.01ms !important;
@@ -684,19 +482,4 @@ main:focus {
 .field:has(input:required) > label::after {
   content: ' *';
   color: var(--text-muted);
-}
-
-/* Narrow screens: model and its controls sit above the note, never under it */
-@media (max-width: 700px) {
-  .shell-stage {
-    min-height: 28rem;
-  }
-
-  .shell-stage > .stage-model {
-    inset: 6.5rem 0 5rem;
-  }
-
-  .shell-stage-note {
-    bottom: var(--space-4);
-  }
 }

@@ -3,6 +3,7 @@ import Login from './pages/Login.jsx'
 import DemoShell from './pages/DemoShell.jsx'
 import { useAuth } from './lib/auth.js'
 import { useTheme } from './lib/theme.js'
+import { clearWelcomeSeen } from './components/Welcome.jsx'
 
 const DEMO_HASH = '#/demo'
 
@@ -36,6 +37,11 @@ export default function App() {
 
     shownPage.current = page
     document.getElementById('main')?.focus()
+  }, [page])
+
+  // Being on the login page ends the visit, so the next entry plays the welcome again.
+  useEffect(() => {
+    if (page === 'login') clearWelcomeSeen()
   }, [page])
 
   const skipLink = (

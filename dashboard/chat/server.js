@@ -3,6 +3,8 @@
 //   GET  /api/chat/status  is Ollama up, and does it have the model?
 // It does not exist on Vercel: there the chat panel hides itself.
 
+import { stat } from 'node:fs/promises'
+import path from 'node:path'
 import { createConfig } from './config.js'
 import { createTools } from './tools.js'
 import { respond } from './agent.js'
@@ -31,6 +33,16 @@ function readBody(req) {
     })
     req.on('error', reject)
   })
+}
+
+// When the local snapshot the tools read was last written (null if it is missing).
+async function snapshotUpdated(config) {
+  try {
+    const file = path.join(config.repoRoot, 'data', 'snapshot', 'tests.csv')
+    return (await stat(file)).mtime.toISOString()
+  } catch {
+    return null
+  }
 }
 
 async function ollamaStatus(config) {
@@ -62,7 +74,11 @@ export function createHandler(env) {
     try {
       if (req.method === 'GET' && req.url.startsWith('/status')) {
         const s = await ollamaStatus(config)
-        return send(res, 200, { ...s, available: s.ollama && s.model_installed })
+        return send(res, 200, {
+          ...s,
+          available: s.ollama && s.model_installed,
+          snapshot_updated: await snapshotUpdated(config),
+        })
       }
       if (req.method !== 'POST') return send(res, 405, { error: 'Use POST.' })
 

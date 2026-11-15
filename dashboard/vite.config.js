@@ -11,6 +11,15 @@ function localChat(env) {
   return { name: 'local-chat', configureServer: mount, configurePreviewServer: mount }
 }
 
+// Mounts the read-only local findings endpoint at /api/findings (same rule: dev and preview only).
+function localFindings(env) {
+  const mount = async (server) => {
+    const { createFindingsHandler } = await import('./findings/server.js')
+    server.middlewares.use('/api/findings', createFindingsHandler(env))
+  }
+  return { name: 'local-findings', configureServer: mount, configurePreviewServer: mount }
+}
+
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), localChat(loadEnv(mode, process.cwd(), ''))],
+  plugins: [react(), localChat(loadEnv(mode, process.cwd(), '')), localFindings(loadEnv(mode, process.cwd(), ''))],
 }))

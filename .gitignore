@@ -26,6 +26,8 @@ Thumbs.db
 # Modelos locales (pesan gigabytes)
 *.gguf
 models/
+# The dashboard's 3D assets are part of the app (public/models/), not local model weights.
+!dashboard/public/models/
 
 # User datasets (private, per-user layer) and query scratch results
 data/user/
