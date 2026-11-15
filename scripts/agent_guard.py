@@ -7,7 +7,7 @@ and the reason on stderr goes back to the agent. Anything unreadable is blocked.
 
 Each agent may run only its own `uv run python -m scripts.<module>` commands, with no
 shell operators or expansions, write only JSON files directly in its drafts folder, and
-never read .env files (secrets).
+never read .env files (secrets). Edit and web tools are blocked.
 """
 import json
 import os
@@ -25,6 +25,9 @@ AGENTS = {
                      "drafts": ROOT / "stages" / "03_investigar" / "output" / "drafts"},
 }
 PREFIX = ["uv", "run", "python", "-m"]
+# Tools that change files or reach outside the repository. Other tools (such as the
+# harness's own hand-back of the final report) are left to the agent's `tools:` list.
+BLOCKED_TOOLS = {"Edit", "MultiEdit", "NotebookEdit", "WebFetch", "WebSearch", "Agent", "Task"}
 OPERATORS = set(";&|<>()\n\r`")
 EXPANSION = re.compile(r"\$[({A-Za-z_0-9@*#?!$-]")
 
@@ -95,7 +98,9 @@ def check(agent_name: str, event: dict) -> str | None:
         if name == ".env" or (name.startswith(".env.") and name != ".env.example"):
             return ".env files hold secrets and may not be read"
         return None
-    return f"tool {tool!r} is not allowed for the {agent_name}"
+    if tool in BLOCKED_TOOLS:
+        return f"tool {tool!r} is not allowed for the {agent_name}"
+    return None
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -33,6 +33,8 @@ Write everything in **English**.
 
 Pass `--user NAME` to `query` and `run_calc` only when the person gave it.
 
+Run each command exactly as shown, from the repository root: no `cd`, no `&&`, no pipes or redirection (`|`, `>`, `2>&1`). A hook blocks anything else.
+
 ## Step 1: choose the calculation
 
 Prefer a catalog function. Use `sql_query` only when none fits.

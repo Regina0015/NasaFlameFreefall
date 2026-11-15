@@ -52,7 +52,9 @@ class GuardTest(unittest.TestCase):
 
     def test_unknown_agent_and_other_tools(self):
         self.assertIsNotNone(check("nobody", bash(Q + "x")))
-        self.assertIsNotNone(check("calculator", {"tool_name": "Edit", "tool_input": {}}))
+        for name in ("Edit", "NotebookEdit", "WebFetch", "WebSearch", "Agent"):
+            self.assertIsNotNone(check("calculator", {"tool_name": name, "tool_input": {}}), name)
+        self.assertIsNone(check("calculator", {"tool_name": "SubagentHandback", "tool_input": {"report": "F-009"}}))
 
     def test_main_blocks_with_exit_code_2(self):
         for stdin, code in ((json.dumps(bash("git push")), 2), ("not json", 2), (json.dumps(bash(Q + "x")), 0)):
