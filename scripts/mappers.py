@@ -270,3 +270,205 @@ MAPPERS.update({
     "PSI-20_Experimental table_ACME BRE.csv": bre,
     "PSI-101_Experimental table_SAME-R.csv": same_r,
 })
+
+
+# --- Tables added by the database owner (stage 02) -------------------------------
+
+def _solid_geometry(fuel: str | None) -> str | None:
+    """Geometry words the BASS / Saffire tables write inside the material text."""
+    lowered = (fuel or "").lower()
+    for word, geometry in (("sphere", "sphere"), ("rod", "rod"), ("film", "film"), ("slab", "slab"),
+                           ("sheet", "sheet"), ("candle", "candle"), ("fabric", "fabric"),
+                           ("sibal", "fabric"), ("nomex", "fabric")):
+        if word in lowered:
+            return geometry
+    return None
+
+
+def _not_in_table(row: _Row, *fields: str) -> None:
+    for field in fields:
+        row.note(f"{field} not in table")
+
+
+def flame_design_normal(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    if _skip(row.text("fuel", "Fuel"), cells, "Test"):
+        return None
+    row.data["phase"], row.data["geometry"] = "gas", "burner"
+    row.number("o2_pct_min", "XO2 (init)", 100.0, *O2_RANGE)
+    _one_value_range(row, "o2_pct_min", "o2_pct_max")
+    row.number("pressure_atm_min", "pmean (atm)", 1.0, *PRESSURE_RANGE_ATM)
+    _one_value_range(row, "pressure_atm_min", "pressure_atm_max")
+    row.keep_other("Flame Type", "Day", "Test", "Xfuel", "mfuel (mg/s)", "mN2 (mg/s)", "mtot (mg/s)",
+                   "XO2 (final)", "pinit (atm)", "pfinal (atm)", "mean Zst", "Tad (K)")
+    if any((cells.get(c) or "").strip().upper() == "RAMPED" for c in cells):
+        row.note("some cells say RAMPED: the value changed during the test")
+    return row.done()
+
+
+def flame_design_inverse(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    if not (cells.get("Test") or "").strip():
+        return None
+    # The table has no Fuel column; its headers (XC2H4 initial/final) name the chamber fuel.
+    row.data["fuel"] = "C2H4"
+    row.sources["fuel"] = "XC2H4 initial"
+    row.note("fuel read from the column header XC2H4 (the table has no Fuel column)")
+    row.data["phase"], row.data["geometry"] = "gas", "burner"
+    row.number("o2_pct_min", "XO2", 100.0, *O2_RANGE)
+    _one_value_range(row, "o2_pct_min", "o2_pct_max")
+    row.note("inverse flame: O2 is the burner stream, not the chamber")
+    row.number("pressure_atm_min", "pmean (atm)", 1.0, *PRESSURE_RANGE_ATM)
+    _one_value_range(row, "pressure_atm_min", "pressure_atm_max")
+    row.keep_other("Flame Type", "Day", "Test", "mO2 (mg/s)", "mN2 (mg/s)", "mtot (mg/s)", "XC2H4 initial",
+                   "XC2H4 final", "pinit (atm)", "pfinal (atm)", "mean Zst", "Tad (K)")
+    return row.done()
+
+
+def spice(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    if _skip(row.text("fuel", "Fuel"), cells, "GMT ignition"):
+        return None
+    row.data["phase"], row.data["geometry"] = "gas", "burner"
+    row.number("flow_cm_s", "Air Rate (cm/s)", 1.0, *FLOW_RANGE_CM_S)
+    _not_in_table(row, "O2", "pressure")
+    row.keep_other("GMT date", "GMT ignition", "GMT Flame Off", "Nozzle (mm)", "Fuel Rate (sccm)",
+                   "Fuel Rate (mg/s)", "HC Fuel Rate (mg/s)")
+    return row.done()
+
+
+def slice_(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    if _skip(row.text("fuel", "Fuel Type"), cells, "Test Date"):
+        return None
+    row.data["phase"], row.data["geometry"] = "gas", "burner"
+    _not_in_table(row, "O2", "pressure")
+    row.note("test-day row: conditions of several tests")
+    row.keep_other("Test Date")
+    return row.done()
+
+
+def _acme_test_day(investigation: str, source_row: int, cells: dict[str, str], day_column: str,
+                   other: tuple[str, ...], extra_note: str | None = None) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    if not (cells.get(day_column) or "").strip():
+        return None  # rows that only continue the Notes column
+    row.text("fuel", "Fuel Bottle")
+    row.data["phase"], row.data["geometry"] = "gas", "burner"
+    _not_in_table(row, "O2", "pressure")
+    row.note("test-day row: conditions of several tests")
+    if extra_note:
+        row.note(extra_note)
+    row.keep_other(*other)
+    return row.done()
+
+
+def cld(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    return _acme_test_day(investigation, source_row, cells, "Test Day",
+                          ("Test Type", "Test Day", "Fuel MFC", "N2 MFC", "Fuel conc. Range",
+                           "Flames ignited", "Notes"))
+
+
+def efield(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    return _acme_test_day(investigation, source_row, cells, "Test Day",
+                          ("Test Type", "Test Day", "Year", "Month", "Date", "Mesh Polarity",
+                           "Fuel Conc", "Flames Ignited", "Notes"))
+
+
+def s_flame(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    return _acme_test_day(investigation, source_row, cells, "Test Day*",
+                          ("Test Type", "Test Day*", "Year", "Month", "Date", "Atmosphere*",
+                           "Flames Ignited*", "Notes"),
+                          "atmosphere given only as text in 'Atmosphere*' (about 21% O2 and 1 atm per the table note)")
+
+
+def bass(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    fuel = row.text("fuel", "Fuel Sample Material")
+    if _skip(fuel, cells, "As Run Test #"):
+        return None
+    row.data["phase"] = "solid"
+    row.data["geometry"] = _solid_geometry(fuel)
+    if fuel and "soot cleaning" in fuel.lower():
+        row.note("maintenance run (soot cleaning), not a burn")
+    _not_in_table(row, "O2", "pressure")
+    row.keep_other("Date", "GMT", "As Run Test #", "Test #", "Sample #")
+    return row.done()
+
+
+def _saffire_large(investigation: str, source_row: int, cells: dict[str, str], flow_column: str,
+                   o2_column: str | None, other: tuple[str, ...]) -> dict | None:
+    if not re.match(r"^S\d+$", (cells.get("Sample Number") or "").strip()):
+        return None  # pre-test flow-visualization rows (F1C1 ...) and blank lines
+    row = _Row(investigation, source_row, cells)
+    fuel = row.text("fuel", "Material")
+    row.data["phase"] = "solid"
+    row.data["geometry"] = _solid_geometry(fuel)
+    if o2_column:
+        row.number_range("o2_pct_min", "o2_pct_max", o2_column, 1.0, *O2_RANGE)
+    else:
+        row.note("O2 not in table")
+    row.number("flow_cm_s", flow_column, 1.0, *FLOW_RANGE_CM_S)
+    row.note("pressure not in table")
+    row.keep_other(*other)
+    return row.done()
+
+
+def saffire1(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    return _saffire_large(investigation, source_row, cells, "Air Flow (cm/s)", "Percent O2",
+                          ("Sample Thickness (cm)", "Sample Length (cm)", "Sample Width (cm)",
+                           "Ignition Power (W)", "Ignition Time (s)", "Burn Time (s)", "Flow Direction"))
+
+
+def saffire3(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    return _saffire_large(investigation, source_row, cells, "Air Flow", None,
+                          ("Sample Thickness", "Sample Length", "Sample Width", "Direction"))
+
+
+def same(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    material = row.text("fuel", "Sample Material")
+    if _skip(material, cells, "Sample #"):
+        return None
+    if material and ":" in material:
+        # Rows 5-8 read e.g. "Kapton: same conditions as 1-4". The conditions are not copied.
+        name, remark = material.split(":", 1)
+        row.data["fuel"] = name.strip()
+        row.note(f"table says '{remark.strip()}'; those values are not copied into this row")
+    row.data["phase"] = "smoke"
+    row.number("flow_cm_s", "Air Flow (cm/s)", 1.0, *FLOW_RANGE_CM_S)
+    _not_in_table(row, "O2", "pressure")
+    row.keep_other("Sample #", "Weight loss rate (mg/min)", "Aging Duration (minutes)")
+    return row.done()
+
+
+def daft(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    row = _Row(investigation, source_row, cells)
+    if _skip(row.text("fuel", "Sample Material"), cells, "Session Name"):
+        return None
+    row.note("dust aerosol for an instrument test, no combustion: phase left empty")
+    _not_in_table(row, "O2", "pressure")
+    row.keep_other("Session Name", "Actual Day", "Hardware Description", "Sampled Location")
+    return row.done()
+
+
+def figure_index(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
+    """PSI-142's table lists figures of a publication, not tests: no row enters tests."""
+    return None
+
+
+MAPPERS.update({
+    "PSI-10_Experimental table_Flame Design_Normal Flame.csv": flame_design_normal,
+    "PSI-10_Experimental table_Flame Design_Inverse Flame.csv": flame_design_inverse,
+    "PSI-107_Experimental table_Spice.csv": spice,
+    "PSI-106_Experimental table_Slice.csv": slice_,
+    "PSI-21_Experimental table_CLD Flame.csv": cld,
+    "PSI-22_Experimental table_ACME E-FIELD Flames.csv": efield,
+    "PSI-23_Experimental table_ACME s-Flame.csv": s_flame,
+    "PSI-26_Experimental table_BASS.csv": bass,
+    "PSI-98_Experimental table_SAFFIRE-1.csv": saffire1,
+    "PSI-100_Experimental table_SAFFIRE-3.csv": saffire3,
+    "PSI-102_Experimental table_SAME.csv": same,
+    "PSI-47_Experimental table_DAFT.csv": daft,
+    "PSI-142_Experimental table_Data Summary Table.csv": figure_index,
+})

@@ -57,7 +57,7 @@ Branch `calculator-agent`. Setup: `uv sync` (needs uv and Python 3.12+); tests: 
 
 **Works now**
 
-- PSI download (24 combustion investigations, 22 test tables) and the data snapshot: 967 tests from 9 tables of 8 investigations, tiers, and 63 relations between investigations.
+- PSI download (24 combustion investigations, 22 test tables) and the data snapshot: 1982 tests from all 22 tables (19 investigations with tests), tiers, and 95 relations between investigations.
 - Read-only SQL over the snapshot (`scripts.query`), a tested calculation catalog (`o2_range`, `coverage_by_environment`, `sql_query`) and calc files (`scripts.run_calc`).
 - Findings checked before they are saved (`scripts.write_finding`): every number in the text must come from the computed values, and every finding validates against `schemas/finding.schema.json`.
 - Charts (Vega-Lite 6) and proof graphs on request, saved as a new version of the finding.
