@@ -32,3 +32,6 @@ data/user/
 stages/04_calcular/output/queries/
 stages/04_calcular/output/drafts/
 stages/04_calcular/output/calcs/
+
+# Team notes and PDFs (local only; files already tracked stay tracked)
+docs/

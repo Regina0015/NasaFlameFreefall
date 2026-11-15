@@ -1,0 +1,178 @@
+{
+  "id": "F-014",
+  "version": 1,
+  "question": "Which solid materials were tested in the Saffire experiments, and at what oxygen levels?",
+  "status": "has_data",
+  "claim": "The Saffire experiments burned SIBAL fabric (Saffire-I and Saffire-III) and silicone, cotton-fiberglass SIBAL, PMMA, and PMMA with Nomex (Saffire-II), all near normal air, between 21.5 and 22.1 % O2, with no O2 reported for Saffire-III.",
+  "summary_student": "Saffire-I burned a cotton-fiberglass fabric called SIBAL in air with 21.5 to 21.7 % oxygen, and Saffire-III burned the same fabric but its table does not give the oxygen level. Saffire-II burned several smaller samples (silicone, SIBAL, PMMA plastic, and PMMA with Nomex) at 21.5 to 22.1 % oxygen. So every Saffire burn with a known oxygen level was close to ordinary air, not the oxygen-rich air planned for a lunar base.",
+  "summary_professional": "Across the 13 Saffire test rows in PSI: PSI-98 (Saffire-I) has 2 SIBAL fabric tests at 21.5 to 21.7 % O2; PSI-100 (Saffire-III) has 2 SIBAL fabric tests with no O2 in the table. PSI-99 (Saffire-II) has silicone (n = 4, 21.5 to 22.1 % O2), cotton-fiberglass SIBAL (n = 1, 22.1 % O2), PMMA (n = 1, 22.0 to 22.1 % O2), PMMA and Nomex (n = 1, 22.1 % O2), plus 2 rows with an empty material cell at 21.9 to 22.1 % O2. Saffire-II O2 values are marked approximate and were derived from measured CO2 production (table Note 1); no Saffire table gives pressure.",
+  "values": {
+    "psi100_sibal_fabric_n_tests": {
+      "value": 2.0,
+      "unit": "tests"
+    },
+    "psi98_sibal_fabric_n_tests": {
+      "value": 2.0,
+      "unit": "tests"
+    },
+    "psi98_sibal_fabric_o2_max": {
+      "value": 21.7,
+      "unit": "% O2"
+    },
+    "psi98_sibal_fabric_o2_min": {
+      "value": 21.5,
+      "unit": "% O2"
+    },
+    "psi99_cotton_fiberglass_sibal_n_tests": {
+      "value": 1.0,
+      "unit": "tests"
+    },
+    "psi99_cotton_fiberglass_sibal_o2_max": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi99_cotton_fiberglass_sibal_o2_min": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi99_material_cell_empty_n_tests": {
+      "value": 2.0,
+      "unit": "tests"
+    },
+    "psi99_material_cell_empty_o2_max": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi99_material_cell_empty_o2_min": {
+      "value": 21.9,
+      "unit": "% O2"
+    },
+    "psi99_pmma_n_tests": {
+      "value": 1.0,
+      "unit": "tests"
+    },
+    "psi99_pmma_nomex_n_tests": {
+      "value": 1.0,
+      "unit": "tests"
+    },
+    "psi99_pmma_nomex_o2_max": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi99_pmma_nomex_o2_min": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi99_pmma_o2_max": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi99_pmma_o2_min": {
+      "value": 22.0,
+      "unit": "% O2"
+    },
+    "psi99_silicone_n_tests": {
+      "value": 4.0,
+      "unit": "tests"
+    },
+    "psi99_silicone_o2_max": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi99_silicone_o2_min": {
+      "value": 21.5,
+      "unit": "% O2"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "WITH t AS (SELECT investigation, source_table, source_row, o2_pct_min, o2_pct_max, field_sources, lower(replace(investigation, '-', '')) || '_' || trim(regexp_replace(lower(coalesce(fuel, 'material cell empty')), '[^a-z]+', '_', 'g'), '_') AS key FROM tests WHERE investigation IN ('PSI-98', 'PSI-99', 'PSI-100') AND phase = 'solid') SELECT key || '_o2_min' AS name, min(o2_pct_min) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_min')) AS source_columns FROM t WHERE o2_pct_min IS NOT NULL GROUP BY key, investigation, source_table UNION ALL SELECT key || '_o2_max' AS name, max(o2_pct_max) AS value, '% O2' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) AS source_columns FROM t WHERE o2_pct_max IS NOT NULL GROUP BY key, investigation, source_table UNION ALL SELECT key || '_n_tests' AS name, count(*) AS value, 'tests' AS unit, investigation, source_table, list(source_row ORDER BY source_row) AS source_rows, list(DISTINCT coalesce(json_extract_string(field_sources, '$.fuel'), json_extract_string(field_sources, '$.o2_pct_min'))) AS source_columns FROM t GROUP BY key, investigation, source_table ORDER BY name"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-98",
+      "doi": "10.60555/0t15-1z43",
+      "table": "PSI-98_Experimental table_SAFFIRE-1.csv",
+      "columns": [
+        "Material",
+        "Percent O2"
+      ],
+      "rows": [
+        1,
+        2
+      ]
+    },
+    {
+      "investigation": "PSI-99",
+      "doi": "10.60555/2chp-m469",
+      "table": "PSI-99_Experimental table_SAFFIRE-2.csv",
+      "columns": [
+        "Material",
+        "Percent O2 (Note 1)"
+      ],
+      "rows": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "investigation": "PSI-100",
+      "doi": "10.60555/040q-4h36",
+      "table": "PSI-100_Experimental table_SAFFIRE-3.csv",
+      "columns": [
+        "Material"
+      ],
+      "rows": [
+        1,
+        2
+      ]
+    }
+  ],
+  "n_tests": 13,
+  "assumptions": [
+    "Material names are taken as written in the PSI tables; SIBAL fabric (Saffire-I and Saffire-III) and cotton-fiberglass SIBAL (Saffire-II) are listed separately because the tables name them differently.",
+    "Each table row is treated as one test, and the O2 range of a material spans the lowest and highest values of its rows, including range cells and approximate (~) cells."
+  ],
+  "limitations": [
+    "The 2 Saffire-II rows with an empty material cell are not assigned to any material; the cell may be a merged cell in the source, but this finding does not guess which material they are.",
+    "Saffire-III does not report O2, so this finding says nothing about its oxygen level.",
+    "No Saffire table gives pressure, so the results cannot be compared with reduced-pressure habitat atmospheres.",
+    "All Saffire burns were in microgravity near normal air; the finding does not cover enriched oxygen, partial gravity, or other investigations such as BASS or BASS-II.",
+    "Only the PSI-98, PSI-99 and PSI-100 tables in the snapshot are covered; later Saffire flights or published results outside PSI are not included."
+  ],
+  "warnings": [
+    "Saffire-II O2 values are approximate and derived from measured CO2 production, not measured directly (table Note 1)."
+  ],
+  "environments": [],
+  "tier": 1,
+  "pillar": "prevention",
+  "visual_offer": {
+    "chart": {
+      "available": true,
+      "idea": "Range bars of the O2 levels tested for each Saffire material, grouped by investigation, with the number of tests on each bar and Saffire-III marked as O2 not reported."
+    },
+    "graph": {
+      "available": true,
+      "idea": "Saffire-I, Saffire-II and Saffire-III linked by shared Saffire hardware and the shared SIBAL fuel, each pointing to its PSI table."
+    },
+    "footnote": "Want a visual? I can draw a chart of the O2 range tested for each Saffire material, or a graph of how the three Saffire investigations share hardware and fuel."
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T08:12:57Z"
+  }
+}

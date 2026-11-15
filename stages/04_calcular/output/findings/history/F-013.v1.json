@@ -1,0 +1,151 @@
+{
+  "id": "F-013",
+  "version": 1,
+  "question": "Is Nomex fabric safe to use inside a lunar habitat at 34% oxygen?",
+  "status": "has_data",
+  "claim": "PSI has no Nomex test at 34% oxygen: the 10 Nomex tests found (BASS-II, BASS, Saffire-II) reached at most 22.2% O2, so the data cannot say whether Nomex is safe or unsafe at 34% O2.",
+  "summary_student": "NASA burned Nomex samples in space in 10 tests, but the most oxygen any of them had was 22.2%, close to normal air. None came near the 34% oxygen asked about for a lunar habitat. So these tests cannot tell us if Nomex is safe there; that would need new tests at higher oxygen.",
+  "summary_professional": "Nomex appears in 10 microgravity tests: BASS-II (PSI-25, n = 3, O2 max 22.2%), BASS (PSI-26, n = 6, O2 not recorded in the table) and Saffire-II (PSI-99, n = 1, O2 approximately 22.1%, derived from measured CO2, combined PMMA and Nomex sample). The number of Nomex tests with O2 at or above 34% is 0 in every investigation. No Nomex row records ambient pressure, so the reduced lunar habitat pressure is also untested for this material.",
+  "values": {
+    "psi25_nomex_tests": {
+      "value": 3.0,
+      "unit": "tests"
+    },
+    "psi26_nomex_tests": {
+      "value": 6.0,
+      "unit": "tests"
+    },
+    "psi99_nomex_tests": {
+      "value": 1.0,
+      "unit": "tests"
+    },
+    "psi25_nomex_tests_with_o2": {
+      "value": 3.0,
+      "unit": "tests"
+    },
+    "psi26_nomex_tests_with_o2": {
+      "value": 0.0,
+      "unit": "tests"
+    },
+    "psi99_nomex_tests_with_o2": {
+      "value": 1.0,
+      "unit": "tests"
+    },
+    "psi25_nomex_o2_max": {
+      "value": 22.2,
+      "unit": "% O2"
+    },
+    "psi99_nomex_o2_max": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi25_nomex_tests_o2_at_or_above_34": {
+      "value": 0.0,
+      "unit": "tests"
+    },
+    "psi26_nomex_tests_o2_at_or_above_34": {
+      "value": 0.0,
+      "unit": "tests"
+    },
+    "psi99_nomex_tests_o2_at_or_above_34": {
+      "value": 0.0,
+      "unit": "tests"
+    },
+    "o2_threshold_lunar_question": {
+      "value": 34.0,
+      "unit": "% O2"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "sql_query",
+    "params": {
+      "sql": "WITH n AS (SELECT * FROM tests WHERE lower(fuel) LIKE '%nomex%'), g AS (SELECT investigation, source_table, lower(replace(investigation, '-', '')) AS p, count(*) AS n_all, count(o2_pct_max) AS n_o2, max(o2_pct_max) AS o2_max, count(*) FILTER (WHERE o2_pct_max >= 34) AS n_hi, list(source_row ORDER BY source_row) AS rows_all, list(source_row ORDER BY source_row) FILTER (WHERE o2_pct_max IS NOT NULL) AS rows_o2, list(DISTINCT json_extract_string(field_sources, '$.fuel')) AS c_fuel, list(DISTINCT json_extract_string(field_sources, '$.o2_pct_max')) FILTER (WHERE o2_pct_max IS NOT NULL) AS c_o2 FROM n GROUP BY investigation, source_table) SELECT p || '_nomex_tests' AS name, n_all AS value, 'tests' AS unit, investigation, source_table, rows_all AS source_rows, c_fuel AS source_columns FROM g UNION ALL SELECT p || '_nomex_tests_with_o2', n_o2, 'tests', investigation, source_table, rows_all, c_fuel FROM g UNION ALL SELECT p || '_nomex_o2_max', o2_max, '% O2', investigation, source_table, rows_o2, c_o2 FROM g WHERE n_o2 > 0 UNION ALL SELECT p || '_nomex_tests_o2_at_or_above_34', n_hi, 'tests', investigation, source_table, rows_all, c_fuel FROM g UNION ALL SELECT 'o2_threshold_lunar_question', 34, '% O2', investigation, source_table, rows_o2, c_o2 FROM g WHERE investigation = 'PSI-25'"
+    },
+    "formula": "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-25",
+      "doi": "10.60555/4qc4-de67",
+      "table": "PSI-25_Experimental table_BASS-II.csv",
+      "columns": [
+        "Calibrated initial O2 % by vol",
+        "Fuel Sample Material"
+      ],
+      "rows": [
+        23,
+        24,
+        25
+      ]
+    },
+    {
+      "investigation": "PSI-26",
+      "doi": "10.60555/58h4-dy80",
+      "table": "PSI-26_Experimental table_BASS.csv",
+      "columns": [
+        "Fuel Sample Material"
+      ],
+      "rows": [
+        14,
+        24,
+        25,
+        39,
+        57,
+        58
+      ]
+    },
+    {
+      "investigation": "PSI-99",
+      "doi": "10.60555/2chp-m469",
+      "table": "PSI-99_Experimental table_SAFFIRE-2.csv",
+      "columns": [
+        "Material",
+        "Percent O2 (Note 1)"
+      ],
+      "rows": [
+        7
+      ]
+    }
+  ],
+  "n_tests": 10,
+  "assumptions": [
+    "Every sample whose fuel name contains 'Nomex' (Nomex natural III, Nomex blend, PMMA & Nomex) was counted as Nomex.",
+    "The highest O2 value of each row (o2_pct_max) was compared with the 34% threshold from the question.",
+    "The Saffire-II O2 value is approximate and was derived from measured CO2 production, as the PSI table notes."
+  ],
+  "limitations": [
+    "No Nomex test reached 34% O2, so this finding does not show that Nomex is safe or unsafe at that level; it only shows the gap in the data.",
+    "All Nomex tests were in microgravity; there is no lunar-gravity or Earth-gravity Nomex result in these tables.",
+    "No Nomex row records ambient pressure, so the effect of the reduced lunar habitat pressure cannot be judged.",
+    "The BASS (PSI-26) table gives no O2 value, so its 6 Nomex tests do not bound the oxygen level.",
+    "The Saffire-II test burned PMMA and Nomex together, so it is not a clean Nomex-only result.",
+    "Only PSI tables were searched; NASA material flammability tests outside PSI (for example NASA-STD-6001 results) are not included."
+  ],
+  "warnings": [
+    "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+  ],
+  "environments": [
+    "lunar_base"
+  ],
+  "tier": 1,
+  "pillar": "prevention",
+  "visual_offer": {
+    "chart": {
+      "available": true,
+      "idea": "Bars of the highest O2 at which Nomex was tested in BASS-II and Saffire-II, with a dashed line at the 34% O2 lunar habitat level from the question."
+    },
+    "graph": {
+      "available": true,
+      "idea": "BASS, BASS-II and Saffire-II linked by their shared Nomex fuel and to the tables and rows behind this finding."
+    },
+    "footnote": "Want a visual? I can draw a chart of the highest oxygen level at which Nomex was tested in each investigation against the 34% lunar habitat level, or a graph linking the three investigations that burned Nomex."
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T08:12:47Z"
+  }
+}

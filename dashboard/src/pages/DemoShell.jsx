@@ -54,7 +54,7 @@ export default function DemoShell({ mode, initialView, session, theme, onToggleT
         </div>
       </header>
 
-      <main className="shell-grid" id="main">
+      <main className="shell-grid" id="main" tabIndex={-1}>
         <h1 className="visually-hidden">Dashboard preview</h1>
 
         <section className="shell-stage" aria-label="Station model">
@@ -70,7 +70,7 @@ export default function DemoShell({ mode, initialView, session, theme, onToggleT
             <Segmented label="Model style" options={MODELS} value={model} onChange={setModel} />
           </div>
           <p className="stage-note shell-stage-note">
-            Conceptual model, not a real spacecraft. No telemetry is shown. Drag to rotate.
+            Conceptual model, not a real spacecraft. No telemetry is shown. Drag or use the arrows to rotate.
           </p>
         </section>
 

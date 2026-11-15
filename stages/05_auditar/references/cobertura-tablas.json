@@ -117,7 +117,8 @@
         "column": "pinit (atm)",
         "unit": "atm"
       },
-      "note": "inverse flame: XO2 is the burner stream, as in CFI-G Inverse. 11 cells are text ('RAMP', 'LOW O2')"
+      "note": "inverse flame: XO2 is the burner stream, as in CFI-G Inverse. 11 cells are text ('RAMP', 'LOW O2')",
+      "o2_is_burner_stream": true
     },
     "PSI-10_Experimental table_Flame Design_Normal Flame.csv": {
       "o2": [
@@ -142,7 +143,8 @@
         "column": "approx p (bar)",
         "unit": "bar"
       },
-      "note": "XO2 is the burner stream, not the chamber"
+      "note": "XO2 is the burner stream, not the chamber",
+      "o2_is_burner_stream": true
     },
     "PSI-159_Experimental table_CFI-G_Normal Flames.csv": {
       "o2": [

@@ -518,6 +518,13 @@ class TestCoverageByEnvironment(Base):
         c3 = next(c for c in a["checks"] if c["id"] == "C3")["detail"]
         self.assertIn("Flame Design", c3)  # la tabla no citada sí tenía una prueba al 45%
 
+    def test_burner_stream_table_is_not_a_room_atmosphere(self):
+        # Inverse flames: XO2 is the burner stream, not the chamber, so they never match an environment.
+        self.cov["tables"][self.GAS2]["o2_is_burner_stream"] = True
+        self.reload()
+        self.assertEqual(self.result(self.audit(self.finding(gas_match=2, with_gas2=False)), "C3"), "pass")
+        self.assertEqual(self.result(self.audit(self.finding()), "C3"), "fail")
+
     def test_zero_with_unknown_o2_fails_c6(self):
         f = self.finding()
         f["values"]["solid_o2_match"] = {"value": 0, "unit": "tests"}

@@ -62,7 +62,9 @@ The Auditor repeats every `sql_query` and rejects the finding if these are broke
 - **Units:** counts use `tests`, `rows`, `days` or `test days`; oxygen uses `% O2`; other measures use `atm`, `psi`, `kPa`, `Pa`, `cm/s`, `mm/s`, `m/s`, `mm`, `cm`, `m`, `s`, `ms`, `K`, `ppm`, `W`, `kW`, `g` or `mg`. No other unit (for example not `distinct O2 levels`).
 - **A count equals its rows:** `source_rows` must list exactly the rows counted. Never return a value of 0 with rows listed (for example "rows with an outcome" over a table that has none): say that in `limitations` instead.
 
-Do not write numbers into the SQL other than thresholds taken from the question or from `_config/environments.md`.
+Do not write numbers into the SQL other than thresholds taken from the question or from `_config/environments.md`. A threshold goes in the `WHERE` clause, never as a returned value: the text may quote any number written in the SQL. `run_calc` refuses unknown units and counts that do not equal their rows; fix the SQL, do not work around it.
+
+**Saving a new version:** if you were told to replace a finding (for example `F-002`) because the data changed, add `--replace F-002` to `write_finding`.
 
 ## Step 2: write the text
 

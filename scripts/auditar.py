@@ -749,6 +749,8 @@ def recalc_coverage_by_environment(finding: dict, sources: Sources) -> Recalc:
         phase = phases.get(inv)
         if not phase:
             continue  # sin fase en el inventario (p. ej. estudios en tierra): no entra en ninguna fase
+        if entry.get("o2_is_burner_stream"):
+            continue  # llama inversa: el O2 es el chorro del quemador, no el ambiente; no es una atmósfera
         st = stats.setdefault(phase, {"tests": 0, "o2_match": 0, "o2_and_pressure_match": 0,
                                       "pressure_unknown": 0, "o2_unknown": 0})
         table, err = sources.table(tname)

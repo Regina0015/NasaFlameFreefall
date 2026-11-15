@@ -73,14 +73,11 @@ Setup: `uv sync` (needs uv and Python 3.12+); tests: `uv run python -m unittest 
 | F-001, F-006, F-008, F-009 | C | C8 (needs Ollama) |
 | F-003, F-004, F-005 | C | C8, and a person answers Q8 (does the SQL answer the question?) in `stages/05_auditar/output/reviews/F-XXX.json` |
 | F-007 | rejected | C8 and Q8: a no-data finding must pass the text review |
-| F-002 (v3) | rejected | C3: 20 PSI-10 gas tests lack pressure in the database (see below), then C8 |
+| F-002 (v5) | C | C7 (0.2% of the cells it needs are unreadable) and C8. Inverse flames are left out: their oxygen is the burner stream, not the room |
 
 **Waiting on teammates**
 
-- **Database owner:**
-  - Add the pressure fix to your copy of the PSI-10 mapper: `_flame_design_pressure` in `scripts/mappers.py` reads `pmean (atm)` and, only when it is empty, `pinit (atm)`, noting it in `problems`. The two differ by about 0.5% in the 187 rows that have both. It fills the pressure of 20 tests (0.93 atm), so `gas_pressure_unknown` in F-002 goes from 36 to 16 and matches the Auditor; the 66 tests at lunar oxygen and pressure do not change. Copy only that function: your mapper is newer than the repository one (it treats PSI-69 "0 mmHg" as not recorded, which this one does not do yet). Then reload the database; we run `pull_db` and regenerate F-002.
-  - Add the findings table (and audits) to `supabase/schema.sql`; until then the dashboard findings section shows sample data.
-  - `load_snapshot.py` is not in the repository yet.
+- **Database owner:** done: the pressure fix, the `findings` table in `supabase/schema.sql` and `scripts/load_snapshot.py` are merged, and the database matches `pull_db`. Next: load the findings and their audits into the `findings` table.
 - **Team:** review three Investigator records against PSI, every line of `tier-review.md`, and the use of `transit_vehicle`; then run `push_investigations --apply`. Tier changes go in `_config/tiers.md`.
 - **Auditor and model:** see "Connecting the Auditor to a teammate's model" below.
 

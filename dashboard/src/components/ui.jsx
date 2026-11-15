@@ -38,12 +38,16 @@ export function MoonIcon() {
 export function Brand() {
   return (
     <div className="brand">
-      <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true" className="brand-mark">
-        <circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
-        <ellipse cx="16" cy="16" rx="13" ry="5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-        <circle cx="16" cy="16" r="3" fill="currentColor" />
-      </svg>
-      <span className="brand-name">NasaTwisters</span>
+      {/* The logo is square with transparency; width and height keep its proportions. */}
+      <img
+        className="brand-mark"
+        src={`${import.meta.env.BASE_URL}branding/logo.png`}
+        width="36"
+        height="36"
+        alt=""
+        decoding="async"
+      />
+      <span className="brand-name">FlameTrace</span>
       <span className="brand-sub">Flame in Freefall</span>
     </div>
   )
