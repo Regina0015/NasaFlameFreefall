@@ -3,6 +3,7 @@ import copy
 import json
 import re
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 
 from scripts.paths import FINDINGS_DIR
@@ -56,3 +57,18 @@ def bump_version(finding: dict, now: str, dir: Path = FINDINGS_DIR) -> dict:
     bumped["version"] = version + 1
     bumped.setdefault("generated_by", {})["date"] = now
     return bumped
+
+
+def save_new_version(finding: dict, field: str, value, validator, dir: Path = FINDINGS_DIR,
+                     now: str | None = None) -> tuple[Path | None, list[str]]:
+    """Set one field, check the schema, then save it as the next version (the old file goes to history/).
+
+    Nothing is written when the schema check fails."""
+    candidate = copy.deepcopy(finding)
+    candidate[field] = value
+    problems = [f"schema: {'.'.join(map(str, e.absolute_path)) or 'finding'}: {e.message}" for e in validator.iter_errors(candidate)]
+    if problems:
+        return None, problems
+    updated = bump_version(finding, now or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), dir)
+    updated[field] = value
+    return save(updated, dir), []

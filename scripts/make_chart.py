@@ -6,10 +6,8 @@ and prints its path, or prints "no chart for this finding: <reason>" and exits 1
 The chart's data come from the finding's `values` and method params: nothing is recomputed.
 """
 import argparse
-import copy
 import csv
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 import altair as alt
@@ -132,17 +130,11 @@ def main(argv: list[str] | None = None, findings_dir: Path = FINDINGS_DIR, snaps
     except (ValueError, OSError) as error:
         print(f"problems:\n- {error}")
         return 1
-    candidate = copy.deepcopy(finding)
-    candidate["chart"] = spec
-    errors = [f"schema: {'.'.join(map(str, e.absolute_path)) or 'finding'}: {e.message}" for e in VALIDATOR.iter_errors(candidate)]
-    if errors:
-        print("problems:\n" + "\n".join(f"- {e}" for e in errors))
+    path, problems = findings.save_new_version(finding, "chart", spec, VALIDATOR, findings_dir)
+    if problems:
+        print("problems:\n" + "\n".join(f"- {p}" for p in problems))
         return 1
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    updated = findings.bump_version(finding, now, findings_dir)
-    updated["chart"] = spec
-    path = findings.save(updated, findings_dir)
-    print(f"saved {updated['id']} version {updated['version']}: {path}")
+    print(f"saved {finding['id']} version {finding['version'] + 1}: {path}")
     return 0
 
 
