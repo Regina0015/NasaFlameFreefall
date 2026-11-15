@@ -1,4 +1,5 @@
 import contextlib
+import hashlib
 import io
 import json
 import os
@@ -10,14 +11,15 @@ from pathlib import Path
 
 from scripts.answer import format_answer
 from scripts.answer import main as answer_main
-from scripts.audit_step import auditor_command, run_audit, split_command
+from scripts.audit_step import GRADES, PSI_DIR, auditor_command, read_verdict, run_audit
 from scripts.findings import save
 from scripts.paths import ROOT
 from scripts.tests.helpers import NO_OFFER, fixture_finding
 
 FIXTURES = Path(__file__).parent / "fixtures"
 FINDING = fixture_finding()
-PY = f'"{sys.executable}"'
+PY = sys.executable
+FAKE = str(FIXTURES / "fake_auditor.py")
 
 
 class AuditStepTest(unittest.TestCase):
@@ -25,65 +27,66 @@ class AuditStepTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.dir = Path(self.tmp.name) / "dir with spaces"
         self.finding_path = save(FINDING, self.dir)
-        self.verdict_path = self.dir / "F-001.v1.audit.json"
+        self.out = Path(self.tmp.name) / "out"
+        self.verdict_path = self.out / "audits" / "F-001.json"
 
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_pending_without_auditor(self):
-        v = run_audit(self.finding_path, None)
-        self.assertEqual(v, {"finding": "F-001", "version": 1, "status": "pending audit"})
-        self.assertTrue(self.verdict_path.exists())
-        self.assertEqual(run_audit(self.finding_path, "")["status"], "pending audit")
+    def fake(self):
+        return [PY, FAKE, "--only", "F-001", "--findings", str(self.dir), "--out", str(self.out)]
 
-    def test_fake_auditor_in_path_with_spaces(self):
-        cmd = f'{PY} "{FIXTURES / "fake_auditor.py"}"'
-        self.assertEqual(run_audit(self.finding_path, cmd)["grade"], "B")
-        self.assertEqual(json.loads(self.verdict_path.read_text(encoding="utf-8"))["grade"], "B")
+    def verdict(self, **changes):
+        data = self.finding_path.read_bytes()
+        v = {"finding_id": "F-001", "finding_version": 1, "finding_sha256": hashlib.sha256(data).hexdigest(), "grade": "A"}
+        self.verdict_path.parent.mkdir(parents=True, exist_ok=True)
+        self.verdict_path.write_text(json.dumps({**v, **changes}), encoding="utf-8")
+
+    def test_command_audits_one_finding_with_the_psi_files(self):
+        cmd = auditor_command("F-001", self.dir, self.out)
+        self.assertEqual(cmd[:2], [sys.executable, str(ROOT / "scripts" / "auditar.py")])
+        for flag, value in (("--only", "F-001"), ("--findings", str(self.dir)), ("--tables", str(PSI_DIR)),
+                            ("--fiches", str(PSI_DIR)), ("--out", str(self.out))):
+            self.assertEqual(cmd[cmd.index(flag) + 1], value)
+
+    def test_verdict_of_the_auditor_is_returned(self):
+        v = run_audit(self.finding_path, self.fake(), self.out)
+        self.assertEqual(v["grade"], "B")
+        self.assertFalse((self.dir / "F-001.v1.audit.json").exists())
+
+    def test_verdict_must_match_id_version_hash_and_grade(self):
+        self.verdict()
+        self.assertEqual(read_verdict(self.finding_path, self.out / "audits")["grade"], "A")
+        for changes in ({"finding_id": "F-002"}, {"finding_version": 2}, {"finding_sha256": "0" * 64}, {"grade": "A+"}):
+            self.verdict(**changes)
+            self.assertIsNone(read_verdict(self.finding_path, self.out / "audits"), changes)
+        self.verdict_path.write_text("not json", encoding="utf-8")
+        self.assertIsNone(read_verdict(self.finding_path, self.out / "audits"))
+        self.assertIsNone(read_verdict(self.finding_path, self.out / "missing"))
 
     def test_failing_auditor_is_reported(self):
-        v = run_audit(self.finding_path, f'{PY} -c "import sys; sys.exit(3)"')
-        self.assertEqual(v["status"], "audit failed to run")
-        self.assertNotIn("grade", v)
-        self.assertEqual(json.loads(self.verdict_path.read_text(encoding="utf-8"))["status"], "audit failed to run")
+        v = run_audit(self.finding_path, [PY, "-c", "import sys; sys.exit(3)"], self.out)
+        self.assertEqual(v, {"finding": "F-001", "version": 1, "status": "audit failed to run", "detail": "exit code 3"})
 
-    def test_auditor_that_writes_nothing_failed(self):
-        self.assertEqual(run_audit(self.finding_path, f'{PY} -c "print(1)"')["status"], "audit failed to run")
-
-    def test_stale_verdict_is_not_reused(self):
-        self.verdict_path.write_text(json.dumps({"finding": "F-001", "version": 1, "grade": "A"}), encoding="utf-8")
-        v = run_audit(self.finding_path, f'{PY} -c "print(1)"')
+    def test_old_verdict_is_not_reused(self):
+        self.verdict()
+        v = run_audit(self.finding_path, [PY, "-c", "print(1)"], self.out)
         self.assertEqual(v["status"], "audit failed to run")
         self.assertNotIn("grade", v)
 
     def test_stderr_tail_is_kept(self):
-        v = run_audit(self.finding_path, f'{PY} -c "import sys; sys.stderr.write(\'x\' * 600 + \'END\'); sys.exit(1)"')
+        v = run_audit(self.finding_path, [PY, "-c", "import sys; sys.stderr.write('x' * 600 + 'END'); sys.exit(1)"], self.out)
         self.assertTrue(v["detail"].endswith("END"))
         self.assertLessEqual(len(v["detail"]), 500)
 
     def test_missing_program_and_timeout(self):
-        self.assertEqual(run_audit(self.finding_path, '"C:/no/such/auditor.exe"')["status"], "audit failed to run")
-        v = run_audit(self.finding_path, f'{PY} -c "import time; time.sleep(5)"', timeout=1)
-        self.assertEqual(v["status"], "audit failed to run")
+        self.assertEqual(run_audit(self.finding_path, ["C:/no/such/auditor.exe"], self.out)["status"], "audit failed to run")
+        v = run_audit(self.finding_path, [PY, "-c", "import time; time.sleep(5)"], self.out, timeout=1)
         self.assertIn("timed out", v["detail"])
 
-    def test_bad_verdict_json(self):
-        cmd = f'{PY} -c "import pathlib, sys; pathlib.Path(sys.argv[1]).with_name(\'F-001.v1.audit.json\').write_text(\'not json\')"'
-        self.assertEqual(run_audit(self.finding_path, cmd)["status"], "audit failed to run")
-
-    def test_auditor_command_from_environment_then_dotenv(self):
-        env_file = Path(self.tmp.name) / ".env"
-        env_file.write_text("# comment\nSUPABASE_URL=x\nAUDITOR_CMD = python audit.py --strict\n", encoding="utf-8")
-        self.assertEqual(auditor_command({}, env_file), "python audit.py --strict")
-        self.assertEqual(auditor_command({"AUDITOR_CMD": "other"}, env_file), "other")
-        env_file.write_text("AUDITOR_CMD=\n", encoding="utf-8")
-        self.assertIsNone(auditor_command({}, env_file))
-        self.assertIsNone(auditor_command({}, Path(self.tmp.name) / "missing.env"))
-
-    @unittest.skipUnless(os.name == "nt", "Windows path rules")
-    def test_split_command_keeps_windows_paths(self):
-        self.assertEqual(split_command(r"C:\tools\audit.exe --x"), [r"C:\tools\audit.exe", "--x"])
-        self.assertEqual(split_command(r'"C:\Program Files\a.exe" "b c"'), [r"C:\Program Files\a.exe", "b c"])
+    def test_real_auditor_reads_our_finding(self):
+        v = run_audit(self.finding_path, auditor_command("F-001", self.dir, self.out) + ["--no-model"], self.out, timeout=120)
+        self.assertIn(v.get("grade"), GRADES, v)
 
 
 class AnswerTest(unittest.TestCase):
@@ -117,15 +120,23 @@ class AnswerTest(unittest.TestCase):
         lines = format_answer(quiet, {}).splitlines()
         self.assertEqual(lines[-1], "Sources: none")
 
-    def test_answer_cli_reads_the_audit_of_the_current_version(self):
+    def test_failed_checks_are_listed_with_the_grade(self):
+        audit = {"grade": "rejected", "checks": [{"id": "C3", "result": "fail"}, {"id": "C5", "result": "pass"},
+                                                 {"id": "C8", "result": "fail"}]}
+        self.assertIn("Grade: rejected (failed: C3, C8)", format_answer(FINDING, audit).splitlines())
+
+    def test_answer_cli_reads_the_auditor_verdict_for_this_file(self):
         with tempfile.TemporaryDirectory() as d:
-            folder = Path(d)
-            save(FINDING, folder)
-            (folder / "F-001.v1.audit.json").write_text(json.dumps({"finding": "F-001", "version": 1, "grade": "A"}), encoding="utf-8")
-            out = io.StringIO()
-            with contextlib.redirect_stdout(out):
-                self.assertEqual(answer_main(["F-001"], findings_dir=folder), 0)
-            self.assertIn("Grade: A", out.getvalue())
+            folder, audits = Path(d) / "findings", Path(d) / "audits"
+            data = save(FINDING, folder).read_bytes()
+            audits.mkdir()
+            verdict = {"finding_id": "F-001", "finding_version": 1, "finding_sha256": hashlib.sha256(data).hexdigest(), "grade": "A"}
+            for sha, shown in ((verdict["finding_sha256"], "Grade: A"), ("0" * 64, "Grade: pending audit")):
+                (audits / "F-001.json").write_text(json.dumps(dict(verdict, finding_sha256=sha)), encoding="utf-8")
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    self.assertEqual(answer_main(["F-001"], findings_dir=folder, audits_dir=audits), 0)
+                self.assertIn(shown, out.getvalue().splitlines())
 
 
 class Utf8OutputTest(unittest.TestCase):

@@ -1,10 +1,18 @@
-"""Stand-in Auditor for tests: writes a fixed verdict (grade B) next to the finding it is given."""
+"""Stand-in for scripts/auditar.py in tests: writes a grade-B verdict for --only into <--out>/audits/."""
+import argparse
+import hashlib
 import json
-import sys
 from pathlib import Path
 
-finding_path = Path(sys.argv[1])
-finding = json.loads(finding_path.read_text(encoding="utf-8"))
-verdict = {"finding": finding["id"], "version": finding["version"], "status": "audited", "grade": "B", "checks": []}
-out = finding_path.parent / f"{finding['id']}.v{finding['version']}.audit.json"
-out.write_text(json.dumps(verdict), encoding="utf-8")
+parser = argparse.ArgumentParser()
+for name in ("--only", "--findings", "--out", "--tables", "--fiches"):
+    parser.add_argument(name)
+args, _ = parser.parse_known_args()
+data = (Path(args.findings) / f"{args.only}.json").read_bytes()
+finding = json.loads(data)
+verdict = {"finding_id": finding["id"], "finding_version": finding["version"],
+           "finding_sha256": hashlib.sha256(data).hexdigest(), "grade": "B",
+           "checks": [{"id": "C5", "result": "fail"}]}
+out = Path(args.out) / "audits"
+out.mkdir(parents=True, exist_ok=True)
+(out / f"{args.only}.json").write_text(json.dumps(verdict), encoding="utf-8")

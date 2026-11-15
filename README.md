@@ -66,7 +66,7 @@ Branch `calculator-agent`. Setup: `uv sync` (needs uv and Python 3.12+); tests: 
 
 **Waiting on teammates**
 
-- **Auditor:** set `AUDITOR_CMD` in `.env` (see `.env.example`). Until then every finding is `pending audit`; no grade is ever invented.
+- **Auditor:** `scripts.audit_step` runs the teammate's `scripts/auditar.py` and reads `stages/05_auditar/output/audits/`. Its model step (C8) needs Ollama with `gemma4:e4b-it-qat`; recalculators for `coverage_by_environment` and `sql_query`, and a total-count value name (`_n_tests`), are still to come. No grade is ever invented.
 - **Database:** run `/investigate` once from a fresh pull, review its output, then define the findings table; the publish script comes after that. If the database export changes the snapshot columns, the query tool reports the missing ones by name.
 - **Dashboard:** reads findings from the database; it draws `chart` (Vega-Lite 6) and `graph` from the finding file.
 

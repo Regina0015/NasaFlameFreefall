@@ -1,16 +1,14 @@
-"""Hand a finding to the Auditor (owned by a teammate) and collect its verdict.
+"""Hand a finding to the Auditor (scripts/auditar.py, owned by a teammate) and read its verdict.
 
 Usage (from the repository root): uv run python -m scripts.audit_step F-001
-The Auditor command comes from AUDITOR_CMD (environment first, then .env). It is run
-with the finding path as its last argument, as a list of arguments (no shell), and
-must write its verdict to <finding dir>/F-001.v<N>.audit.json. With no command the
-verdict is "pending audit"; if the command fails or writes nothing it is
-"audit failed to run". This step never invents a grade.
+Runs auditar.py on that one finding, with the PSI tables and records of stage 01, and
+reads its verdict from stages/05_auditar/output/audits/F-001.json. A verdict counts only
+if its finding id, version and SHA-256 match the finding file and it was written by this
+run; otherwise the result is "audit failed to run". This step never invents a grade.
 """
 import argparse
+import hashlib
 import json
-import os
-import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -19,88 +17,87 @@ from scripts import findings
 from scripts.cli import utf8_output
 from scripts.paths import FINDINGS_DIR, ROOT
 
+AUDITOR = ROOT / "scripts" / "auditar.py"
+PSI_DIR = ROOT / "stages" / "01_ingesta" / "output" / "psi"
+AUDIT_OUT = ROOT / "stages" / "05_auditar" / "output"
+AUDITS_DIR = AUDIT_OUT / "audits"
+GRADES = ("A", "B", "C", "no_data", "rejected")
 TIMEOUT_S = 300
 DETAIL_LENGTH = 500
 PENDING = "pending audit"
 FAILED = "audit failed to run"
-ENV_FILE = ROOT / ".env"
 
 
-def auditor_command(environ=None, env_path: Path = ENV_FILE) -> str | None:
-    """AUDITOR_CMD from the environment, else from simple KEY=VALUE lines in .env; None when empty."""
-    environ = os.environ if environ is None else environ
-    value = environ.get("AUDITOR_CMD") or None
-    if value is None and Path(env_path).is_file():
-        for line in Path(env_path).read_text(encoding="utf-8-sig").splitlines():
-            key, sep, rest = line.partition("=")
-            if sep and not line.lstrip().startswith("#") and key.strip() == "AUDITOR_CMD":
-                value = rest
-    value = (value or "").strip()
-    return value or None
+def auditor_command(fid: str, findings_dir: Path, out_dir: Path) -> list[str]:
+    """auditar.py on one finding; no shell, the same Python as this step."""
+    return [sys.executable, str(AUDITOR), "--only", fid, "--findings", str(findings_dir),
+            "--tables", str(PSI_DIR), "--fiches", str(PSI_DIR), "--out", str(out_dir)]
 
 
-def split_command(command: str) -> list[str]:
-    """Split a command line into arguments; on Windows backslashes in paths are kept."""
-    if os.name != "nt":
-        return shlex.split(command)
-    parts = shlex.split(command, posix=False)
-    return [p[1:-1] if len(p) >= 2 and p[0] == p[-1] == '"' else p for p in parts]
+def _finding(finding_path: Path) -> tuple[dict, bytes]:
+    data = Path(finding_path).read_bytes()
+    finding = json.loads(data)
+    version = finding.get("version")
+    if isinstance(version, bool) or not isinstance(version, int) or version < 1:
+        raise ValueError(f"{finding.get('id')} has no valid version")
+    findings.check_id(finding.get("id"))
+    return finding, data
 
 
-def _write(path: Path, verdict: dict) -> dict:
-    path.write_text(json.dumps(verdict, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+def read_verdict(finding_path: Path, audits_dir: Path = AUDITS_DIR) -> dict | None:
+    """The Auditor's verdict for exactly this finding file, or None."""
+    finding, data = _finding(finding_path)
+    try:
+        verdict = json.loads((Path(audits_dir) / f"{finding['id']}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(verdict, dict):
+        return None
+    if (verdict.get("finding_id") != finding["id"] or verdict.get("finding_version") != finding["version"]
+            or verdict.get("finding_sha256") != hashlib.sha256(data).hexdigest() or verdict.get("grade") not in GRADES):
+        return None
     return verdict
 
 
-def run_audit(finding_path: Path, auditor_cmd: str | None, timeout: int = TIMEOUT_S) -> dict:
-    finding_path = Path(finding_path).resolve()
-    finding = json.loads(finding_path.read_text(encoding="utf-8"))
-    fid = findings.check_id(finding.get("id"))
-    version = finding.get("version")
-    if isinstance(version, bool) or not isinstance(version, int) or version < 1:
-        raise ValueError(f"{fid} has no valid version")
-    out = finding_path.parent / f"{fid}.v{version}.audit.json"
-    base = {"finding": fid, "version": version}
-    if not auditor_cmd:
-        return _write(out, {**base, "status": PENDING})
+def run_audit(finding_path: Path, command: list[str], out_dir: Path = AUDIT_OUT, timeout: int = TIMEOUT_S) -> dict:
+    finding, _ = _finding(finding_path)
+    verdict_path = Path(out_dir) / "audits" / f"{finding['id']}.json"
+    before = verdict_path.stat().st_mtime_ns if verdict_path.is_file() else None
 
     def failed(detail: str) -> dict:
-        return _write(out, {**base, "status": FAILED, "detail": detail[-DETAIL_LENGTH:]})
+        return {"finding": finding["id"], "version": finding["version"], "status": FAILED, "detail": detail[-DETAIL_LENGTH:]}
 
-    out.unlink(missing_ok=True)  # an old verdict must never stand in for this run
     try:
-        proc = subprocess.run(split_command(auditor_cmd) + [str(finding_path)], capture_output=True, text=True,
-                              encoding="utf-8", errors="replace", timeout=timeout, stdin=subprocess.DEVNULL)
+        proc = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                              timeout=timeout, stdin=subprocess.DEVNULL)
     except subprocess.TimeoutExpired:
         return failed(f"timed out after {timeout} s")
     except (OSError, ValueError) as error:
         return failed(f"could not start the Auditor: {error}")
-    if proc.returncode != 0 or not out.is_file():
-        reason = f"exit code {proc.returncode}" if proc.returncode else "the Auditor wrote no verdict file"
-        return failed((proc.stderr or "").strip() or reason)
-    try:
-        verdict = json.loads(out.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        return failed("the verdict file is not valid JSON")
-    if not isinstance(verdict, dict):
-        return failed("the verdict file is not a JSON object")
-    return verdict
+    if proc.returncode != 0:
+        return failed((proc.stderr or "").strip() or f"exit code {proc.returncode}")
+    fresh = verdict_path.is_file() and verdict_path.stat().st_mtime_ns != before
+    verdict = read_verdict(finding_path, verdict_path.parent) if fresh else None
+    return verdict or failed("the Auditor wrote no verdict for this version of the finding")
 
 
-def main(argv: list[str] | None = None, findings_dir: Path = FINDINGS_DIR, environ=None, env_path: Path = ENV_FILE) -> int:
+def main(argv: list[str] | None = None, findings_dir: Path = FINDINGS_DIR, out_dir: Path = AUDIT_OUT) -> int:
     utf8_output()
     parser = argparse.ArgumentParser(description="Run the Auditor on a finding.")
     parser.add_argument("finding_id")
     args = parser.parse_args(argv)
     try:
-        path = Path(findings_dir) / f"{findings.check_id(args.finding_id)}.json"
+        fid = findings.check_id(args.finding_id)
+        path = Path(findings_dir) / f"{fid}.json"
         if not path.is_file():
-            raise ValueError(f"{args.finding_id} not found in {findings_dir}")
-        verdict = run_audit(path, auditor_command(environ, env_path))
+            raise ValueError(f"{fid} not found in {findings_dir}")
+        verdict = run_audit(path, auditor_command(fid, findings_dir, out_dir), out_dir)
     except (ValueError, OSError) as error:
         print(json.dumps({"error": str(error)}, ensure_ascii=False))
         return 1
-    print(json.dumps(verdict, ensure_ascii=False))
+    failed = [c.get("id") for c in verdict.get("checks") or [] if isinstance(c, dict) and c.get("result") == "fail"]
+    summary = {"finding": fid, "grade": verdict["grade"], "failed": failed} if "grade" in verdict else verdict
+    print(json.dumps(summary, ensure_ascii=False))
     return 0
 
 

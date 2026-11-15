@@ -1,17 +1,16 @@
 """Print a finding for the person who asked, with its audit grade.
 
 Usage (from the repository root): uv run python -m scripts.answer F-001
-Reads the current version of the finding and its verdict F-001.v<N>.audit.json
-(no verdict file means "pending audit").
+Reads the current version of the finding and the Auditor's verdict in
+stages/05_auditar/output/audits/F-001.json; a verdict for other content means "pending audit".
 """
 import argparse
-import json
 import re
 import sys
 from pathlib import Path
 
 from scripts import findings
-from scripts.audit_step import FAILED, PENDING
+from scripts.audit_step import AUDITS_DIR, FAILED, PENDING, read_verdict
 from scripts.cli import utf8_output
 from scripts.paths import FINDINGS_DIR
 
@@ -28,7 +27,8 @@ def format_answer(finding: dict, audit: dict) -> str:
     grade = audit.get("grade")
     status = audit.get("status")
     if grade not in (None, ""):
-        shown = grade
+        failed = [c.get("id") for c in audit.get("checks") or [] if isinstance(c, dict) and c.get("result") == "fail"]
+        shown = f"{grade} (failed: {', '.join(map(str, failed))})" if failed else grade
     elif status == FAILED:
         shown = FAILED
     else:
@@ -45,15 +45,14 @@ def format_answer(finding: dict, audit: dict) -> str:
     return "\n".join(_clean(line) for line in lines)
 
 
-def main(argv: list[str] | None = None, findings_dir: Path = FINDINGS_DIR) -> int:
+def main(argv: list[str] | None = None, findings_dir: Path = FINDINGS_DIR, audits_dir: Path = AUDITS_DIR) -> int:
     utf8_output()
     parser = argparse.ArgumentParser(description="Print a finding and its audit grade.")
     parser.add_argument("finding_id")
     args = parser.parse_args(argv)
     try:
         finding = findings.load(args.finding_id, findings_dir)
-        verdict_path = Path(findings_dir) / f"{finding['id']}.v{finding['version']}.audit.json"
-        audit = json.loads(verdict_path.read_text(encoding="utf-8")) if verdict_path.is_file() else {"status": PENDING}
+        audit = read_verdict(Path(findings_dir) / f"{finding['id']}.json", audits_dir) or {"status": PENDING}
     except (ValueError, OSError) as error:
         print(f"problems:\n- {error}")
         return 1
