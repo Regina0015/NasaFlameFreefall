@@ -7,7 +7,7 @@ Comprueba cada hallazgo por un camino distinto al que lo produjo y le asigna un 
 - Capa 4 (trabajo): `../01_ingesta/output/tablas/` (los CSV **originales**, no los normalizados)
 - Capa 4 (trabajo): `../01_ingesta/output/fichas/` (para confirmar DOI, acrónimo y que la tabla pertenece a la investigación)
 - Capa 4 (trabajo): `../01_ingesta/output/manifiesto.json` (opcional: nombre original del CSV → archivo guardado)
-- Capa 3 (referencia): `../../_config/confianza.md`
+- Capa 3 (referencia): `../../_config/confidence.md`
 - Capa 3 (referencia): `references/lista-revision.md` (preguntas fijas para la revisión del texto)
 
 ## Proceso
@@ -30,10 +30,10 @@ Se revisan `claim`, `summary_student` y `summary_professional`.
 - **Código** contesta Q1 y Q2: cada número del texto tiene fuente y su unidad cuadra (por ejemplo, "22.2%" contra 0.222 fracción). El modelo pequeño no es confiable comparando números.
 - **El modelo local** contesta Q3 a Q7, en inglés, con sí o no. Recibe solo el texto y su evidencia, no el razonamiento del Calculador.
 
-Modelo, parámetros y cómo correrlo: `_config/modelos.md`.
+Modelo, parámetros y cómo correrlo: `_config/models.md`.
 
 ### Grado
-El grado se obtiene de las comprobaciones con las reglas de `_config/confianza.md`. El modelo no elige el grado.
+El grado se obtiene de las comprobaciones con las reglas de `_config/confidence.md`. El modelo no elige el grado.
 
 ## Cómo correrlo
 ```
@@ -58,4 +58,4 @@ El contenido de las salidas va en inglés, como los hallazgos.
 ## Revisión humana
 Leer todos los que fallaron y una muestra de los que pasaron. Todo C8 sin respuesta del modelo se revisa a mano.
 
-Para cada alerta del modelo en `pending`: abrir `output/reviews/F-XXX.json`, poner `decision` en `dismiss` (falsa alarma) o `confirm` (problema real), con `reviewer` y `note`, y volver a correr `auditar.py`. Reglas: `_config/confianza.md`, sección "Revisión humana".
+Para cada alerta del modelo en `pending`: abrir `output/reviews/F-XXX.json`, poner `decision` en `dismiss` (falsa alarma) o `confirm` (problema real), con `reviewer` y `note`, y volver a correr `auditar.py`. Reglas: `_config/confidence.md`, sección "Human review of the model's alerts".

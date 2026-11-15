@@ -40,7 +40,7 @@ Para medir una redacción nueva o un modelo distinto antes de cambiarlos: `pytho
 | 2026-11-14 | `gemma4:e4b-it-qat` | 4/5 | 4/5 | 2/2 | 2/3 | 2/2 | **14/17** | **0** (3 falsas alarmas) |
 | 2026-11-14 | `llama3.1:8b` | 3/5 | 4/5 | 2/2 | 3/3 | 2/2 | 14/17 | 1 (no vio "Solid fuels in PSI…"); inventó una cita |
 
-Se queda Gemma: en un auditor, una falsa alarma cuesta tiempo de revisión; una alerta perdida deja pasar un texto falso. Las falsas alarmas se descartan a mano (`_config/confianza.md`, "Revisión humana").
+Se queda Gemma: en un auditor, una falsa alarma cuesta tiempo de revisión; una alerta perdida deja pasar un texto falso. Las falsas alarmas se descartan a mano (`_config/confidence.md`, "Human review of the model's alerts").
 
 ## Si el modelo no contesta
 Si la respuesta no es JSON con `yes` o `no`, se repite una vez con un recordatorio del formato. Si vuelve a fallar, o no hay conexión con Ollama, la respuesta queda en `null`, C8 falla y el hallazgo se revisa a mano.
