@@ -131,6 +131,13 @@ class FlameDesignTest(unittest.TestCase):
         self.assertAlmostEqual(r["pressure_atm_min"], 1.01796816, places=5)
         self.assertEqual(json.loads(r["field_sources"])["o2_pct_min"], "XO2 (init)")
 
+    def test_pressure_falls_back_to_pinit_when_pmean_is_empty(self):
+        r = map_row(self.NORMAL, 188)
+        self.assertAlmostEqual(r["pressure_atm_min"], 0.931972789, places=6)
+        self.assertEqual(r["pressure_atm_min"], r["pressure_atm_max"])
+        self.assertEqual(json.loads(r["field_sources"])["pressure_atm_min"], "pinit (atm)")
+        self.assertIn("pressure read from pinit", r["problems"])
+
     def test_normal_ramped_row_is_noted(self):
         self.assertIn("RAMPED", map_row(self.NORMAL, 2)["problems"])
 

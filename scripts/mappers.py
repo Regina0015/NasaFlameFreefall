@@ -290,6 +290,15 @@ def _not_in_table(row: _Row, *fields: str) -> None:
         row.note(f"{field} not in table")
 
 
+def _flame_design_pressure(row: _Row) -> None:
+    """Flame Design pressure: pmean (atm), or pinit (atm) when pmean is empty (same rule as the Auditor)."""
+    column = "pmean (atm)" if (row.cells.get("pmean (atm)") or "").strip() else "pinit (atm)"
+    row.number("pressure_atm_min", column, 1.0, *PRESSURE_RANGE_ATM)
+    if column == "pinit (atm)" and row.data["pressure_atm_min"] is not None:
+        row.note("pmean (atm) empty: pressure read from pinit (atm)")
+    _one_value_range(row, "pressure_atm_min", "pressure_atm_max")
+
+
 def flame_design_normal(investigation: str, source_row: int, cells: dict[str, str]) -> dict | None:
     row = _Row(investigation, source_row, cells)
     if _skip(row.text("fuel", "Fuel"), cells, "Test"):
@@ -297,8 +306,7 @@ def flame_design_normal(investigation: str, source_row: int, cells: dict[str, st
     row.data["phase"], row.data["geometry"] = "gas", "burner"
     row.number("o2_pct_min", "XO2 (init)", 100.0, *O2_RANGE)
     _one_value_range(row, "o2_pct_min", "o2_pct_max")
-    row.number("pressure_atm_min", "pmean (atm)", 1.0, *PRESSURE_RANGE_ATM)
-    _one_value_range(row, "pressure_atm_min", "pressure_atm_max")
+    _flame_design_pressure(row)
     row.keep_other("Flame Type", "Day", "Test", "Xfuel", "mfuel (mg/s)", "mN2 (mg/s)", "mtot (mg/s)",
                    "XO2 (final)", "pinit (atm)", "pfinal (atm)", "mean Zst", "Tad (K)")
     if any((cells.get(c) or "").strip().upper() == "RAMPED" for c in cells):
@@ -318,8 +326,7 @@ def flame_design_inverse(investigation: str, source_row: int, cells: dict[str, s
     row.number("o2_pct_min", "XO2", 100.0, *O2_RANGE)
     _one_value_range(row, "o2_pct_min", "o2_pct_max")
     row.note("inverse flame: O2 is the burner stream, not the chamber")
-    row.number("pressure_atm_min", "pmean (atm)", 1.0, *PRESSURE_RANGE_ATM)
-    _one_value_range(row, "pressure_atm_min", "pressure_atm_max")
+    _flame_design_pressure(row)
     row.keep_other("Flame Type", "Day", "Test", "mO2 (mg/s)", "mN2 (mg/s)", "mtot (mg/s)", "XC2H4 initial",
                    "XC2H4 final", "pinit (atm)", "pfinal (atm)", "mean Zst", "Tad (K)")
     return row.done()
