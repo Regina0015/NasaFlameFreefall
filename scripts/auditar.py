@@ -228,6 +228,66 @@ def parse_number(cell: str) -> float | None:
     return float(s) if _PLAIN_NUMBER.match(s) else None
 
 
+_NUM = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
+
+
+def parse_o2_cell(cell: str) -> tuple[list[float], str]:
+    """Lectura para cálculos de cobertura (o2_range), un poco más amplia que parse_number:
+      '22.2'            -> [22.2], 'exact'
+      '~ 22.1'          -> [22.1], 'imprecise'   (aproximado: Saffire-II)
+      '22.1 to 22.0'    -> [22.1, 22.0], 'imprecise'
+      '21; 26.5; 40'    -> [21, 26.5, 40], 'imprecise'  (varios niveles en un día: BRE)
+    Todo lo demás ('3400%', texto, vacío) -> [], 'unreadable'. Nunca corrige un dato."""
+    s = cell.strip()
+    x = parse_number(s)
+    if x is not None:
+        return [x], "exact"
+    m = re.fullmatch(rf"~\s*({_NUM})", s)
+    if m:
+        return [float(m.group(1))], "imprecise"
+    if ";" in s or re.search(r"\sto\s", s):
+        parts = [p for p in re.split(r"\s*;\s*|\s+to\s+", s) if p != ""]
+        vals = [parse_number(p) for p in parts]
+        if len(vals) >= 2 and all(v is not None for v in vals):
+            return vals, "imprecise"
+    return [], "unreadable"
+
+
+def load_units(path) -> dict[tuple[str, str], dict]:
+    """Lee references/unidades-columnas.json: unidad de columnas cuyo encabezado no la dice.
+    Clave: (nombre del CSV, nombre de columna normalizado)."""
+    if not path or not Path(path).is_file():
+        return {}
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    out = {}
+    for table, cols in (data.get("tables") or {}).items():
+        for col, entry in cols.items():
+            out[(table, norm_col(col))] = entry
+    return out
+
+
+def column_unit(sources, table_name: str, header: str) -> tuple[str | None, str]:
+    """Unidad de una columna de O2: 'percent' o 'fraction'. Primero el encabezado; si no la dice,
+    el archivo de unidades aprobado por una persona. Devuelve (None, motivo) si no se sabe."""
+    h = norm_col(header).lower()
+    from_header = "percent" if ("%" in h or "percent" in h) else "fraction" if "fraction" in h else None
+    entry = sources.units.get((table_name, norm_col(header))) if sources else None
+    if entry and entry.get("unit") not in ("percent", "fraction"):
+        return None, f"unidades-columnas.json gives an unknown unit for '{norm_col(header)}': {entry.get('unit')!r}"
+    if entry and not str(entry.get("approved_by", "")).strip():
+        return None, (f"unit of column '{norm_col(header)}' is proposed in unidades-columnas.json "
+                      "but not approved yet (approved_by is empty)")
+    if entry and from_header and entry["unit"] != from_header:
+        return None, (f"column '{norm_col(header)}': the header says {from_header} but "
+                      f"unidades-columnas.json says {entry['unit']}")
+    if from_header:
+        return from_header, ""
+    if entry:
+        return entry["unit"], ""
+    return None, (f"cannot tell the unit of column '{norm_col(header)}'; add it to "
+                  "stages/05_auditar/references/unidades-columnas.json for a person to approve")
+
+
 @dataclass
 class Table:
     path: Path
@@ -270,10 +330,12 @@ def norm_doi(doi: str) -> str:
 class Sources:
     """Acceso a los archivos de la etapa 01 (tablas originales y fichas)."""
 
-    def __init__(self, tables_dir: Path, fiches_dir: Path, manifest_path: Path | None = None):
+    def __init__(self, tables_dir: Path, fiches_dir: Path, manifest_path: Path | None = None,
+                 units_path: Path | None = None):
         self.tables_dir = Path(tables_dir)
         self.fiches_dir = Path(fiches_dir)
         self._manifest = self._load_manifest(manifest_path)
+        self.units = load_units(units_path)
         self._tables: dict[str, tuple[Table | None, str]] = {}
         self._fiches: dict[str, dict | None] = {}
 
@@ -343,9 +405,11 @@ class Sources:
 
 
 def cited_rows(table: Table, rows_spec) -> tuple[list[int], list[int]]:
-    """Filas citadas que existen, y filas citadas que no existen."""
+    """Filas citadas que existen, y filas citadas que no existen.
+    'all' = todas las filas que tienen algo escrito; las filas completamente vacías no son pruebas
+    (CFI-G Inverse trae 861 al final). La numeración no cambia."""
     if rows_spec == "all":
-        return list(range(1, len(table.rows) + 1)), []
+        return [r for r in range(1, len(table.rows) + 1) if any(c.strip() for c in table.rows[r - 1])], []
     ok = [r for r in rows_spec if 1 <= r <= len(table.rows)]
     bad = [r for r in rows_spec if not 1 <= r <= len(table.rows)]
     return ok, bad
@@ -464,6 +528,8 @@ class Quantity:
     column: str = ""
     rows: list[int] = field(default_factory=list)  # filas donde está el valor (min/max)
     scale: float = 1.0        # celda * scale = valor en %
+    cell_text: str = ""       # texto de la celda de la primera fila de 'rows'
+    cell_values: list[float] = field(default_factory=list)  # lo que se leyó de esa celda (sin escalar)
 
 
 @dataclass
@@ -471,7 +537,8 @@ class Recalc:
     quantities: list[Quantity] = field(default_factory=list)
     problems: list[str] = field(default_factory=list)
     cells_total: int = 0
-    cells_readable: int = 0
+    cells_readable: int = 0      # incluye las imprecisas
+    cells_imprecise: int = 0     # '~ x', 'a to b', 'a; b; c': legibles, pero no un número exacto
     used_percent_values: list[tuple[str, int, float]] = field(default_factory=list)
     tested_range_ok: bool | None = None
     tested_range_detail: str = ""
@@ -501,21 +568,22 @@ def recalc_o2_range(finding: dict, sources: Sources) -> Recalc:
         if col is None:
             out.problems.append(f"{inv}: column '{ev['columns'][0]}' not found in {ev['table']}")
             continue
-        header = norm_col(table.header[col]).lower()
-        if "%" in header or "percent" in header:
-            scale = 1.0
-        elif "fraction" in header:
-            scale = 100.0
-        else:
-            out.problems.append(f"{inv}: cannot tell the unit of column '{table.header[col]}'")
+        unit, why = column_unit(sources, ev["table"], table.header[col])
+        if unit is None:
+            out.problems.append(f"{inv}: {why}")
             continue
+        scale = 100.0 if unit == "fraction" else 1.0
         rows, _ = cited_rows(table, ev["rows"])
-        nums = []
+        nums, per_row = [], {}
         for r in rows:
             out.cells_total += 1
-            v = parse_number(table.cell(r, col))
-            if v is not None:
-                out.cells_readable += 1
+            vals, kind = parse_o2_cell(table.cell(r, col))
+            if kind == "unreadable":
+                continue
+            out.cells_readable += 1
+            out.cells_imprecise += kind == "imprecise"
+            per_row[r] = vals
+            for v in vals:
                 nums.append((r, v * scale))
                 out.used_percent_values.append((inv, r, v * scale))
         common = dict(investigation=inv, table=ev["table"], column=table.header[col], scale=scale)
@@ -523,14 +591,14 @@ def recalc_o2_range(finding: dict, sources: Sources) -> Recalc:
             out.quantities += [Quantity(stat="min", value=None, kind="percent", **common),
                                Quantity(stat="max", value=None, kind="percent", **common)]
         else:
-            lo = min(v for _, v in nums)
-            hi = max(v for _, v in nums)
-            out.quantities += [
-                Quantity(stat="min", value=lo, kind="percent", rows=[r for r, v in nums if v == lo], **common),
-                Quantity(stat="max", value=hi, kind="percent", rows=[r for r, v in nums if v == hi], **common),
-            ]
+            for stat, target in (("min", min(v for _, v in nums)), ("max", max(v for _, v in nums))):
+                where = sorted({r for r, v in nums if v == target})
+                out.quantities.append(Quantity(stat=stat, value=target, kind="percent", rows=where,
+                                               cell_text=table.cell(where[0], col).strip(),
+                                               cell_values=per_row[where[0]], **common))
         if threshold is not None:
-            n = sum(1 for _, v in nums if v >= threshold)
+            # Una fila cuenta si alguno de sus valores llega al umbral (en BRE cada fila es un día de pruebas).
+            n = sum(1 for r in per_row if any(v * scale >= threshold for v in per_row[r]))
             out.quantities.append(Quantity(stat="count_at_or_above", value=float(n), kind="other", **common))
     for inv in sorted(set(invs) - covered):
         out.problems.append(f"{inv} is in method.params but has no evidence entry")
@@ -553,6 +621,8 @@ def value_stat(key: str) -> str | None:
         return "max"
     if re.search(r"(count|n|tests)_(at_or_above|above|ge|over)", k):
         return "count_at_or_above"
+    if re.search(r"(^|_)(n_tests|n|tests|test_count|num_tests)$", k):
+        return "n_tests"  # pruebas citadas (filas) de una investigación, o el total si la llave es genérica
     return None
 
 
@@ -560,12 +630,18 @@ _ROMAN = {"i": "1", "ii": "2", "iii": "3", "iv": "4", "v": "5", "vi": "6", "vii"
 
 
 def _name_forms(name: str) -> set[str]:
-    """'BASS-II' -> {'bassii', 'bass2'}; 'PSI-25' -> {'psi25'}."""
-    low = name.lower()
-    forms = {re.sub(r"[^a-z0-9]", "", low)}
-    m = re.match(r"^(.*?)[-\s](x|ix|viii|vii|vi|v|iv|iii|ii|i)$", low)
-    if m:
-        forms.add(re.sub(r"[^a-z0-9]", "", m.group(1)) + _ROMAN[m.group(2)])
+    """'BASS-II' -> {'bassii', 'bass2'}; 'PSI-25' -> {'psi25'};
+    'ACME CFI-G' -> {'acmecfig', 'cfig'} (PSI antepone la familia de hardware al acrónimo)."""
+    low = name.lower().strip()
+    variants = {low}
+    if " " in low:
+        variants.add(low.split()[-1])
+    forms = set()
+    for v in variants:
+        forms.add(re.sub(r"[^a-z0-9]", "", v))
+        m = re.match(r"^(.*?)[-\s](x|ix|viii|vii|vi|v|iv|iii|ii|i)$", v)
+        if m:
+            forms.add(re.sub(r"[^a-z0-9]", "", m.group(1)) + _ROMAN[m.group(2)])
     return forms
 
 
@@ -577,13 +653,18 @@ def value_investigation(key: str, candidates: list[str], sources: Sources) -> st
     Devuelve el ID, None si la llave no nombra ninguna (p. ej. 'o2_max'),
     o '?<prefijo>' si nombra algo que no es una investigación citada."""
     token = key.lower().split("_")[0]
+    hits = []
     for inv in candidates:
         names = _name_forms(inv)
         acr = sources.acronym(inv)
         if acr:
             names |= _name_forms(acr)
         if token in names:
-            return inv
+            hits.append(inv)
+    if len(hits) == 1:
+        return hits[0]
+    if len(hits) > 1:
+        return f"?{token} (matches {', '.join(hits)})"
     return None if token in _GENERIC_TOKENS else f"?{token}"
 
 
@@ -865,6 +946,10 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
         checks["C7"] = _check("C7", "not_applicable", "No independent recalculator for this function.")
     else:
         recalc = RECALCULATORS[func](finding, sources)
+        for inv, n in row_counts.items():
+            recalc.quantities.append(Quantity(investigation=inv, stat="n_tests", value=float(n), kind="other"))
+        recalc.quantities.append(Quantity(investigation="ALL", stat="n_tests",
+                                          value=float(sum(row_counts.values())), kind="other"))
         c3_problems = list(recalc.problems)
         c2_problems, c2_notes = [], []
         candidates = sorted({ev["investigation"] for ev in finding["evidence"]})
@@ -878,7 +963,8 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
             inv = value_investigation(key, candidates, sources)
             if inv is not None and inv.startswith("?"):
                 no_fiche = [c for c in candidates if sources.acronym(c) is None]
-                why = f"prefix '{inv[1:]}' does not name any cited investigation"
+                why = (f"prefix '{inv[1:]}' names more than one cited investigation" if "(matches" in inv else
+                       f"prefix '{inv[1:]}' does not name any cited investigation")
                 if no_fiche:
                     why += f" (acronyms come from the PSI fiches; missing for {', '.join(no_fiche)})"
                 c3_problems.append(f"values.{key}: {why}")
@@ -886,7 +972,7 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
                                       "unit": obj["unit"], "match": False, "detail": why})
                 continue
             cands = [q for q in recalc.quantities if q.stat == stat and (inv is None or q.investigation == inv)]
-            exact = stat == "count_at_or_above"
+            exact = stat in ("count_at_or_above", "n_tests")
             fv = None if obj["value"] is None else (obj["value"] if exact else to_percent(obj["value"], obj["unit"]))
             hit = next((q for q in cands if close(fv, q.value, exact)), None)
             q = hit or (cands[0] if cands else None)
@@ -905,14 +991,13 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
                                    f"{'nothing' if back is None else _fmt(back)}")
                 continue
             if stat in ("min", "max") and hit.value is not None:
-                table, _ = sources.table(hit.table)
-                col = table.col_index(hit.column)
-                r = hit.rows[0]
-                cell = table.cell(r, col)
-                if abs(parse_number(cell) * hit.scale - fv) > 1e-9 * max(1.0, abs(fv)):
+                r, cell = hit.rows[0], hit.cell_text
+                if not any(abs(v * hit.scale - fv) <= 1e-9 * max(1.0, abs(fv)) for v in hit.cell_values):
                     c2_problems.append(f"values.{key} = {obj['value']} but the original cell at row {r} says '{cell}'")
                 else:
-                    c2_notes.append(f"{key} = {obj['value']} {obj['unit']} <- cell '{cell.strip()}' at row {r} of {hit.table}")
+                    exact_cell = parse_number(cell) is not None
+                    c2_notes.append(f"{key} = {obj['value']} {obj['unit']} <- cell '{cell}' at row {r} of {hit.table}"
+                                    + ("" if exact_cell else " (approximate or multi-value cell)"))
         total_rows = sum(row_counts.values())
         n_ok = finding["n_tests"] == total_rows
         recalculation.append({"value_name": "n_tests", "finding_value": finding["n_tests"],
@@ -929,10 +1014,17 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
         # C7: calidad de las celdas que hicieron falta
         if recalc.cells_total:
             frac = recalc.cells_readable / recalc.cells_total
-            level = "clean" if frac == 1.0 else ("minor" if frac >= QUALITY_MINOR_MIN else "many")
+            if frac < QUALITY_MINOR_MIN:
+                level = "many"
+            elif frac < 1.0 or recalc.cells_imprecise:
+                level = "minor"  # una celda aproximada o con varios valores no es un dato limpio
+            else:
+                level = "clean"
+            imprecise = (f", {recalc.cells_imprecise} of them approximate or multi-value"
+                         if recalc.cells_imprecise else "")
             checks["C7"] = _check("C7", "pass" if level == "clean" else "fail",
                                   f"{recalc.cells_readable} of {recalc.cells_total} needed cells readable "
-                                  f"({frac:.1%}); level: {level}.")
+                                  f"({frac:.1%}){imprecise}; level: {level}.")
         else:
             checks["C7"] = _check("C7", "not_applicable", "No cells were needed.")
 
@@ -1135,6 +1227,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--fiches", type=Path, default=ROOT / "stages/01_ingesta/output/fichas")
     ap.add_argument("--manifest", type=Path, default=ROOT / "stages/01_ingesta/output/manifiesto.json")
     ap.add_argument("--out", type=Path, default=ROOT / "stages/05_auditar/output")
+    ap.add_argument("--units", type=Path, default=ROOT / "stages/05_auditar/references/unidades-columnas.json")
     ap.add_argument("--only", help="audit only this finding id, e.g. F-001")
     ap.add_argument("--no-model", action="store_true", help="do not call the local model (C8 fails, manual review)")
     args = ap.parse_args(argv)
@@ -1153,7 +1246,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"No findings to audit in {args.findings}", file=sys.stderr)
         return 2
 
-    sources = Sources(args.tables, args.fiches, args.manifest)
+    sources = Sources(args.tables, args.fiches, args.manifest, args.units)
     audit_schema = load_schema("audit.schema.json")
     audits_dir = args.out / "audits"
     reviews_dir = args.out / "reviews"

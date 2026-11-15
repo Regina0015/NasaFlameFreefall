@@ -45,8 +45,8 @@ Aprobados para empezar el 2026-11-14; el equipo puede cambiarlos. Viven como con
 |---|---|
 | C3: tolerancia del recálculo | relativa 1e-6; los conteos deben ser exactos |
 | C5: soporte amplio | 30 pruebas o más |
-| C7: datos limpios | 100% de las celdas necesarias legibles |
-| C7: problemas menores | 90% o más legibles; menos de 90% son "muchas celdas ilegibles" |
+| C7: datos limpios | 100% de las celdas necesarias legibles y exactas |
+| C7: problemas menores | 90% o más legibles, o alguna celda aproximada (`~ 22.1`) o con varios valores (`21; 26.5; 40`); menos de 90% legibles son "muchas celdas ilegibles" |
 
 ## En el dashboard
 

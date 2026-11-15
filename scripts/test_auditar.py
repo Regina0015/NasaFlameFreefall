@@ -127,6 +127,14 @@ class TestHelpers(unittest.TestCase):
         self.assertEqual(missing, ["150"])
         self.assertEqual(len(bad), 1)
 
+    def test_parse_o2_cell(self):
+        self.assertEqual(A.parse_o2_cell("22.2"), ([22.2], "exact"))
+        self.assertEqual(A.parse_o2_cell("~ 22.1"), ([22.1], "imprecise"))
+        self.assertEqual(A.parse_o2_cell("22.1 to 22.0"), ([22.1, 22.0], "imprecise"))
+        self.assertEqual(A.parse_o2_cell("21; 26.5; 40"), ([21.0, 26.5, 40.0], "imprecise"))
+        for bad in ("3400%", "", "none", "see note", "21;", "~"):
+            self.assertEqual(A.parse_o2_cell(bad)[1], "unreadable", bad)
+
     def test_name_forms(self):
         self.assertIn("bass2", A._name_forms("BASS-II"))
         self.assertEqual(A._name_forms("FLEX"), {"flex"})  # la X final no es número romano
@@ -199,6 +207,20 @@ class TestAudit(Base):
         a = self.audit(f)
         self.assertEqual(self.result(a, "C3"), "fail")  # 'flex' no es una investigación citada
 
+    def test_n_tests_values(self):
+        f = base_finding()
+        f["values"]["bass2_n_tests"] = {"value": 4, "unit": "tests"}
+        f["values"]["total_n_tests"] = {"value": 4, "unit": "tests"}
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C3"), "pass")
+        f["values"]["bass2_n_tests"]["value"] = 5
+        self.assertEqual(self.result(self.audit(f), "C3"), "fail")
+
+    def test_acronym_with_hardware_prefix(self):
+        self.assertIn("bre", A._name_forms("ACME BRE"))
+        self.assertIn("cfig", A._name_forms("ACME CFI-G"))
+        self.assertIn("saffire2", A._name_forms("SAFFIRE-II"))
+
     def test_wrong_doi_is_rejected(self):
         f = base_finding()
         f["evidence"][0]["doi"] = "10.0000/wrong"
@@ -212,6 +234,13 @@ class TestAudit(Base):
         f["n_tests"] = 3
         a = self.audit(f)
         self.assertEqual(self.result(a, "C1"), "fail")
+
+    def test_all_skips_fully_blank_rows(self):
+        (self.sources.tables_dir / TABLE).write_text(CSV_TEXT + ",,,\n,,,\n", encoding="utf-8")
+        self.sources._tables.clear()
+        a = self.audit(base_finding())
+        self.assertEqual(self.result(a, "C3"), "pass")  # n_tests = 4, no 6
+        self.assertEqual(self.result(a, "C7"), "pass")
 
     def test_n_tests_must_match_rows(self):
         f = base_finding()
@@ -276,12 +305,29 @@ class TestAudit(Base):
 
     def test_unreadable_cells_lower_quality(self):
         f = base_finding()
-        bad = CSV_TEXT.replace("B4,SIBAL,18.2", "B4,SIBAL,~ 18")
+        bad = CSV_TEXT.replace("B4,SIBAL,18.2", "B4,SIBAL,18 (?)")
         (self.sources.tables_dir / TABLE).write_text(bad, encoding="utf-8")
         self.sources._tables.clear()
         a = self.audit(f)
         self.assertEqual(self.result(a, "C7"), "fail")  # 3 de 4 legibles = 75% < 90%
         self.assertEqual(a["grade"], "C")
+
+    def test_approximate_and_multi_value_cells_cap_at_minor(self):
+        # Como Saffire-II ('~ 22.1', '22.1 to 22.0') y BRE ('21; 26.5; 40'), y una celda tipo '3400%'
+        messy = CSV_TEXT.replace("B1,PMMA film,22.2", "B1,PMMA film,~ 22.2") \
+                        .replace("B2,PMMA film,21,", "B2,PMMA film,21 to 20.9,") \
+                        .replace("B4,SIBAL,18.2", "B4,SIBAL,13.6; 18.2")
+        (self.sources.tables_dir / TABLE).write_text(messy, encoding="utf-8")
+        self.sources._tables.clear()
+        a = self.audit(base_finding())
+        self.assertEqual(self.result(a, "C3"), "pass")
+        self.assertEqual(self.result(a, "C2"), "pass")
+        c2 = next(c for c in a["checks"] if c["id"] == "C2")["detail"]
+        self.assertIn("cell '~ 22.2' at row 1", c2)
+        self.assertIn("approximate or multi-value", c2)
+        c7 = next(c for c in a["checks"] if c["id"] == "C7")["detail"]
+        self.assertIn("level: minor", c7)
+        self.assertEqual(a["grade"], "B")
 
     def test_main_writes_files(self):
         d = Path(self.tmp.name)
@@ -295,6 +341,58 @@ class TestAudit(Base):
         self.assertEqual(audit["grade"], "C")  # sin modelo, C8 queda para revisión manual
         summary = (d / "out" / "summary.md").read_text(encoding="utf-8")
         self.assertIn("F-002.json: not valid JSON", summary)
+
+
+class TestUnitsFile(Base):
+    CFIG = "PSI-159_Experimental table_CFI-G_Normal Flames.csv"
+
+    def setUp(self):
+        super().setUp()
+        d = Path(self.tmp.name)
+        (d / "tablas" / self.CFIG).write_text("Test,XO2 before test\nA1,0.3939\nB1,0.18\n", encoding="utf-8")
+        (d / "fichas" / "PSI-159.json").write_text(json.dumps(
+            {"doi": "10.60555/cyt1-kh64", "investigationAcronym": "ACME CFI-G",
+             "experimentalTable": [{"file_name": self.CFIG}]}), encoding="utf-8")
+        self.units_path = d / "unidades.json"
+
+    def finding(self):
+        f = base_finding()
+        f["values"] = {"cfig_o2_min": {"value": 18.0, "unit": "% mole"},
+                       "cfig_o2_max": {"value": 39.39, "unit": "% mole"}}
+        f["method"]["params"] = {"investigations": ["PSI-159"], "threshold_pct": 30}
+        f["evidence"] = [{"investigation": "PSI-159", "doi": "10.60555/cyt1-kh64", "table": self.CFIG,
+                          "columns": ["XO2 before test"], "rows": "all"}]
+        f["n_tests"] = 2
+        f["claim"] = "CFI-G tested 18% to 39.39% oxygen in 2 tests."
+        f["summary_student"] = "CFI-G flames were tested with different amounts of oxygen."
+        f["summary_professional"] = "ACME CFI-G XO2 before test: 18–39.39% (n = 2)."
+        return f
+
+    def run_with(self, units):
+        if units is not None:
+            self.units_path.write_text(json.dumps({"tables": {self.CFIG: {"XO2 before test": units}}}),
+                                       encoding="utf-8")
+        d = Path(self.tmp.name)
+        self.sources = A.Sources(d / "tablas", d / "fichas", None, self.units_path)
+        return self.audit(self.finding())
+
+    def test_without_units_file_fails(self):
+        a = self.run_with(None)
+        self.assertEqual(self.result(a, "C3"), "fail")
+        self.assertIn("unidades-columnas.json", next(c for c in a["checks"] if c["id"] == "C3")["detail"])
+
+    def test_unapproved_unit_fails(self):
+        a = self.run_with({"unit": "fraction", "approved_by": ""})
+        self.assertIn("not approved", next(c for c in a["checks"] if c["id"] == "C3")["detail"])
+
+    def test_approved_unit_passes(self):
+        a = self.run_with({"unit": "fraction", "approved_by": "Pingui"})
+        self.assertEqual(self.result(a, "C3"), "pass")  # 0.3939 fracción = 39.39 %
+        self.assertEqual(self.result(a, "C1"), "pass")  # 'cfig' encuentra 'ACME CFI-G'
+
+    def test_wrong_approved_unit_is_caught(self):
+        a = self.run_with({"unit": "percent", "approved_by": "Pingui"})
+        self.assertEqual(self.result(a, "C3"), "fail")  # 0.3939 % no es 39.39 %
 
 
 class TestHumanReview(Base):
