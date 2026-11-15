@@ -1,0 +1,89 @@
+{
+  "id": "F-009",
+  "version": 1,
+  "question": "What oxygen levels did the Saffire-II tests cover, and did any reach the lunar habitat level of 30%?",
+  "status": "has_data",
+  "claim": "The 9 Saffire-II (PSI-99) tests covered oxygen levels from 21.5% to 22.1% O2, and none of them (0 of 9) reached the 30% lunar habitat level.",
+  "summary_student": "Saffire-II burned 9 samples of solid materials in microgravity, and the air around them held between 21.5% and 22.1% oxygen, close to ordinary Earth air. None of the 9 tests reached the 30% oxygen of a lunar habitat, so these results cannot tell us directly how these materials would burn at that level.",
+  "summary_professional": "PSI-99 (SAFFIRE-II) reports 9 microgravity solid-fuel tests (silicone, cotton-fiberglass SIBAL, PMMA, and PMMA with Nomex) with O2 ranging from 21.5% to 22.1% across all rows (o2_pct_min to o2_pct_max). 0 of 9 tests were at or above the 30% O2 threshold of the lunar base atmosphere. The source table gives no ambient pressure, so the pressure side of the lunar atmosphere cannot be compared.",
+  "values": {
+    "psi99_o2_min": {
+      "value": 21.5,
+      "unit": "% O2"
+    },
+    "psi99_o2_max": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi99_n_tests": {
+      "value": 9,
+      "unit": "tests"
+    },
+    "psi99_n_at_or_above": {
+      "value": 0,
+      "unit": "tests"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "o2_range",
+    "params": {
+      "investigations": [
+        "PSI-99"
+      ],
+      "threshold_pct": 30.0
+    },
+    "formula": "For each investigation, the lowest and highest oxygen percentage over its tests that report oxygen, the number of those tests, and how many reached at least threshold_pct (o2_pct_max >= threshold_pct)."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-99",
+      "doi": "10.60555/2chp-m469",
+      "table": "PSI-99_Experimental table_SAFFIRE-2.csv",
+      "columns": [
+        "Percent O2 (Note 1)"
+      ],
+      "rows": "all"
+    }
+  ],
+  "n_tests": 9,
+  "assumptions": [
+    "Oxygen is read from the Percent O2 column of the Saffire-II table; a note in the table says it was derived from measured CO2 production, and several cells are approximate (marked ~) or given as ranges.",
+    "For cells that give a range, the lowest and highest values of the cell are used as o2_pct_min and o2_pct_max.",
+    "Mole fraction and volume fraction of O2 are treated as equal (ideal gas).",
+    "The lunar habitat level is the 30% O2 threshold given in the question and in _config/environments.md."
+  ],
+  "limitations": [
+    "This finding covers only PSI-99 (Saffire-II); it does not include Saffire-I, Saffire-III, BASS, BASS-II or other solid-fuel investigations, which may have tested other oxygen levels.",
+    "All Saffire-II tests are in microgravity; the finding says nothing about burning behavior in lunar gravity.",
+    "The Saffire-II table gives no ambient pressure, so these tests cannot be checked against the lunar base pressure limit.",
+    "No test at 30% O2 means no data at that level, not that these materials are safe or unsafe there; results near Earth-air oxygen must not be extrapolated to 30% O2.",
+    "Some rows have an empty material cell in the source table (possibly merged cells), so this finding does not assign a material to those rows."
+  ],
+  "warnings": [
+    "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
+  ],
+  "environments": [
+    "lunar_base"
+  ],
+  "tier": 1,
+  "pillar": "prevention",
+  "visual_offer": {
+    "chart": {
+      "available": true,
+      "idea": "A range bar of the oxygen levels tested by Saffire-II, with a dashed line at the 30% lunar habitat level."
+    },
+    "graph": {
+      "available": false,
+      "idea": null
+    },
+    "footnote": "Want a visual? I can draw a chart of the Saffire-II oxygen range against the 30% lunar habitat level."
+  },
+  "chart": null,
+  "graph": null,
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T01:11:46Z"
+  }
+}

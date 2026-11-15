@@ -1,0 +1,202 @@
+{
+  "id": "F-006",
+  "version": 2,
+  "question": "Did BASS-II or Saffire-II burn solid materials at Earth's 21% oxygen level or more?",
+  "status": "has_data",
+  "claim": "Yes: all 9 Saffire-II tests (21.5–22.1% oxygen) and 27 of the 129 BASS-II tests (up to 22.2%) were at 21% oxygen or more.",
+  "summary_student": "Both experiments burned solid materials, such as acrylic plastic and fabric, at about the oxygen level of normal air. Neither went much higher than that.",
+  "summary_professional": "BASS-II (PSI-25) initial O2: 13.6–22.2% by volume, 27 of 129 tests at or above 21%. Saffire-II (PSI-99): 21.5–22.1%, all 9 tests at or above 21%.",
+  "values": {
+    "psi25_o2_min": {
+      "value": 13.6,
+      "unit": "% O2"
+    },
+    "psi25_o2_max": {
+      "value": 22.2,
+      "unit": "% O2"
+    },
+    "psi25_n_tests": {
+      "value": 129,
+      "unit": "tests"
+    },
+    "psi25_n_at_or_above": {
+      "value": 27,
+      "unit": "tests"
+    },
+    "psi99_o2_min": {
+      "value": 21.5,
+      "unit": "% O2"
+    },
+    "psi99_o2_max": {
+      "value": 22.1,
+      "unit": "% O2"
+    },
+    "psi99_n_tests": {
+      "value": 9,
+      "unit": "tests"
+    },
+    "psi99_n_at_or_above": {
+      "value": 9,
+      "unit": "tests"
+    }
+  },
+  "method": {
+    "script": "scripts/functions.py",
+    "function": "o2_range",
+    "params": {
+      "investigations": [
+        "PSI-25",
+        "PSI-99"
+      ],
+      "threshold_pct": 21.0
+    },
+    "formula": "For each investigation, the lowest and highest oxygen percentage over its tests that report oxygen, the number of those tests, and how many reached at least threshold_pct (o2_pct_max >= threshold_pct)."
+  },
+  "evidence": [
+    {
+      "investigation": "PSI-25",
+      "doi": "10.60555/4qc4-de67",
+      "table": "PSI-25_Experimental table_BASS-II.csv",
+      "columns": [
+        "Calibrated initial O2 % by vol"
+      ],
+      "rows": "all"
+    },
+    {
+      "investigation": "PSI-99",
+      "doi": "10.60555/2chp-m469",
+      "table": "PSI-99_Experimental table_SAFFIRE-2.csv",
+      "columns": [
+        "Percent O2 (Note 1)"
+      ],
+      "rows": "all"
+    }
+  ],
+  "n_tests": 138,
+  "assumptions": [
+    "Uses the initial oxygen level of each test.",
+    "Mole fraction and volume fraction are treated as equal (ideal gas)."
+  ],
+  "limitations": [
+    "Covers only BASS-II and Saffire-II, not every solid-fuel investigation in PSI.",
+    "At or above 21% does not mean far above it: the highest level in either investigation is 22.2%."
+  ],
+  "warnings": [],
+  "environments": [
+    "space_station",
+    "transit_vehicle"
+  ],
+  "tier": 1,
+  "pillar": "prevention",
+  "visual_offer": {
+    "chart": {
+      "available": true,
+      "idea": "Range bars of the oxygen levels tested by BASS-II and Saffire-II, with a dashed line at 21%."
+    },
+    "graph": {
+      "available": true,
+      "idea": "How BASS-II and Saffire-II connect: shared fuels and related PSI studies."
+    },
+    "footnote": "Want a visual? I can draw a chart of the oxygen levels tested, or a graph of how BASS-II and Saffire-II connect to related PSI studies."
+  },
+  "chart": null,
+  "graph": {
+    "nodes": [
+      {
+        "id": "F-006",
+        "type": "finding",
+        "label": "Yes: all 9 Saffire-II tests (21.5–22.1% oxygen) and 27 of the 129 BASS-II tests…"
+      },
+      {
+        "id": "o2_range",
+        "type": "method",
+        "label": "o2_range"
+      },
+      {
+        "id": "PSI-25",
+        "type": "investigation",
+        "label": "BASS-II"
+      },
+      {
+        "id": "PSI-99",
+        "type": "investigation",
+        "label": "SAFFIRE-II"
+      },
+      {
+        "id": "PSI-26",
+        "type": "investigation",
+        "label": "BASS"
+      },
+      {
+        "id": "PSI-62",
+        "type": "investigation",
+        "label": "Concurrent Flame Spread Modeling using…"
+      },
+      {
+        "id": "PSI-98",
+        "type": "investigation",
+        "label": "SAFFIRE-I"
+      },
+      {
+        "id": "PSI-100",
+        "type": "investigation",
+        "label": "SAFFIRE-III"
+      }
+    ],
+    "edges": [
+      {
+        "from": "F-006",
+        "to": "o2_range",
+        "type": "computed_with",
+        "source": "method"
+      },
+      {
+        "from": "o2_range",
+        "to": "PSI-25",
+        "type": "uses_data_from",
+        "source": "evidence[0]"
+      },
+      {
+        "from": "o2_range",
+        "to": "PSI-99",
+        "type": "uses_data_from",
+        "source": "evidence[1]"
+      },
+      {
+        "from": "PSI-25",
+        "to": "PSI-26",
+        "type": "related_in_psi",
+        "source": "related_glds"
+      },
+      {
+        "from": "PSI-98",
+        "to": "PSI-99",
+        "type": "related_in_psi",
+        "source": "related_glds"
+      },
+      {
+        "from": "PSI-99",
+        "to": "PSI-100",
+        "type": "related_in_psi",
+        "source": "related_glds"
+      },
+      {
+        "from": "PSI-62",
+        "to": "PSI-25",
+        "type": "reuses_flight_data",
+        "source": "related_glds + projectType"
+      },
+      {
+        "from": "PSI-25",
+        "to": "PSI-99",
+        "type": "same_fuel",
+        "source": "tests.fuel: pmma, sibal"
+      }
+    ]
+  },
+  "generated_by": {
+    "agent": "calculator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T00:11:43Z"
+  }
+}
