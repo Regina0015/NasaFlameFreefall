@@ -6,10 +6,13 @@ import {
   BufferGeometry,
   CatmullRomCurve3,
   CircleGeometry,
+  CanvasTexture,
   Color,
   DoubleSide,
   Group,
   LinearMipmapLinearFilter,
+  Line,
+  LineBasicMaterial,
   LineSegments,
   Mesh,
   MeshBasicMaterial,
@@ -22,6 +25,8 @@ import {
   Scene,
   ShaderMaterial,
   SphereGeometry,
+  Sprite,
+  SpriteMaterial,
   SRGBColorSpace,
   TextureLoader,
   Vector3,
@@ -30,6 +35,7 @@ import {
 
 import {
   DIVE,
+  OPEN,
   T,
   cameraWaypoints,
   clamp01,
@@ -43,6 +49,7 @@ import {
   smooth,
   smoother,
 } from '../lib/intro.js'
+import { outerRing, patchAngles, ringToPositions, toUnit } from '../lib/geo.js'
 import { analyseStation, applyHologram, loadStation, makeAssembly, makeWordTargets } from '../lib/stationParticles.js'
 
 // NASA SVS 3615 equirectangular map (see public/textures/SOURCES.md). Clouds are baked in.
@@ -125,6 +132,48 @@ const ATMOSPHERE_FRAG = /* glsl */ `
     gl_FragColor = vec4(uColor, rim * 0.42);
   }
 `
+
+// ---------- Opening shot: regional imagery patch, outline and marker ----------
+
+// Lit like the Earth below it. The patch fades at its own edges, so no rectangle shows while it gives way to the
+// global map.
+const PATCH_FRAG = /* glsl */ `
+  uniform sampler2D uMap;
+  uniform vec3 uSun;
+  uniform float uAlpha;
+  varying vec2 vUv;
+  varying vec3 vNormalW;
+  varying vec3 vPosW;
+
+  void main() {
+    vec3 N = normalize(vNormalW);
+    vec3 L = normalize(uSun);
+    vec3 albedo = texture2D(uMap, vUv).rgb;
+    float ndl = dot(N, L);
+    float day = smoothstep(-0.14, 0.3, ndl);
+    float lit = max(ndl, 0.0);
+    vec3 color = albedo * (0.05 + 1.15 * lit * day) + vec3(0.012, 0.02, 0.04) * (1.0 - day);
+    float edge = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
+    gl_FragColor = vec4(color, uAlpha * smoothstep(0.0, 0.14, edge));
+    #include <colorspace_fragment>
+  }
+`
+
+function makePinTexture() {
+  const size = 128
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')
+  const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
+  g.addColorStop(0, 'rgba(255,255,255,1)')
+  g.addColorStop(0.12, 'rgba(255,246,225,0.95)')
+  g.addColorStop(0.3, 'rgba(255,226,170,0.38)')
+  g.addColorStop(1, 'rgba(255,226,170,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, size, size)
+  return new CanvasTexture(canvas)
+}
 
 // ---------- Particles (orbiting stardust) ----------
 
@@ -578,7 +627,9 @@ export default function EarthScene({
 
     // Dev only: ?t=<seconds> freezes the sequence on one frame for inspection.
     const debugParam = import.meta.env.DEV ? parseFloat(new URLSearchParams(window.location.search).get('t')) : NaN
-    const frozen = Number.isFinite(debugParam)
+    const openParam = import.meta.env.DEV ? parseFloat(new URLSearchParams(window.location.search).get('o')) : NaN
+    const openFrozen = Number.isFinite(openParam)
+    const frozen = Number.isFinite(debugParam) || openFrozen
 
     // Background layers follow the camera so the sky never parallaxes during the long flight.
     const nebulaGeometry = new SphereGeometry(60, 32, 24)
@@ -661,7 +712,32 @@ export default function EarthScene({
     tilt.rotation.x = 0.28
     tilt.add(earth)
     scene.add(tilt)
-    const baseRotation = -Math.PI / 3
+    let baseRotation = -Math.PI / 3 // set in layout(): the globe is turned so Monterrey faces the camera at the end of the opening
+    let earthReady = false
+    let holding = false // the opening waits on its imagery: the globe stays hidden, only space is drawn
+
+    // Opening shot objects live on the Earth, so they turn with it and stay attached to Monterrey.
+    const geoGroup = new Group()
+    geoGroup.visible = false
+    earth.add(geoGroup)
+    const pinLocal = new Vector3(...toUnit(OPEN.PIN.lat, OPEN.PIN.lon, 1))
+    const northLocal = new Vector3(...toUnit(OPEN.PIN.lat + 0.05, OPEN.PIN.lon, 1)).sub(pinLocal).normalize()
+    const pinWorld = new Vector3()
+    const pinDir = new Vector3()
+    const northWorld = new Vector3()
+    const openStart = new Vector3()
+    const openDirB = new Vector3()
+    const origin = new Vector3()
+    const projected = new Vector3()
+    let patch = null // { mesh, texture }
+    let outline = null // Line
+    let pin = null // { sprite, texture }
+    let labelEl = null
+    let patchState = 'off' // 'off' | 'loading' | 'ready' | 'failed'
+    let outlineState = 'off'
+    let holdTime = 0
+    // The opening runs only on a first visit and when motion is allowed; its imagery is loaded only then.
+    let openOffset = !reducedMotion && !startFinalRef.current ? OPEN.DURATION : 0
 
     const atmosphereMaterial = new ShaderMaterial({
       vertexShader: ATMOSPHERE_VERT,
@@ -673,7 +749,8 @@ export default function EarthScene({
       side: BackSide,
     })
     const atmosphereGeometry = new SphereGeometry(1.03, 96, 64)
-    scene.add(new Mesh(atmosphereGeometry, atmosphereMaterial))
+    const atmosphere = new Mesh(atmosphereGeometry, atmosphereMaterial)
+    scene.add(atmosphere)
 
     const particles = makeParticles(small ? 3200 : 7000, pixelRatio, rng)
     scene.add(particles)
@@ -736,6 +813,33 @@ export default function EarthScene({
         (p) => new Vector3(p[0], p[1], p[2]),
       )
       curve = new CatmullRomCurve3(points, false, 'centripetal')
+
+      // Turn the globe about its own axis so that Monterrey faces the camera where the existing Earth approach
+      // begins. Then the opening ends exactly on that first frame, with no spin and no jump.
+      const facing = curve.getPoint(0).clone().normalize()
+      const tryAngle = (angle) => {
+        earth.rotation.y = angle
+        tilt.updateMatrixWorld(true)
+        return pinWorld.copy(pinLocal).applyMatrix4(earth.matrixWorld).normalize().dot(facing)
+      }
+      let best = 0
+      let bestDot = -2
+      for (let degrees = 0; degrees < 360; degrees += 1) {
+        const d = tryAngle((degrees * Math.PI) / 180)
+        if (d > bestDot) {
+          bestDot = d
+          best = degrees
+        }
+      }
+      let refined = best
+      for (let step = -10; step <= 10; step += 1) {
+        const d = tryAngle(((best + step / 10) * Math.PI) / 180)
+        if (d > bestDot) {
+          bestDot = d
+          refined = best + step / 10
+        }
+      }
+      baseRotation = (refined * Math.PI) / 180
     }
     layout()
 
@@ -751,15 +855,62 @@ export default function EarthScene({
     }
 
     // Draws the frame for time `t`. A pure function of t and the loaded assets.
-    const draw = (t, ambient = 0) => {
+    const draw = (t, ambient = 0, openP = 1) => {
       const fallback = stationState === 'failed'
       const tt = fallback ? Math.min(t, T.ORBIT_END) : t
+      earth.rotation.y = baseRotation + Math.min(tt, T.ORBIT_END) * 0.02
+      tilt.updateMatrixWorld(true)
+      const opening = openP < 1 && patchState === 'ready'
+      camera.up.set(0, 1, 0)
 
       // Camera: continuous position and look-at along one curve.
       camera.position.copy(curve.getPoint(pathParam(tt)))
       const swing = smoother(range(tt, T.ORBIT_END + 0.9, T.DEPART_END + 0.8))
       lookAt.set(0, 0, 0).lerp(aim, swing)
       camera.lookAt(lookAt)
+
+      // Opening shot: one continuous pull-away from a regional view over Monterrey to the first frame of the Earth
+      // approach (same position, same look-at, same up), with smooth acceleration and a soft landing.
+      if (opening) {
+        const ease = smoother(openP)
+        openStart.copy(curve.getPoint(0))
+        const r0 = 1 + OPEN.START_ALTITUDE
+        const r1 = openStart.length()
+        pinWorld.copy(pinLocal).applyMatrix4(earth.matrixWorld)
+        pinDir.copy(pinWorld).normalize()
+        openDirB.copy(openStart).normalize()
+        const dir = pinDir.lerp(openDirB, ease).normalize()
+        camera.position.copy(dir).multiplyScalar(Math.exp(Math.log(r0) * (1 - ease) + Math.log(r1) * ease))
+        lookAt.copy(pinWorld).lerp(origin, smoother(range(openP, OPEN.LOOK_SHIFT[0], OPEN.LOOK_SHIFT[1])))
+        northWorld.copy(northLocal).transformDirection(earth.matrixWorld)
+        camera.up.copy(northWorld).lerp(worldUp, smoother(range(openP, OPEN.UP_SHIFT[0], OPEN.UP_SHIFT[1]))).normalize()
+        camera.lookAt(lookAt)
+      }
+      geoGroup.visible = opening
+      earth.visible = earthReady && !holding
+      atmosphere.visible = !holding
+      if (opening) {
+        const geoAlpha = 1 - smooth(range(openP, OPEN.GEO_FADE[0], OPEN.GEO_FADE[1]))
+        if (patch) patch.mesh.material.uniforms.uAlpha.value = 1 - smooth(range(openP, OPEN.PATCH_FADE[0], OPEN.PATCH_FADE[1]))
+        if (outline) outline.material.opacity = 0.9 * geoAlpha
+        camera.updateMatrixWorld(true)
+        if (pin) {
+          pin.sprite.material.opacity = geoAlpha
+          pin.sprite.scale.setScalar(camera.position.distanceTo(pinWorld) * 0.07)
+        }
+        if (labelEl) {
+          // The label is a DOM element (crisp text) placed at the projected position of the marker; it is hidden when
+          // the marker is on the far side of the globe.
+          projected.copy(pinWorld).project(camera)
+          const facing = pinDir.copy(pinWorld).normalize().dot(camera.position.clone().normalize()) > 0.02
+          const w = host.clientWidth
+          const h = host.clientHeight
+          labelEl.style.opacity = facing && projected.z < 1 ? String(geoAlpha) : '0'
+          labelEl.style.transform = `translate(${((projected.x * 0.5 + 0.5) * w).toFixed(1)}px, ${((-projected.y * 0.5 + 0.5) * h).toFixed(1)}px)`
+        }
+      } else if (labelEl) {
+        labelEl.style.opacity = '0'
+      }
 
       // Docking flight: starts from the settled composition above and ends in front of the hatch.
       let ringFade = 0
@@ -798,8 +949,6 @@ export default function EarthScene({
         })
       }
       camera.updateMatrixWorld(true)
-
-      earth.rotation.y = baseRotation + Math.min(tt, T.ORBIT_END) * 0.02
 
       const settle = smooth(range(tt, T.REVEAL_END, T.TOTAL))
       const oldFade = 1 - smooth(range(tt, T.ORBIT_END - 0.4, T.DEPART_END))
@@ -894,6 +1043,9 @@ export default function EarthScene({
     let skipFrame = false
     const ambientOn = () => !reducedMotion && !frozen && !pausedRef.current && stationState !== 'failed'
 
+    // The frame for elapsed time `e`: the opening first, then the existing stages from their own time zero.
+    const drawElapsed = (e, ambient = 0) => (e < openOffset ? draw(0, ambient, e / openOffset) : draw(e - openOffset, ambient))
+
     const finish = () => {
       finished = true
       stopLoop()
@@ -924,22 +1076,37 @@ export default function EarthScene({
         return
       }
       if (stationState === 'failed') {
-        elapsed = T.ORBIT_END
+        elapsed = openOffset + T.ORBIT_END
         finish()
         return
       }
+      // The opening waits for its imagery on the first frame, but never longer than OPEN.LOAD_WAIT: without the
+      // regional imagery it is skipped and the Earth approach starts at once.
+      if (openOffset > 0 && elapsed === 0) {
+        const decided = patchState !== 'loading' && outlineState !== 'loading'
+        if (!decided) {
+          holdTime += dt
+          if (holdTime < OPEN.LOAD_WAIT) {
+            holding = true
+            drawElapsed(0)
+            return
+          }
+        }
+        holding = false
+        if (patchState !== 'ready') openOffset = 0
+      }
       // The station has to be ready before the gathering begins; wait for it if it is not.
-      if (stationState === 'loading' && elapsed + dt >= T.GATHER_START) {
-        elapsed = T.GATHER_START
+      if (stationState === 'loading' && elapsed + dt >= openOffset + T.GATHER_START) {
+        elapsed = openOffset + T.GATHER_START
       } else {
         elapsed += dt
       }
-      if (elapsed >= T.TOTAL) {
-        elapsed = T.TOTAL
+      if (elapsed >= openOffset + T.TOTAL) {
+        elapsed = openOffset + T.TOTAL
         finish()
         return
       }
-      draw(elapsed)
+      drawElapsed(elapsed)
     }
 
     function startLoop() {
@@ -973,7 +1140,8 @@ export default function EarthScene({
     document.addEventListener('visibilitychange', onVisibility)
 
     skipFnRef.current = () => {
-      elapsed = T.TOTAL
+      holding = false
+      elapsed = openOffset + T.TOTAL
       finish()
     }
     replayFnRef.current = () => {
@@ -982,18 +1150,23 @@ export default function EarthScene({
       finished = false
       announced = false
       ambientTime = 0
+      holdTime = 0
       if (reducedMotion) {
         finish()
         return
       }
-      draw(0)
+      // Replay includes the opening; its imagery is fetched now if this visit skipped it.
+      if (patchState === 'off') loadGeo()
+      openOffset = patchState === 'failed' ? 0 : OPEN.DURATION
+      drawElapsed(0)
       startLoop()
     }
 
     const requestRedraw = () => {
-      if (frozen) draw(debugParam)
+      if (openFrozen) draw(0, 0, openParam)
+      else if (frozen) draw(debugParam)
       else if (finished) draw(T.TOTAL)
-      else if (!frame) draw(elapsed)
+      else if (!frame) drawElapsed(elapsed)
     }
 
     const observer = new ResizeObserver(() => {
@@ -1001,6 +1174,88 @@ export default function EarthScene({
       requestRedraw()
     })
     observer.observe(host)
+
+    // Opening assets: the regional imagery, the Nuevo Leon outline and the Monterrey marker. Any failure only removes
+    // the opening (or just the outline); it never blocks the page.
+    function loadGeo() {
+      if (patchState !== 'off') return
+      patchState = 'loading'
+      outlineState = 'loading'
+      const base = import.meta.env.BASE_URL
+      new TextureLoader().load(
+        base + OPEN.IMAGE,
+        (texture) => {
+          if (disposed) {
+            texture.dispose()
+            return
+          }
+          texture.colorSpace = SRGBColorSpace
+          texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy())
+          texture.minFilter = LinearMipmapLinearFilter
+          const a = patchAngles(OPEN.PATCH)
+          const geometry = new SphereGeometry(1.0006, 160, 140, a.phiStart, a.phiLength, a.thetaStart, a.thetaLength)
+          const material = new ShaderMaterial({
+            vertexShader: EARTH_VERT,
+            fragmentShader: PATCH_FRAG,
+            uniforms: { uMap: { value: texture }, uSun: { value: sun }, uAlpha: { value: 1 } },
+            transparent: true,
+            depthWrite: false,
+          })
+          const mesh = new Mesh(geometry, material)
+          mesh.renderOrder = 1
+          geoGroup.add(mesh)
+          patch = { mesh, texture }
+
+          const pinTexture = makePinTexture()
+          const sprite = new Sprite(new SpriteMaterial({ map: pinTexture, transparent: true, depthTest: false, depthWrite: false, blending: AdditiveBlending }))
+          sprite.position.copy(pinLocal).multiplyScalar(1.0025)
+          sprite.renderOrder = 3
+          geoGroup.add(sprite)
+          pin = { sprite, texture: pinTexture }
+
+          labelEl = document.createElement('div')
+          labelEl.className = 'earth-pin'
+          labelEl.setAttribute('aria-hidden', 'true')
+          labelEl.textContent = OPEN.LABEL
+          labelEl.style.opacity = '0'
+          host.appendChild(labelEl)
+
+          patchState = 'ready'
+          if (import.meta.env.DEV) {
+            const n = pinLocal.clone().applyMatrix4(earth.matrixWorld).normalize()
+            console.info('[open] regional imagery ready; Monterrey sun angle (ndl)', +n.dot(sun.clone().normalize()).toFixed(2))
+          }
+          requestRedraw()
+        },
+        undefined,
+        () => {
+          if (disposed) return
+          patchState = 'failed'
+          if (import.meta.env.DEV) console.warn('[open] regional imagery failed; the opening is skipped')
+        },
+      )
+      fetch(base + OPEN.OUTLINE)
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+        .then((json) => {
+          if (disposed) return
+          const ring = outerRing(json)
+          if (!ring) throw new Error('no polygon')
+          const geometry = new BufferGeometry()
+          geometry.setAttribute('position', new BufferAttribute(ringToPositions(ring, 1.0016), 3))
+          const material = new LineBasicMaterial({ color: '#f3d9a4', transparent: true, opacity: 0.9, depthWrite: false })
+          outline = new Line(geometry, material)
+          outline.renderOrder = 2
+          outline.frustumCulled = false
+          geoGroup.add(outline)
+          outlineState = 'ready'
+          requestRedraw()
+        })
+        .catch((error) => {
+          outlineState = 'failed'
+          if (import.meta.env.DEV) console.warn('[open] outline unavailable', error)
+        })
+    }
+    if (openOffset > 0) loadGeo()
 
     // Assets. The Earth texture and the station model load in parallel.
     new TextureLoader().load(
@@ -1015,7 +1270,8 @@ export default function EarthScene({
         texture.minFilter = LinearMipmapLinearFilter
         earthTexture = texture
         earthMaterial.uniforms.uMap.value = texture
-        earth.visible = true
+        earthReady = true
+        earth.visible = !holding
         requestRedraw()
       },
       undefined,
@@ -1023,7 +1279,8 @@ export default function EarthScene({
         if (disposed) return
         earthMaterial.fragmentShader = 'void main(){ gl_FragColor = vec4(0.05, 0.1, 0.16, 1.0); }'
         earthMaterial.needsUpdate = true
-        earth.visible = true
+        earthReady = true
+        earth.visible = !holding
         requestRedraw()
       },
     )
@@ -1071,7 +1328,9 @@ export default function EarthScene({
     renderer.domElement.addEventListener('webglcontextlost', onContextLost)
 
     // Start: the final state at once for reduced motion, a returning visit or a frozen debug frame.
-    if (frozen) {
+    if (openFrozen) {
+      loadGeo()
+    } else if (frozen) {
       elapsed = debugParam
       if (elapsed >= T.TOTAL) announce()
       draw(elapsed)
@@ -1079,7 +1338,7 @@ export default function EarthScene({
       elapsed = T.TOTAL
       finish()
     } else {
-      draw(0)
+      drawElapsed(0)
       startLoop()
     }
 
@@ -1110,6 +1369,20 @@ export default function EarthScene({
       igniteGeometry.dispose()
       igniteMaterial.dispose()
       diveFnRef.current = null
+      if (patch) {
+        patch.mesh.geometry.dispose()
+        patch.mesh.material.dispose()
+        patch.texture.dispose()
+      }
+      if (outline) {
+        outline.geometry.dispose()
+        outline.material.dispose()
+      }
+      if (pin) {
+        pin.sprite.material.dispose()
+        pin.texture.dispose()
+      }
+      labelEl?.remove()
       streaks.geometry.dispose()
       streaks.material.dispose()
       if (dock) {

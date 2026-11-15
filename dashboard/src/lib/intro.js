@@ -22,6 +22,25 @@ export const T = {
   TOTAL: 15.6, // 6. settle, then the login appears
 }
 
+// Opening shot (before the Earth approach above): a satellite-style view over Monterrey, Mexico that pulls away to the
+// full Earth, then hands over to the stages above. All values are editable. Times are in seconds.
+export const OPEN = {
+  DURATION: 3.6, // total length of the opening; the stages above start after it
+  START_ALTITUDE: 0.14, // camera height above the surface at the start, in Earth radii (about 900 km)
+  LOAD_WAIT: 2.5, // how long to wait for the regional imagery before skipping the opening
+  PIN: { lat: 25.6866, lon: -100.3161 }, // Monterrey, Mexico
+  LABEL: 'Monterrey, Mexico',
+  // The regional imagery covers exactly this latitude/longitude box (see public/textures/SOURCES.md).
+  PATCH: { lonMin: -107, lonMax: -95, latMin: 21, latMax: 31 },
+  IMAGE: 'textures/northern-mexico-regional.jpg',
+  OUTLINE: 'data/geo/nuevo-leon.geojson', // the state outline (see public/data/geo/SOURCES.md)
+  // Fractions of the opening (0 to 1).
+  PATCH_FADE: [0.2, 0.55], // the regional imagery gives way to the global Earth map
+  GEO_FADE: [0.22, 0.52], // the label, marker and outline fade as they become too small to read
+  LOOK_SHIFT: [0.1, 0.9], // the view slides from Monterrey to the centre of the globe
+  UP_SHIFT: [0.15, 0.95], // north-up turns into the scene's own up direction (no sudden roll)
+}
+
 export const clamp01 = (x) => Math.min(Math.max(x, 0), 1)
 export const smooth = (x) => {
   const t = clamp01(x)
