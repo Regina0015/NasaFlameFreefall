@@ -50,8 +50,8 @@ A finding is one answer to one question. The Calculator writes it, code checks e
 - Warning: "PSI has no partial-gravity combustion data. Lunar and Mars conclusions are bounded by microgravity and Earth-gravity results only."
 - Chart: range bars of tested O2 per investigation, with a dashed line at 30%.
 
-**F-002 v3, "no data" inside a result:**
-- Claim: "Of the PSI tests that reached 30% oxygen or more, 8 of 32 droplet tests and 66 of 468 gas tests also ran at or below 10.2 psi; for solids and smoke there is no data, because some of their tests report no oxygen."
+**F-002 v5, "no data" inside a result:**
+- Claim: "Of the PSI tests that reached 30% O2 or more, only 8 of 32 droplet tests and 20 of 262 gas tests also ran at or below 10.2 psi, while 16 of those gas tests report no pressure and no solid-fuel test in the data reaches that oxygen level."
 - Show solids and smoke as **"No data"**, never as 0 (a gray, hatched bar or an empty slot with the label "No data"). A zero and a "no data" must never look the same.
 
 **F-005, a list result:** "SAME-R made smoke from five spacecraft materials: Kapton in 29 tests, silicone in 22, lampwick and Pyrell in 20 each, and Teflon in 18." Good for a simple horizontal bar chart.
@@ -153,6 +153,8 @@ A panel next to the chat: "what if the data were read differently?". It shows wh
   6. Rows that are test days or ranges: minimum, maximum, or leave out.
   7. Tests with no oxygen or no pressure: leave out (no data) or show as their own group.
   8. Tier: Tier 1 only, or all.
+  9. Material: one or more fuels from `tests.fuel` (Nomex, PMMA, SIBAL, Kapton, silicone...), grouped by phase.
+- **Material map (graphic):** one row per material, one dot per test at its O2 (x axis), dashed lines at 30% and 34%. The empty space to the right of the lines is the knowledge gap (for example no Nomex test above 22.2%, F-013). Tests with no O2 go in a "No data" column at the end, never at 0.
 - **Result:** the official value next to the lab value, how many tests each choice adds or drops, and from which investigations. One axis per chart; if the official and the lab number barely differ, say "robust to this choice".
 - A lab result worth keeping becomes a real question through `/ask` (Calculator + Auditor).
 
