@@ -5,19 +5,43 @@
       "XO2 before test": {
         "unit": "fraction",
         "approved_by": "Regina (checked against the CSV: 512 of 512 cells between 0.12 and 0.85, none above 1; 2026-11-14)",
-        "evidence": "179 of 179 cells between 0.1797 and 0.3997; X is the usual symbol for mole fraction"
+        "evidence": "179 of 179 cells between 0.1797 and 0.3997; X is the usual symbol for mole fraction",
+        "cosigned_by": "Diego (Auditor), 2026-11-14"
       },
       "XO2 after test": {
         "unit": "fraction",
         "approved_by": "Regina (checked against the CSV: 512 of 512 cells between 0.12 and 0.85, none above 1; 2026-11-14)",
-        "evidence": "179 of 179 cells between 0.1794 and 0.3973"
+        "evidence": "179 of 179 cells between 0.1794 and 0.3973",
+        "cosigned_by": "Diego (Auditor), 2026-11-14"
       }
     },
     "PSI-159_Experimental table_CFI-G_Inverse Flames.csv": {
       "XO2": {
         "unit": "fraction",
         "approved_by": "Regina (checked against the CSV: 512 of 512 cells between 0.12 and 0.85, none above 1; 2026-11-14)",
-        "evidence": "154 of 154 non-empty cells between 0.12 and 0.85. In inverse flames this is the O2 fraction of the burner (oxidizer) stream, not of the chamber atmosphere"
+        "evidence": "154 of 154 non-empty cells between 0.12 and 0.85. In inverse flames this is the O2 fraction of the burner (oxidizer) stream, not of the chamber atmosphere",
+        "cosigned_by": "Diego (Auditor), 2026-11-14"
+      }
+    },
+    "PSI-10_Experimental table_Flame Design_Normal Flame.csv": {
+      "XO2 (init)": {
+        "unit": "fraction",
+        "approved_by": "Diego (Auditor), 2026-11-14",
+        "evidence": "207 of 207 cells between 0.198 and 0.400"
+      }
+    },
+    "PSI-10_Experimental table_Flame Design_Inverse Flame.csv": {
+      "XO2": {
+        "unit": "fraction",
+        "approved_by": "Diego (Auditor), 2026-11-14",
+        "evidence": "109 of 120 cells between 0.212 and 0.850; 11 are text ('RAMP', 'LOW O2'). Burner stream, as in CFI-G Inverse"
+      }
+    },
+    "PSI-39_Experimental table_CFI.csv": {
+      "Oxygen": {
+        "unit": "fraction",
+        "approved_by": "Diego (Auditor), 2026-11-14",
+        "evidence": "87 of 87 cells between 0.17 and 0.21; Oxygen + Nitrogen + Helium add up to 0.97-1.00 on every row"
       }
     }
   }

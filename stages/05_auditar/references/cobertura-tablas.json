@@ -1,0 +1,256 @@
+{
+  "_doc": "Fase de combustible de cada investigación y, para CADA tabla de PSI, la columna de O2, la de presión (con su unidad) y qué filas son pruebas. Lo usa scripts/auditar.py para recalcular coverage_by_environment recorriendo todas las tablas, no solo las citadas, para que los ceros también se comprueben. Vale solo cuando 'approved_by' tiene el nombre de quien lo revisó contra los CSV. Si aparece un CSV nuevo en stages/01_ingesta/output/psi/ que no esté aquí, el auditor falla.",
+  "approved_by": "Diego (Auditor), 2026-11-14",
+  "investigations": {
+    "PSI-10": {
+      "phase": "gas",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-20": {
+      "phase": "gas",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible'); inventory: 'gas (emula sólidos)'"
+    },
+    "PSI-21": {
+      "phase": "gas",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-22": {
+      "phase": "gas",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-23": {
+      "phase": "gas",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-159": {
+      "phase": "gas",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-107": {
+      "phase": "gas",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-106": {
+      "phase": "gas",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-69": {
+      "phase": "droplet",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-68": {
+      "phase": "droplet",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-39": {
+      "phase": "droplet",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-26": {
+      "phase": "solid",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-25": {
+      "phase": "solid",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-98": {
+      "phase": "solid",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-99": {
+      "phase": "solid",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-100": {
+      "phase": "solid",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-102": {
+      "phase": "smoke",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-101": {
+      "phase": "smoke",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-47": {
+      "phase": "dust",
+      "source": "docs/datos-psi-inventario.md (column 'Combustible')"
+    },
+    "PSI-142": {
+      "phase": null,
+      "source": "docs/datos-psi-inventario.md (column 'Combustible'); ground study (inventory has no fuel phase); left out of every phase"
+    }
+  },
+  "tables": {
+    "PSI-100_Experimental table_SAFFIRE-3.csv": {
+      "o2": [],
+      "pressure": null,
+      "note": "no O2 column"
+    },
+    "PSI-101_Experimental table_SAME-R.csv": {
+      "o2": [],
+      "pressure": null,
+      "note": "smoke; no O2 column"
+    },
+    "PSI-102_Experimental table_SAME.csv": {
+      "o2": [],
+      "pressure": null,
+      "note": "smoke; no O2 column"
+    },
+    "PSI-106_Experimental table_Slice.csv": {
+      "o2": [],
+      "pressure": null,
+      "note": "no O2 column"
+    },
+    "PSI-107_Experimental table_Spice.csv": {
+      "o2": [],
+      "pressure": null,
+      "note": "no O2 column"
+    },
+    "PSI-10_Experimental table_Flame Design_Inverse Flame.csv": {
+      "o2": [
+        "XO2"
+      ],
+      "pressure": {
+        "column": "pinit (atm)",
+        "unit": "atm"
+      },
+      "note": "inverse flame: XO2 is the burner stream, as in CFI-G Inverse. 11 cells are text ('RAMP', 'LOW O2')"
+    },
+    "PSI-10_Experimental table_Flame Design_Normal Flame.csv": {
+      "o2": [
+        "XO2 (init)"
+      ],
+      "pressure": {
+        "column": "pinit (atm)",
+        "unit": "atm"
+      },
+      "note": "initial O2 and initial pressure, like 'before test' in CFI-G"
+    },
+    "PSI-142_Experimental table_Data Summary Table.csv": {
+      "o2": [],
+      "pressure": null,
+      "note": "ground study without a fuel phase; not counted"
+    },
+    "PSI-159_Experimental table_CFI-G_Inverse Flames.csv": {
+      "o2": [
+        "XO2"
+      ],
+      "pressure": {
+        "column": "approx p (bar)",
+        "unit": "bar"
+      },
+      "note": "XO2 is the burner stream, not the chamber"
+    },
+    "PSI-159_Experimental table_CFI-G_Normal Flames.csv": {
+      "o2": [
+        "XO2 before test"
+      ],
+      "pressure": {
+        "column": "approx p (bar)",
+        "unit": "bar"
+      },
+      "note": "same columns the Calculator cites in F-002"
+    },
+    "PSI-20_Experimental table_ACME BRE.csv": {
+      "o2": [
+        "Oxygen Conc (percent)"
+      ],
+      "pressure": null,
+      "note": "rows are test days; O2 is a list per day; no pressure column ('chamber pressures were also varied but are not identified')"
+    },
+    "PSI-21_Experimental table_CLD Flame.csv": {
+      "o2": [],
+      "pressure": null,
+      "note": "no O2 column; rows are test days"
+    },
+    "PSI-22_Experimental table_ACME E-FIELD Flames.csv": {
+      "o2": [],
+      "pressure": null,
+      "note": "no O2 column; rows are test days"
+    },
+    "PSI-23_Experimental table_ACME s-Flame.csv": {
+      "o2": [],
+      "pressure": null,
+      "note": "O2 only as text in 'Atmosphere*' (e.g. '~30% and ~21% O2 with He'); not readable as numbers, so these days count as O2 unknown"
+    },
+    "PSI-25_Experimental table_BASS-II.csv": {
+      "o2": [
+        "Calibrated initial O2 % by vol"
+      ],
+      "pressure": null,
+      "note": "no pressure column"
+    },
+    "PSI-26_Experimental table_BASS.csv": {
+      "o2": [],
+      "pressure": null,
+      "note": "no O2 column: its 122 tests count as O2 unknown"
+    },
+    "PSI-39_Experimental table_CFI.csv": {
+      "o2": [
+        "Oxygen"
+      ],
+      "pressure": {
+        "column": "Pressure",
+        "unit": "atm"
+      },
+      "note": "'Oxygen' has no unit in the header (values 0.17-0.21: fraction, see unidades-columnas.json); pressure cells read like '1 atm'"
+    },
+    "PSI-47_Experimental table_DAFT.csv": {
+      "o2": [],
+      "pressure": null,
+      "note": "dust sampling; no O2 column"
+    },
+    "PSI-68_Experimental table_Flex2.csv": {
+      "o2": [
+        "Oxygen Mole Fraction"
+      ],
+      "pressure": {
+        "column": "Ambient Pressure (atm)",
+        "unit": "atm"
+      },
+      "note": "rows are a matrix of conditions"
+    },
+    "PSI-69_Experimental table_FLEX.csv": {
+      "o2": [
+        "O initial ambient composition; mole fraction"
+      ],
+      "pressure": {
+        "column": "Ambient pressure; mmHg",
+        "unit": "mmHg"
+      },
+      "note": "same columns the Calculator cites in F-002"
+    },
+    "PSI-98_Experimental table_SAFFIRE-1.csv": {
+      "o2": [
+        "Percent O2"
+      ],
+      "pressure": null,
+      "rows": [
+        1,
+        2
+      ],
+      "note": "rows 3-4 are flow-visualization data, not tests"
+    },
+    "PSI-99_Experimental table_SAFFIRE-2.csv": {
+      "o2": [
+        "Percent O2 (Note 1)"
+      ],
+      "pressure": null,
+      "rows": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "note": "rows 10-15 are flow-visualization data and footnotes, not tests"
+    }
+  }
+}

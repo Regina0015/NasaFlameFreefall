@@ -1,0 +1,24 @@
+{
+  "id": "PSI-39",
+  "summary_student": {
+    "text": "Small drops of liquid fuel, such as n-dodecane, were burned inside a combustion chamber on the International Space Station. The study looked at cool flames, very weak flames that burn at low temperature and can keep going after a normal flame goes out. Understanding them helps explain how fuels ignite and supports the design of safer spacecraft.",
+    "sources": ["approach", "flightProgram", "objective", "researchImpacts"]
+  },
+  "summary_professional": {
+    "text": "Fiber-tethered or needle-suspended droplets of n-dodecane, farnesane and n-dodecane/iso-dodecane mixtures were hot-wire ignited in the MDCA inside the CIR, in gas mixtures with helium dilution. The objective states pressures from 0.25 atm to 5 atm, while the approach states chamber pressures from 0.25 to 0.5 atm. A black-and-white camera measured droplet size, a UV camera captured OH* emission and flame size, and narrow-band and wide-band radiometers measured flame radiation. Targets were cool-flame behavior, droplet extinction diameters, flame dynamics and soot formation.",
+    "sources": ["approach", "objective", "hypothesis", "experimentHardware", "10.1007/s12217-024-10115-x"]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "The work characterizes low-temperature ignition and cool-flame extinction of liquid fuels, which informs how fuels can ignite and keep burning; the record links it to the design of safer spacecraft systems.",
+    "sources": ["researchImpacts", "hypothesis"]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "The tests were flown on the International Space Station in the Combustion Integrated Rack.",
+      "sources": ["flightProgram", "experimentHardware"]
+    }
+  ],
+  "model": "claude-opus-5-5"
+}

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator
 
-from scripts import numbers
+from scripts import number_check
 from scripts.findings import load, save
 from scripts.make_chart import build_chart, main
 from scripts.paths import CONFIG_DIR, SCHEMAS_DIR
@@ -40,8 +40,8 @@ class BuildChartTest(unittest.TestCase):
 
     def test_chart_numbers_trace_to_values(self):
         spec = build_chart(FINDING, LABELS)
-        allowed = numbers.collect(FINDING["values"]) | numbers.collect(FINDING["method"]["params"])
-        self.assertTrue(numbers.collect(spec["data"]["values"]) <= allowed)
+        allowed = number_check.collect(FINDING["values"]) | number_check.collect(FINDING["method"]["params"])
+        self.assertTrue(number_check.collect(spec["data"]["values"]) <= allowed)
 
     def test_labels_fall_back_to_ids(self):
         spec = build_chart(FINDING, {})
@@ -60,7 +60,7 @@ class BuildChartTest(unittest.TestCase):
         self.assertEqual(spec["data"]["values"], [{"phase": "droplet", "o2_match": 1, "o2_and_pressure_match": 1},
                                                   {"phase": "solid", "o2_match": 0, "o2_and_pressure_match": 0}])
         self.assertEqual(spec["title"], "Tests within the lunar base atmosphere (tests)")
-        self.assertTrue(numbers.collect(spec["data"]["values"]) <= numbers.collect(finding["values"]))
+        self.assertTrue(number_check.collect(spec["data"]["values"]) <= number_check.collect(finding["values"]))
 
     def test_sql_chart_needs_one_unit(self):
         spec = build_chart(sql_finding({"a": {"value": 2, "unit": "tests"}, "b": {"value": 5, "unit": "tests"}}), LABELS)

@@ -1,0 +1,29 @@
+{
+  "id": "PSI-101",
+  "summary_student": {
+    "text": "SAME-R heated spacecraft materials, including a fire-retardant foam, on the International Space Station until they gave off smoke, and measured how big the smoke particles became. Without gravity, smoke particles may grow larger, which could keep some smoke detectors from sounding an alarm. The results help design better smoke detectors for long space missions.",
+    "sources": ["approach", "hypothesis", "researchImpacts"]
+  },
+  "summary_professional": {
+    "text": "Reflight of SAME using the same on-orbit hardware, with Pyrell intumescent fire-retardant foam replacing DBP samples, broadened conditions including higher heating temperatures and no flow during sample heating, and a new M-pass instrument replacing one of the two Commercial Diagnostic Enclosures (DustTrak and ionization detector). Flight tests ran from July 16 to September 9, 2010 and completed 66 test points. The aim was to quantify liquid smoke particle sizes in low gravity and relate the droplet size distribution to smoke generation and transport; post-flight ground tests validated the lognormal distribution assumption behind the moment method.",
+    "sources": ["approach", "objective", "10.1016/j.firesaf.2018.04.004", "10.2514/6.2013-3433"]
+  },
+  "pillar": {
+    "value": "detection",
+    "reason": "The investigation measures smoke particle sizes to evaluate smoke detector sensitivity and lead to an advanced fire detector for future spacecraft.",
+    "sources": ["researchImpacts", "hypothesis"]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "Flown on the International Space Station; it evaluates the adequacy of existing spacecraft smoke detectors in reduced gravity.",
+      "sources": ["flightProgram", "researchImpacts"]
+    },
+    {
+      "environment": "transit_vehicle",
+      "reason": "Results are meant for an advanced fire detector for future spacecraft used on long duration missions.",
+      "sources": ["researchImpacts"]
+    }
+  ],
+  "model": "claude-opus-5-5"
+}

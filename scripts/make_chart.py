@@ -15,7 +15,7 @@ import altair as alt
 from scripts import findings
 from scripts.cli import utf8_output
 from scripts.functions import investigation_key
-from scripts.numbers import canonical
+from scripts.number_check import canonical
 from scripts.paths import FINDINGS_DIR, SNAPSHOT_DIR
 from scripts.write_finding import VALIDATOR
 

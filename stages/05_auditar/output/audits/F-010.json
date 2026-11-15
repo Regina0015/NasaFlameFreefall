@@ -1,0 +1,332 @@
+{
+  "finding_id": "F-010",
+  "finding_version": 2,
+  "finding_sha256": "ea049d14c100e9ea6b0f699d21aebffd8ff32ffedabe6074e5c969f8d636513d",
+  "checks": [
+    {
+      "id": "C0",
+      "name": "format",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "Matches schemas/finding.schema.json."
+    },
+    {
+      "id": "C1",
+      "name": "traceability",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "Rows, columns and DOI found: PSI-68: 8 rows in PSI-68_Experimental table_Flex2.csv; PSI-69: 186 rows in PSI-69_Experimental table_FLEX.csv"
+    },
+    {
+      "id": "C2",
+      "name": "fidelity",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "flex_extinction_o2_min = 12.0 % O2 <- cell '0.12' (O initial ambient composition; mole fraction) at row 83 of PSI-69_Experimental table_FLEX.csv; flex_extinction_o2_max = 30.0 % O2 <- cell '0.3' (O initial ambient composition; mole fraction) at row 30 of PSI-69_Experimental table_FLEX.csv"
+    },
+    {
+      "id": "C3",
+      "name": "recalculation",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "All 5 values reproduced by running the finding's SQL over data\\snapshot (read-only); every source row and column it reports exists in the original CSVs."
+    },
+    {
+      "id": "C4",
+      "name": "units_and_ranges",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "Every value is in a known unit and a possible range."
+    },
+    {
+      "id": "C5",
+      "name": "support",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "194 tests; broad support starts at 30 (provisional)."
+    },
+    {
+      "id": "C6",
+      "name": "tested_range",
+      "done_by": "code",
+      "result": "not_applicable",
+      "detail": "No tested-range rule applies."
+    },
+    {
+      "id": "C7",
+      "name": "data_quality",
+      "done_by": "code",
+      "result": "pass",
+      "detail": "566 of 566 needed cells readable (100.0%); level: clean."
+    },
+    {
+      "id": "C8",
+      "name": "faithful_text",
+      "done_by": "code+model",
+      "result": "fail",
+      "detail": "14 of 20 answers differ from the expected one: Q3/claim, Q4/claim, Q5/claim, Q6/claim, Q3/summary_student, Q4/summary_student, Q5/summary_student, Q6/summary_student, Q3/summary_professional, Q4/summary_professional, Q5/summary_professional, Q6/summary_professional, Q7/limitations, Q8/method. 13 unanswered (model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>); needs manual review. Review file ignored: it is for another version of the finding (SHA-256 differs); review it again."
+    },
+    {
+      "id": "C9",
+      "name": "chart_consistency",
+      "done_by": "code",
+      "result": "not_applicable",
+      "detail": "No chart."
+    }
+  ],
+  "recalculation": [
+    {
+      "value_name": "flex_extinction_o2_min",
+      "finding_value": 12.0,
+      "recalculated_value": 12.0,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "flex_extinction_o2_max",
+      "finding_value": 30.0,
+      "recalculated_value": 30.0,
+      "unit": "% O2",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "flex_extinction_tests",
+      "finding_value": 186.0,
+      "recalculated_value": 186.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "flex2_tests_without_outcome",
+      "finding_value": 8.0,
+      "recalculated_value": 8.0,
+      "unit": "tests",
+      "match": true,
+      "detail": "recomputed over every PSI table"
+    },
+    {
+      "value_name": "n_tests",
+      "finding_value": 194,
+      "recalculated_value": 194,
+      "unit": "tests",
+      "match": true,
+      "detail": "sum of the cited rows over all evidence"
+    }
+  ],
+  "text_review": [
+    {
+      "question_id": "Q1",
+      "question": "Does every number in the text come from values, n_tests, method params, the cited rows or the recalculation?",
+      "field": "claim",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Every number has a source.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q2",
+      "question": "Do the units of the numbers in the text (%) agree with the units of their sources?",
+      "field": "claim",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Units agree.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q1",
+      "question": "Does every number in the text come from values, n_tests, method params, the cited rows or the recalculation?",
+      "field": "summary_student",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Every number has a source.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q2",
+      "question": "Do the units of the numbers in the text (%) agree with the units of their sources?",
+      "field": "summary_student",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Units agree.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q1",
+      "question": "Does every number in the text come from values, n_tests, method params, the cited rows or the recalculation?",
+      "field": "summary_professional",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Every number has a source.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q2",
+      "question": "Do the units of the numbers in the text (%) agree with the units of their sources?",
+      "field": "summary_professional",
+      "done_by": "code",
+      "expected": "yes",
+      "answer": "yes",
+      "reason": "Units agree.",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q3",
+      "question": "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? Ignore numbers: they are checked separately.",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "no",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q4",
+      "question": "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', 'materials in space' or 'all PSI tests'.",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q5",
+      "question": "Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)?",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "no",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q6",
+      "question": "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count.",
+      "field": "claim",
+      "done_by": "model",
+      "expected": "no",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q3",
+      "question": "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? Ignore numbers: they are checked separately.",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "no",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q4",
+      "question": "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', 'materials in space' or 'all PSI tests'.",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q5",
+      "question": "Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)?",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "no",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q6",
+      "question": "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count.",
+      "field": "summary_student",
+      "done_by": "model",
+      "expected": "no",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q3",
+      "question": "Does the TEXT name a fuel, material, experiment, investigation or test condition that does not appear in CITED INVESTIGATIONS, EVIDENCE, VALUES, ASSUMPTIONS or LIMITATIONS? Ignore numbers: they are checked separately.",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "no",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q4",
+      "question": "Is every statement in the TEXT limited to tests of the CITED INVESTIGATIONS? Answer yes if the text only talks about those investigations, for example 'none of the 129 BASS-II tests' or 'in these two investigations'. Answer no if it talks about a wider group, such as 'solid materials', 'materials in space' or 'all PSI tests'.",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q5",
+      "question": "Does the TEXT present a lack of tests as if it were a safety result (for example, calling something safe or unsafe because it was not tested)?",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "no",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q6",
+      "question": "Does the TEXT predict or describe how fire or combustion behaves under lunar or Martian gravity? Saying that there is no data for lunar or Martian gravity does not count.",
+      "field": "summary_professional",
+      "done_by": "model",
+      "expected": "no",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q7",
+      "question": "Does at least one LIMITATIONS item name something specific that this finding does NOT let you conclude (for example an investigation, material, condition or environment it does not cover)? Saying where the data come from is not a limitation.",
+      "field": "limitations",
+      "done_by": "model",
+      "expected": "yes",
+      "answer": null,
+      "reason": "model unavailable: gemma4:e4b-it-qat at http://localhost:11434/api/chat: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+      "attempts": 0
+    },
+    {
+      "question_id": "Q8",
+      "question": "Does the SQL in method.params answer the finding's question, and do its filters keep every test they should (for example, rows with NULL are dropped by NOT IN)? The code only checks that the numbers come from the data; a person must read the SQL.",
+      "field": "method",
+      "done_by": "human",
+      "expected": "yes",
+      "answer": null,
+      "attempts": 0,
+      "reason": "Pending. The snapshot covers 21 of 22 PSI tables; a claim about 'PSI' or 'no test' does not see: PSI-142_Experimental table_Data Summary Table.csv."
+    }
+  ],
+  "grade": "C",
+  "reasons": [
+    "C8 failed: the text says more than the evidence supports, or it was not reviewed."
+  ],
+  "send_back_to": null,
+  "audited_by": {
+    "script": "scripts/auditar.py",
+    "model": null,
+    "model_params": null,
+    "date": "2026-11-15T08:02:53Z"
+  }
+}

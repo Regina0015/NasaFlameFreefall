@@ -2,12 +2,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "review.schema.json",
   "title": "Human review of model flags",
-  "description": "A teammate's decision on each C8 flag raised by the local model for one finding. Lives in stages/05_auditar/output/reviews/F-XXX.json. auditar.py creates it with every flag 'pending'; a person edits it; the next run honors it. Only model answers (Q3-Q7) can be dismissed; code checks cannot.",
+  "description": "A teammate's decision on each C8 flag raised by the local model for one finding. Lives in stages/05_auditar/output/reviews/F-XXX.json. auditar.py creates it with every flag 'pending'; a person edits it; the next run honors it. Only model answers (Q3-Q7) and the human question Q8 (does the SQL answer the question?) can be dismissed; code checks cannot.",
   "type": "object",
-  "required": ["finding_id", "finding_sha256", "flags"],
+  "required": [
+    "finding_id",
+    "finding_sha256",
+    "flags"
+  ],
   "additionalProperties": false,
   "properties": {
-    "finding_id": { "type": "string", "pattern": "^F-[0-9]{3}$" },
+    "finding_id": {
+      "type": "string",
+      "pattern": "^F-[0-9]{3}$"
+    },
     "finding_sha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$",
@@ -17,18 +24,55 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["question_id", "field", "model_reason", "decision", "reviewer", "note"],
+        "required": [
+          "question_id",
+          "field",
+          "model_reason",
+          "decision",
+          "reviewer",
+          "note"
+        ],
         "additionalProperties": false,
         "properties": {
-          "question_id": { "enum": ["Q3", "Q4", "Q5", "Q6", "Q7"] },
-          "field": { "enum": ["claim", "summary_student", "summary_professional", "limitations"] },
-          "model_reason": { "type": "string", "description": "What the model said (copied by auditar.py, for context)" },
+          "question_id": {
+            "enum": [
+              "Q3",
+              "Q4",
+              "Q5",
+              "Q6",
+              "Q7",
+              "Q8"
+            ]
+          },
+          "field": {
+            "enum": [
+              "claim",
+              "summary_student",
+              "summary_professional",
+              "limitations",
+              "method"
+            ]
+          },
+          "model_reason": {
+            "type": "string",
+            "description": "What the model said (copied by auditar.py, for context)"
+          },
           "decision": {
-            "enum": ["pending", "dismiss", "confirm"],
+            "enum": [
+              "pending",
+              "dismiss",
+              "confirm"
+            ],
             "description": "dismiss = false alarm, ignore it; confirm = real problem, keep failing C8; pending = not reviewed yet"
           },
-          "reviewer": { "type": "string", "description": "Who decided. Required to dismiss" },
-          "note": { "type": "string", "description": "Why. Required to dismiss" }
+          "reviewer": {
+            "type": "string",
+            "description": "Who decided. Required to dismiss"
+          },
+          "note": {
+            "type": "string",
+            "description": "Why. Required to dismiss"
+          }
         }
       }
     }

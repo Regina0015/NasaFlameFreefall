@@ -53,9 +53,8 @@ Write `stages/03_investigar/output/drafts/PSI-XX.json` with exactly these fields
 
 Run `uv run python -m scripts.write_investigation PSI-XX`. It prints `saved` or a list of problems. Fix the draft and run it again, at most 2 more times; if it still fails, report the investigation as failed with its problems.
 
-The only commands you may run are:
+The only command you may run is:
 - `uv run python -m scripts.write_investigation <ids>`
-- `uv run python -m scripts.build_snapshot`
 
 Run each command exactly as shown, from the repository root: no `cd`, no `&&`, no pipes or redirection (`|`, `>`, `2>&1`). A hook blocks anything else.
 

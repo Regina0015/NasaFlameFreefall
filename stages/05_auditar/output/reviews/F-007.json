@@ -1,0 +1,14 @@
+{
+  "finding_id": "F-007",
+  "finding_sha256": "f0d92b01e3e6f6195366f236a08a84bccf14c823f47d56b8787d5db61eb330df",
+  "flags": [
+    {
+      "question_id": "Q8",
+      "field": "method",
+      "model_reason": "Pending. The snapshot covers 21 of 22 PSI tables; a claim about 'PSI' or 'no test' does not see: PSI-142_Experimental table_Data Summary Table.csv.",
+      "decision": "dismiss",
+      "reviewer": "Regina Flores",
+      "note": "The SQL answers the question: every test in the snapshot has a gravity value (none is NULL, so NOT IN drops nothing). The claim is limited to the snapshot, which is correct."
+    }
+  ]
+}

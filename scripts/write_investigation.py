@@ -18,7 +18,7 @@ from jsonschema import Draft202012Validator
 
 from scripts.cli import utf8_output
 from scripts.investigations import facts, load_tiers
-from scripts.numbers import collect, numbers_in
+from scripts.number_check import collect, numbers_in
 from scripts.paths import CONFIG_DIR, INVESTIGATOR_OUT, PSI_DIR, ROOT, SCHEMAS_DIR
 
 DRAFT_FIELDS = {"id", "summary_student", "summary_professional", "pillar", "environments", "model"}

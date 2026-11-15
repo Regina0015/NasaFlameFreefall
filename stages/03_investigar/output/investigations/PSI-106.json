@@ -1,0 +1,57 @@
+{
+  "id": "PSI-106",
+  "acronym": "SLICE",
+  "label": "SLICE",
+  "title": "Structure and Liftoff In Combustion Experiment",
+  "doi": "10.60555/pm12-rg61",
+  "type": "flight",
+  "subarea": "",
+  "platform": "International Space Station (ISS)",
+  "hardware": "",
+  "scope": "psi",
+  "tier": 2,
+  "tier_reason": "Team list, Tier 2. PSI subarea: not stated in PSI.",
+  "boost_environments": [],
+  "summary_student": {
+    "text": "SLICE burned gas fuels such as methane and ethylene from small burner tubes on the International Space Station while air flowed gently around the flame. It studied what holds a flame in place and when it lifts off the burner, and how soot and flame length change without gravity. Understanding how flames stay stable gives insights that can enhance fire safety.",
+    "sources": [
+      "approach",
+      "objective",
+      "researchImpacts"
+    ]
+  },
+  "summary_professional": {
+    "text": "Laminar coflow diffusion flames of methane, ethylene and nitrogen-diluted mixtures were burned on exchangeable burner tubes in a fan-driven flow duct with sensors for flow rate and temperature, and were manually ignited under controlled coflow air. Objectives included flame-base stabilization mechanisms, liftoff velocity limits for different fuels and burner diameters, the effect of nitrogen dilution on soot and stability, and microgravity effects on flame length and radiative heat loss compared with normal gravity. More than 4,000 high-resolution images were captured across 13 testing experiments, with calibration tests for airflow velocity, soot measurement and the fans. Oxygen concentration and pressure are not stated in PSI.",
+    "sources": [
+      "approach",
+      "objective",
+      "hypothesis",
+      "10.1016/j.proci.2014.05.138",
+      "10.1016/j.proci.2014.05.064"
+    ]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "The fire-safety link is insight into flame stability and behavior; no detection or suppression measurement is described.",
+    "sources": [
+      "researchImpacts",
+      "objective"
+    ]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "Conducted under the International Space Station program in microgravity; the record states only a general fire-safety benefit.",
+      "sources": [
+        "flightProgram",
+        "researchImpacts"
+      ]
+    }
+  ],
+  "generated_by": {
+    "agent": "investigator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T06:58:23Z"
+  },
+  "reviewed_by": null
+}

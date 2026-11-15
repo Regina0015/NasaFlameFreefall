@@ -12,7 +12,7 @@ The grade comes from checks that anyone can repeat. No model chooses it. The Aud
 | C3 | Recalculation | Code | Does a second calculation, made with separate code, give the same result? |
 | C4 | Units and ranges | Code | Are the values physically possible and in the right unit? |
 | C5 | Support | Code | How many tests back it? |
-| C6 | Tested range | Code | Does the claim stay within the conditions that were actually tested? |
+| C6 | Tested range | Code | Does the claim stay within the conditions that were actually tested? A count of zero over tests that have no data for the condition (for example, solid tests without an O2 column) is not a zero, and fails C6 |
 | C7 | Data quality | Code | What share of the needed cells could be read? |
 | C8 | Faithful text | Code + model | Does the text say only what the evidence supports, and mention its limits? Code checks the numbers and units; the model checks the meaning |
 | C9 | Chart | Code | Does every number in the chart come from the finding or the recalculation? (Not applicable when there is no chart) |
@@ -34,8 +34,9 @@ Findings that include user-provided data can be graded B at most (phase 2).
 The local model is sometimes wrong, almost always by being too cautious (in the 2026-11-14 test: 14 of 17 right, 3 false alarms and no missed alert). So:
 
 - A model alert (Q3 to Q7) makes C8 fail, as before.
+- In `sql_query` findings, the code also opens a question only a person can close (Q8: does the SQL answer the question?). The code checks that the SQL's numbers come from the data, not that it asks the right thing. Q8 fails C8 until a person dismisses it.
 - A team member can **dismiss** it as a false alarm in `stages/05_auditar/output/reviews/F-XXX.json`, with their name and the reason. `auditar.py` creates that file with every alert set to `pending`. Format: `schemas/review.schema.json`.
-- On the next run, dismissed alerts no longer count, and the audit records who dismissed them and why.
+- On the next run, dismissed alerts no longer count, and the audit records who dismissed them and why. Confirmed alerts keep failing C8 and are recorded as confirmed, with who and why.
 - If the finding changes (a different SHA-256), the review no longer applies: it is saved as `.old.json` and reviewed again.
 - **The code checks (C0 to C7, C9, Q1 and Q2) cannot be dismissed.**
 

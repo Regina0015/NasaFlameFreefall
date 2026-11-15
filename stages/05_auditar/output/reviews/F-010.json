@@ -1,0 +1,14 @@
+{
+  "finding_id": "F-010",
+  "finding_sha256": "ea049d14c100e9ea6b0f699d21aebffd8ff32ffedabe6074e5c969f8d636513d",
+  "flags": [
+    {
+      "question_id": "Q8",
+      "field": "method",
+      "model_reason": "Pending. The snapshot covers 21 of 22 PSI tables; a claim about 'PSI' or 'no test' does not see: PSI-142_Experimental table_Data Summary Table.csv.",
+      "decision": "pending",
+      "reviewer": "",
+      "note": ""
+    }
+  ]
+}

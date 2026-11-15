@@ -1,0 +1,82 @@
+{
+  "id": "PSI-20",
+  "acronym": "ACME BRE",
+  "label": "ACME BRE",
+  "title": "Advanced Combustion via Microgravity Experiments - Burning Rate Emulator",
+  "doi": "10.60555/vb93-3y72",
+  "type": "flight",
+  "subarea": "Flames of Gaseous Fuels",
+  "platform": "International Space Station (ISS)",
+  "hardware": "Combustion Integrated Rack (CIR), ACME",
+  "scope": "psi",
+  "tier": 2,
+  "tier_reason": "Team list, Tier 2. PSI subarea: Flames of Gaseous Fuels. Gas burner that emulates burning solids; raised to Tier 1 for transit vehicles and the lunar base.",
+  "boost_environments": [
+    "transit_vehicle",
+    "lunar_base"
+  ],
+  "summary_student": {
+    "text": "Aboard the International Space Station, a gas burner was used to imitate how real solid and liquid materials burn, without any air flow around the flame. In normal air the flames went out quickly, but in oxygen-rich air, like the air being considered for future spacecraft, they kept burning. This matters because turning off the ventilation is one of the standard steps for putting out a fire in a spacecraft.",
+    "sources": [
+      "objective",
+      "researchImpacts",
+      "flightProgram"
+    ]
+  },
+  "summary_professional": {
+    "text": "The Burning Rate Emulator fed CH4/N2 and C2H4/N2 mixtures through porous circular burners of 25 and 50 mm diameter in a quiescent microgravity ambient, using ACME in the Combustion Integrated Rack on the ISS. O2/N2 ambients included NASA-considered crew atmospheres of 14.7 psia with 21% oxygen, 10.2 psia with 26.5%, and 8.2 psia with 34% oxygen, with O2/CO2 ambients as a desired extension. Burner surface temperature, heat flux and extinction limits were recorded to build flammability maps that relate the flames to fuel heat of gasification, heat of combustion and smoke point. Quasi-steady burning emulating materials such as PMMA and Nylon was observed without air flow in elevated-oxygen atmospheres.",
+    "sources": [
+      "objective",
+      "approach",
+      "hypothesis",
+      "researchImpacts",
+      "experimentHardware",
+      "10.1016/j.combustflame.2018.01.044"
+    ]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "The results are flammability maps for condensed materials, and the record suggests NASA may want to increase use of its cone calorimeter flammability test for selecting materials. They also show that stopping ventilation may not extinguish flames in elevated-oxygen atmospheres.",
+    "sources": [
+      "researchImpacts",
+      "hypothesis"
+    ]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "Tests were run aboard the International Space Station, and the record says the results are relevant to spacecraft fire safety, including the practice of cutting ventilation.",
+      "sources": [
+        "flightProgram",
+        "researchImpacts"
+      ]
+    },
+    {
+      "environment": "transit_vehicle",
+      "reason": "The record says continued burning without air flow was seen in elevated-oxygen atmospheres being considered for future spacecraft.",
+      "sources": [
+        "researchImpacts"
+      ]
+    },
+    {
+      "environment": "lunar_base",
+      "reason": "One tested atmosphere, 8.2 psia with 34% oxygen, is in the oxygen-enriched, reduced-pressure range of the lunar base atmosphere. Warning: PSI has no partial-gravity combustion data; these are microgravity results.",
+      "sources": [
+        "objective"
+      ]
+    },
+    {
+      "environment": "pressurized_rover",
+      "reason": "The pressurized rover shares the lunar oxygen-enriched, reduced-pressure atmosphere, and the 8.2 psia, 34% oxygen condition was tested. Microgravity results only; no partial-gravity data.",
+      "sources": [
+        "objective"
+      ]
+    }
+  ],
+  "generated_by": {
+    "agent": "investigator",
+    "model": "claude-opus-5-5",
+    "date": "2026-11-15T06:58:54Z"
+  },
+  "reviewed_by": null
+}

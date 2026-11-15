@@ -15,7 +15,7 @@ import duckdb
 
 from scripts.contract import SOURCE_SEPARATOR
 from scripts.mdtable import parse_table
-from scripts.numbers import numbers_in
+from scripts.number_check import numbers_in
 from scripts.query import execute_limited
 
 SCRIPT = "scripts/functions.py"
@@ -148,11 +148,14 @@ def coverage_by_environment(con: duckdb.DuckDBPyConnection, environment: str, en
     stats = con.execute(
         f"SELECT phase, count(*) FILTER (WHERE {o2_match}), "
         f"count(*) FILTER (WHERE {o2_match} AND pressure_atm_min <= ?), "
-        f"count(*) FILTER (WHERE {o2_match} AND pressure_atm_min IS NULL) "
+        f"count(*) FILTER (WHERE {o2_match} AND pressure_atm_min IS NULL), "
+        f"count(*) FILTER (WHERE {O2_HIGH} IS NULL) "
         "FROM tests WHERE phase IS NOT NULL GROUP BY phase ORDER BY phase",
         [o2_min, o2_min, pressure_max_atm, o2_min]).fetchall()
     values: dict = {}
-    for phase, n_o2, n_both, n_unknown in stats:
+    for phase, n_o2, n_both, n_unknown, n_no_o2 in stats:
+        if n_o2 == 0 and n_no_o2:
+            continue  # a zero over tests without O2 data is no data, not zero (Auditor rule C6)
         key = phase_key(phase)
         if f"{key}_o2_match" in values:
             raise ValueError(f"two phases give the same value name: {key}")
@@ -163,7 +166,8 @@ def coverage_by_environment(con: duckdb.DuckDBPyConnection, environment: str, en
                        f"WHERE phase IS NOT NULL AND {o2_match}", [o2_min]).fetchall()
     formula = ("For each fuel phase, the number of tests whose oxygen reached at least o2_min_pct, how many of them "
                "also ran at or below pressure_max_psi (pressure_atm_min <= pressure_max_psi / 14.6959), and how many "
-               "of them report no pressure.")
+               "of them report no pressure. A phase with no test at that oxygen but with tests that report no oxygen is "
+               "left out of the values: that is no data, not zero.")
     params = {k: atmosphere[k] for k in ("environment", "o2_min_pct", "pressure_max_psi", "source")}
     return _result("coverage_by_environment", params, formula, values, len(used),
                    _evidence(con, _group_rows(used, O2_FIELDS + ("pressure_atm_min",))))

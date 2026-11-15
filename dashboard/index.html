@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FlameTrace — Flame in Freefall</title>
     <script>
-      // Apply the saved or system theme before first paint (see src/lib/theme.js).
+      // Apply the saved or system theme before first paint.
       try {
         var t = localStorage.getItem('nasatwisters-theme')
-        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+        if (t !== 'light' && t !== 'dark') {
+          t = matchMedia('(prefers-color-scheme: light)').matches
+            ? 'light'
+            : 'dark'
+        }
         document.documentElement.dataset.theme = t
       } catch (e) {}
     </script>

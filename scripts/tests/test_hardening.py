@@ -7,7 +7,7 @@ from unittest import mock
 from scripts.answer import format_answer
 from scripts.findings import save
 from scripts.functions import sql_values
-from scripts.numbers import numbers_in
+from scripts.number_check import numbers_in
 from scripts.paths import ROOT
 from scripts.query import QueryRejected, open_snapshot, run_query
 from scripts.tests.helpers import FIXTURE_TEXT as TEXT, NOW, TIERS, fixture_finding, fixture_o2_calc, fixture_test, \

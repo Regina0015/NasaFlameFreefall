@@ -20,12 +20,12 @@ The dashboard only shows results that went through all three. It has two views: 
 |---|---|
 | `stages/` | Six numbered stages: ingest, normalize, investigate, calculate, audit and publish. Each has a `CONTEXT.md` that states what it reads, what it does and what it delivers |
 | `_config/` | Shared context for the agents: challenge summary, tier table, crew environments, the two views, confidence grade, data schema, models |
-| `data/snapshot/` | The normalized PSI data the Calculator reads (temporary copy until the database export exists) |
+| `data/snapshot/` | The normalized PSI data the Calculator and the Auditor read: a copy of the database made with `scripts.pull_db` (the database is the source of truth) |
 | `.claude/` | The Investigator and Calculator agents and their commands (`/investigate`, `/ask`, `/chart`, `/graph`) |
 | `schemas/` | Exact format of the data passed between stages, with examples |
 | `scripts/` | Python tools for every deterministic step: download, normalize, query, calculate, check, chart |
 | `supabase/` | `schema.sql`: the database tables |
-| `dashboard/` | The React web app; reads from Supabase |
+| `dashboard/` | The React web app: login, demo view, 3D station, data sections and the local chat; reads from Supabase |
 | `docs/` | Challenge text, PSI data inventory, Calculator output format, and the ICM paper |
 
 To get started: `CONTEXT.md` gives the order of the stages and `CLAUDE.md` the working rules. The layout follows the ICM method (`docs/Interpretable Context Methodology.pdf`): numbered stage folders, with plain-text files as the contract between them.
@@ -53,22 +53,62 @@ Full spec: `docs/calculator-output.md`. Schema: `schemas/finding.schema.json`. E
 
 ## Status
 
-Branch `calculator-agent`. Setup: `uv sync` (needs uv and Python 3.12+); tests: `uv run python -m unittest discover -s scripts/tests -t .` (see `CLAUDE.md`).
+Setup: `uv sync` (needs uv and Python 3.12+); tests: `uv run python -m unittest discover -s scripts/tests -t .` and `uv run python -m unittest scripts.test_auditar` (see `CLAUDE.md`).
 
 **Works now**
 
-- PSI download (24 combustion investigations, 22 test tables) and the data snapshot: 967 tests from 9 tables of 8 investigations, tiers, and 63 relations between investigations.
-- Read-only SQL over the snapshot (`scripts.query`), a tested calculation catalog (`o2_range`, `coverage_by_environment`, `sql_query`) and calc files (`scripts.run_calc`).
-- Findings checked before they are saved (`scripts.write_finding`): every number in the text must come from the computed values, and every finding validates against `schemas/finding.schema.json`.
-- Charts (Vega-Lite 6) and proof graphs on request, saved as a new version of the finding.
-- Agent commands in Claude Code: `/investigate`, `/ask "<question>"`, `/chart F-001`, `/graph F-001`.
-- Eight demo findings in `stages/04_calcular/output/findings/` from `docs/demo-questions.md` (draft for team review), including the lunar oxygen gap and a `no_data` answer.
+- **The database (Supabase) is the source of truth.** Tables `investigations` (24), `tests` (1982), `relations` (95), `tests_clean` and `measurements`. `uv run python -m scripts.pull_db` copies the first three into `data/snapshot/`; `--check` only says whether they differ.
+- **Calculator:** read-only SQL over the snapshot, a tested calculation catalog (`o2_range`, `coverage_by_environment`, `sql_query`) and findings checked before they are saved (every number in the text must come from the computed values).
+- **"No data" is not zero:** `coverage_by_environment` leaves out a fuel phase whose count would be 0 while some of its tests report no oxygen (solids and smoke for the lunar base). The chat says "No data for ..." for those phases.
+- **Investigator:** records for all 24 investigations in `stages/03_investigar/output/investigations/`, with `tier-review.md` (5 investigations the brief names that the tier table keeps at Tier 2) and `questions.json` (9 candidate questions). `uv run python -m scripts.push_investigations` shows what would change in the database; after a person reviews the records, `--apply` updates the four Investigator columns and copies the database back into the snapshot. The agent itself can no longer rebuild the snapshot.
+- **Auditor** (`scripts/auditar.py`): recalculates every value with code from the original NASA tables, never with the model, and grades each finding. Its model step (C8) needs Ollama.
+- **Dashboard:** login and demo view, 3D station model, the investigations section reading the `investigations` table, and the local chat in the "Research assistant" panel (`npm run dev` only).
+- Charts (Vega-Lite 6) and proof graphs on request; agent commands `/investigate`, `/ask "<question>"`, `/chart F-001`, `/graph F-001`.
+- `scripts/numbers.py` is now `scripts/number_check.py`: the old name hid the Python standard module `numbers` and crashed the Auditor.
+
+**Findings and their grades (without the model, so C8 is still open)**
+
+| Finding | Grade now | What is missing |
+|---|---|---|
+| F-001, F-006, F-008, F-009 | C | C8 (needs Ollama) |
+| F-003, F-004, F-005 | C | C8, and a person answers Q8 (does the SQL answer the question?) in `stages/05_auditar/output/reviews/F-XXX.json` |
+| F-007 | rejected | C8 and Q8: a no-data finding must pass the text review |
+| F-002 (v3) | rejected | C3: 20 PSI-10 gas tests lack pressure in the database (see below), then C8 |
 
 **Waiting on teammates**
 
-- **Auditor:** `scripts.audit_step` runs the teammate's `scripts/auditar.py` and reads `stages/05_auditar/output/audits/`. Its model step (C8) needs Ollama with `gemma4:e4b-it-qat`; recalculators for `coverage_by_environment` and `sql_query`, and a total-count value name (`_n_tests`), are still to come. No grade is ever invented.
-- **Database:** run `/investigate` once from a fresh pull, review its output, then define the findings table; the publish script comes after that. If the database export changes the snapshot columns, the query tool reports the missing ones by name.
-- **Dashboard:** reads findings from the database; it draws `chart` (Vega-Lite 6) and `graph` from the finding file.
+- **Database owner:**
+  - Add the pressure fix to your copy of the PSI-10 mapper: `_flame_design_pressure` in `scripts/mappers.py` reads `pmean (atm)` and, only when it is empty, `pinit (atm)`, noting it in `problems`. The two differ by about 0.5% in the 187 rows that have both. It fills the pressure of 20 tests (0.93 atm), so `gas_pressure_unknown` in F-002 goes from 36 to 16 and matches the Auditor; the 66 tests at lunar oxygen and pressure do not change. Copy only that function: your mapper is newer than the repository one (it treats PSI-69 "0 mmHg" as not recorded, which this one does not do yet). Then reload the database; we run `pull_db` and regenerate F-002.
+  - Add the findings table (and audits) to `supabase/schema.sql`; until then the dashboard findings section shows sample data.
+  - `load_snapshot.py` is not in the repository yet.
+- **Team:** review three Investigator records against PSI, every line of `tier-review.md`, and the use of `transit_vehicle`; then run `push_investigations --apply`. Tier changes go in `_config/tiers.md`.
+- **Auditor and model:** see "Connecting the Auditor to a teammate's model" below.
+
+## Connecting the Auditor to a teammate's model
+
+The Auditor sends each text question to an Ollama server. A teammate on the same network is building an API in front of their Ollama. For the Auditor to use it without changes:
+
+- In `.env`: `OLLAMA_URL=http://<their address>:<port>` and `MODELO_AUDITOR=gemma4:e4b-it-qat` (the model in `_config/models.md`).
+- The API must accept `POST <OLLAMA_URL>/api/chat` with the Ollama body (`model`, `messages`, `stream: false`, `think: false`, `format` with a JSON schema, `options`) and answer with the Ollama shape (`message.content`), because `OllamaModel` in `scripts/auditar.py` reads exactly that. The dashboard chat uses `/api/generate` and `/api/tags` on the same URL.
+- Security: Ollama has no password. Expose only those routes and the one model, ask for a token, and do not open it beyond the local network. If the API asks for a token, `OllamaModel` must send it in a header: a two-line change in the Auditor file, to agree with its owner; keep the token only in `.env`.
+- Use the same model and settings on every computer, so the same finding gets the same review.
+
+## Idea for the dashboard: an interpretation lab (not built yet)
+
+The official path stays fixed: each finding uses one documented interpretation, so the Auditor can repeat it and the grade means something. The lab is a separate panel next to the chat to ask "what if I read the data differently?" and see whether a result holds (a sensitivity check). If a number barely moves across reasonable choices, the finding is robust; if it moves a lot, that is worth showing too.
+
+- **Not a new agent.** It is one more read-only tool of the chat: code recomputes with the chosen options and shows option A next to option B; the model only explains the difference, and the chat number check still applies.
+- **Always labeled "exploration, ungraded".** Nothing from the lab is a finding. A result worth keeping goes through `/ask` and the Auditor.
+- **Variables to start with:**
+  - Pressure column when a table has several: initial, mean or final (`pinit`, `pmean`, `pfinal`).
+  - Oxygen read as a fraction or a percent (0.3 or 30), and mole versus volume fraction (treated as equal today).
+  - Oxygen threshold: 30% (lunar habitat), 34% (the 8.2 psi atmosphere in PSI-20), or a custom value.
+  - Pressure limit: 10.2 psi, 8.2 psi or a custom value.
+  - Include or exclude inverse flames (CFI-G and Flame Design inverse report the burner stream, not the room).
+  - Rows that are test days or ranges ("0.17; 0.21"): use the minimum, the maximum, or leave them out.
+  - Tests with no oxygen or no pressure: leave them out (no data) or show them as their own group.
+  - Tier filter: Tier 1 only, or all investigations.
+- **Show next to each result:** how many tests each choice adds or drops, and which investigations they come from.
 
 ## Notes
 

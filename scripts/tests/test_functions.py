@@ -97,6 +97,17 @@ class CoverageTest(FixtureCase):
         self.assertEqual([e["investigation"] for e in c["evidence"]], ["PSI-69"])
         self.assertTrue(c["evidence"][0]["rows"] and all(isinstance(r, int) for r in c["evidence"][0]["rows"]))
 
+    def test_coverage_zero_with_tests_lacking_o2_is_no_data(self):
+        # Auditor rule C6: a zero over tests without O2 data is not a zero, so the phase is left out.
+        self.con.close()
+        smoke = fixture_test("PSI-142", "smoke.csv", 1, "smoke", None)
+        solid_no_o2 = fixture_test("PSI-99", SAFFIRE2_TABLE, 2, "solid", None)
+        self.snap = make_fixture_snapshot(self.root / "snap2", extra_tests=[PSI99_SOLID, smoke, solid_no_o2])
+        self.con = open_snapshot(self.snap, user_root=self.root / "user")
+        v = coverage_by_environment(self.con, "lunar_base", ENV_MD)["values"]
+        self.assertFalse([k for k in v if k.startswith(("smoke_", "solid_"))])
+        self.assertEqual(v["droplet_o2_match"]["value"], 1)  # every droplet has O2: a real count stays
+
     def test_coverage_unknown_environment(self):
         with self.assertRaisesRegex(ValueError, "no sourced atmosphere for space_station"):
             coverage_by_environment(self.con, "space_station", ENV_MD)

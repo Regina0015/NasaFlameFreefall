@@ -1,0 +1,24 @@
+{
+  "id": "PSI-10",
+  "summary_student": {
+    "text": "Small ball-shaped flames of methane and ethylene gas were burned in drop towers and aboard the International Space Station. The team studied when these flames start making soot and when they go out on their own. Knowing the conditions where a flame cannot survive helps explain how fires behave, and possibly die out, in weightlessness.",
+    "sources": ["approach", "objective", "flightProgram"]
+  },
+  "summary_professional": {
+    "text": "Quasi-steady normal and inverse spherical diffusion flames of ethylene and methane, plus normal and inverse coflow flames, were studied in drop towers and in the ACME hardware of the Combustion Integrated Rack on the ISS. Flow rate, stoichiometric mixture fraction (Zst), inert dilution (N2 or CO2) and pressure were varied for both convection directions. Soot-inception and extinction limits, flame temperature, size, color and soot volume fraction were measured with cameras, radiometers, photomultiplier tubes and thermocouples. One stated hypothesis is that these flames extinguish when the peak temperature first decreases below 1130 K.",
+    "sources": ["objective", "approach", "hypothesis", "experimentHardware", "10.1016/j.combustflame.2021.02.019"]
+  },
+  "pillar": {
+    "value": "prevention",
+    "reason": "The investigation maps soot-inception and extinction limits and asks whether pseudo-flammability limits can be obtained, which describes when a gas flame can or cannot be sustained. The record names no direct fire-safety application; its stated impacts are for terrestrial combustors.",
+    "sources": ["objective", "researchImpacts"]
+  },
+  "environments": [
+    {
+      "environment": "space_station",
+      "reason": "Long-duration flame tests were run aboard the International Space Station, so they describe gas-flame behavior and extinction in station microgravity. The record does not state the cabin atmosphere tested as a crew atmosphere.",
+      "sources": ["flightProgram", "approach"]
+    }
+  ],
+  "model": "claude-opus-5-5"
+}

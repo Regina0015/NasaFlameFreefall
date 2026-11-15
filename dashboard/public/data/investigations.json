@@ -1,22 +1,22 @@
 [
   {
     "id": "PSI-25",
-    "acronimo": "BASS-II",
-    "titulo": "Burning and Suppression of Solids - II",
+    "acronym": "BASS-II",
+    "title": "Burning and Suppression of Solids - II",
     "doi": "10.60555/4qc4-de67",
-    "tipo": "Microgravity Investigation",
+    "type": "Microgravity Investigation",
     "subarea": "Spacecraft Fire Safety",
-    "plataforma": "International Space Station (ISS)",
+    "platform": "International Space Station (ISS)",
     "hardware": "Microgravity Science Glovebox (MSG)"
   },
   {
     "id": "PSI-69",
-    "acronimo": "FLEX",
-    "titulo": "Flame Extinguishment Experiment",
+    "acronym": "FLEX",
+    "title": "Flame Extinguishment Experiment",
     "doi": "10.60555/mbq8-0451",
-    "tipo": "Microgravity Investigation",
+    "type": "Microgravity Investigation",
     "subarea": "Spacecraft Fire Safety",
-    "plataforma": "International Space Station (ISS)",
+    "platform": "International Space Station (ISS)",
     "hardware": "Combustion Integrated Rack (CIR), Multi-user Droplet Combustion Apparatus (MDCA)"
   }
 ]
