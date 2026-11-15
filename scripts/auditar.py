@@ -46,6 +46,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMAS = ROOT / "schemas"
 PSI_DIR = ROOT / "stages/01_ingesta/output/psi"  # etapa 01: CSV originales y fichas PSI-XX.json juntos
+REFERENCES = ROOT / "stages/05_auditar/references"
+COVERAGE_FILE = REFERENCES / "cobertura-tablas.json"   # fase, columna de O2 y de presión de cada tabla PSI
+ENVIRONMENTS_MD = ROOT / "_config/environments.md"     # atmósfera de cada ambiente habitado
+PRESSURE_TO_PSI = {"psi": 1.0, "atm": 14.6959, "bar": 14.5038, "kpa": 0.145038, "mmhg": 0.0193368, "torr": 0.0193368}
 
 # --- Umbrales PROVISIONALES (ver _config/confidence.md; el equipo puede cambiarlos) ---
 RECALC_REL_TOL = 1e-6      # C3: tolerancia relativa del recálculo. Los conteos deben ser exactos.
@@ -236,7 +240,7 @@ def parse_o2_cell(cell: str) -> tuple[list[float], str]:
     """Lectura para cálculos de cobertura (o2_range), un poco más amplia que parse_number:
       '22.2'            -> [22.2], 'exact'
       '~ 22.1'          -> [22.1], 'imprecise'   (aproximado: Saffire-II)
-      '22.1 to 22.0'    -> [22.1, 22.0], 'imprecise'
+      '22.1 to 22.0'    -> [22.1, 22.0], 'imprecise'   (también '21.5 - 21.7': Saffire-I)
       '21; 26.5; 40'    -> [21, 26.5, 40], 'imprecise'  (varios niveles en un día: BRE)
     Todo lo demás ('3400%', texto, vacío) -> [], 'unreadable'. Nunca corrige un dato."""
     s = cell.strip()
@@ -246,8 +250,8 @@ def parse_o2_cell(cell: str) -> tuple[list[float], str]:
     m = re.fullmatch(rf"~\s*({_NUM})", s)
     if m:
         return [float(m.group(1))], "imprecise"
-    if ";" in s or re.search(r"\sto\s", s):
-        parts = [p for p in re.split(r"\s*;\s*|\s+to\s+", s) if p != ""]
+    if ";" in s or re.search(r"\sto\s|\s-\s", s):
+        parts = [p for p in re.split(r"\s*;\s*(?:or\s+)?|\s+to\s+|\s+-\s+", s) if p != ""]  # '2.0; or 3.0': FLEX-2
         vals = [parse_number(p) for p in parts]
         if len(vals) >= 2 and all(v is not None for v in vals):
             return vals, "imprecise"
@@ -332,13 +336,20 @@ class Sources:
     """Acceso a los archivos de la etapa 01 (tablas originales y fichas)."""
 
     def __init__(self, tables_dir: Path, fiches_dir: Path, manifest_path: Path | None = None,
-                 units_path: Path | None = None):
+                 units_path: Path | None = None, coverage_path: Path | None = None,
+                 environments_path: Path | None = None):
         self.tables_dir = Path(tables_dir)
         self.fiches_dir = Path(fiches_dir)
         self._manifest = self._load_manifest(manifest_path)
         self.units = load_units(units_path)
+        self.coverage_path = Path(coverage_path) if coverage_path else None
+        self.environments_path = Path(environments_path) if environments_path else None
         self._tables: dict[str, tuple[Table | None, str]] = {}
         self._fiches: dict[str, dict | None] = {}
+
+    def table_names(self) -> list[str]:
+        """Todos los CSV de PSI que hay en la carpeta de la etapa 01."""
+        return sorted(p.name for p in self.tables_dir.glob("*.csv") if p.name.lower() != "manifest.csv")
 
     @staticmethod
     def _load_manifest(path) -> dict[str, str]:
@@ -549,6 +560,8 @@ class Recalc:
     used_percent_values: list[tuple[str, int, float]] = field(default_factory=list)
     tested_range_ok: bool | None = None
     tested_range_detail: str = ""
+    # Recalculadores que nombran sus resultados igual que 'values' (coverage_by_environment):
+    named: dict[str, float] | None = None
 
 
 def recalc_o2_range(finding: dict, sources: Sources) -> Recalc:
@@ -645,8 +658,162 @@ def by_investigation(quantities: list[Quantity]) -> list[Quantity]:
     return out
 
 
+def parse_pressure_cell(cell: str, unit: str) -> tuple[list[float], str]:
+    """Como parse_o2_cell, pero acepta la unidad escrita en la celda ('1 atm' en CFI)."""
+    s = re.sub(rf"\s*{re.escape(unit)}\s*$", "", cell.strip(), flags=re.I)
+    return parse_o2_cell(s)
+
+
+def read_environments(path) -> dict[str, dict]:
+    """Tabla 'Sourced atmospheres' de _config/environments.md, leída con código propio."""
+    if not path or not Path(path).is_file():
+        return {}
+    lines = Path(path).read_text(encoding="utf-8").splitlines()
+    out = {}
+    for i, line in enumerate(lines):
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if line.lstrip().startswith("|") and cells[:2] == ["environment", "o2_min_pct"]:
+            for row in lines[i + 2:]:
+                if not row.lstrip().startswith("|"):
+                    break
+                vals = dict(zip(cells, [c.strip() for c in row.strip().strip("|").split("|")]))
+                env = {"source": vals.get("source", "")}
+                for k in ("o2_min_pct", "o2_max_pct", "pressure_min_psi", "pressure_max_psi"):
+                    env[k] = float(vals[k]) if vals.get(k) else None
+                out[vals["environment"]] = env
+            break
+    return out
+
+
+def recalc_coverage_by_environment(finding: dict, sources: Sources) -> Recalc:
+    """Recalcula coverage_by_environment recorriendo TODAS las tablas de PSI (no solo las citadas):
+    por fase de combustible, cuántas pruebas llegaron al O2 del ambiente, cuántas además a su presión,
+    y de cuántas no se sabe la presión. Así también se comprueban los ceros.
+    Fase y columnas de cada tabla: references/cobertura-tablas.json (aprobado por una persona)."""
+    out = Recalc(named={})
+    params = finding["method"]["params"]
+    envs = read_environments(sources.environments_path)
+    env = envs.get(params.get("environment"))
+    if env is None:
+        out.problems.append(f"environment {params.get('environment')!r} is not in the sourced table of "
+                            "_config/environments.md")
+        return out
+    for k in ("o2_min_pct", "pressure_max_psi"):
+        if env[k] is None or params.get(k) is None or not close(float(params[k]), env[k]):
+            out.problems.append(f"params.{k} = {params.get(k)} but _config/environments.md says {env[k]}")
+    for k in ("o2_max_pct", "pressure_min_psi"):
+        if env[k] is not None:
+            out.problems.append(f"{k} is set in _config/environments.md; this recalculator does not handle it yet")
+    if out.problems:
+        return out
+    o2_min, p_max = env["o2_min_pct"], env["pressure_max_psi"]
+
+    cov = None
+    if sources.coverage_path and sources.coverage_path.is_file():
+        cov = json.loads(sources.coverage_path.read_text(encoding="utf-8"))
+    if cov is None:
+        out.problems.append("stages/05_auditar/references/cobertura-tablas.json is missing")
+        return out
+    if not str(cov.get("approved_by", "")).strip():
+        out.problems.append("cobertura-tablas.json is not approved yet (approved_by is empty)")
+        return out
+    phases = {inv: e.get("phase") for inv, e in cov.get("investigations", {}).items()}
+    tables = cov.get("tables", {})
+    unmapped = [t for t in sources.table_names() if t not in tables]
+    if unmapped:
+        out.problems.append("tables in stage 01 not described in cobertura-tablas.json, so zero counts cannot be "
+                            f"verified: {', '.join(unmapped)}")
+
+    stats: dict[str, dict[str, int]] = {}
+    matched: dict[str, set[int]] = {}
+    for tname, entry in tables.items():
+        inv = tname.split("_")[0]
+        phase = phases.get(inv)
+        if not phase:
+            continue  # sin fase en el inventario (p. ej. estudios en tierra): no entra en ninguna fase
+        st = stats.setdefault(phase, {"tests": 0, "o2_match": 0, "o2_and_pressure_match": 0,
+                                      "pressure_unknown": 0, "o2_unknown": 0})
+        table, err = sources.table(tname)
+        if table is None:
+            out.problems.append(f"{tname}: {err}")
+            continue
+        o2cols = []
+        for c in entry.get("o2", []):
+            i = table.col_index(c)
+            unit, why = (column_unit(sources, tname, table.header[i]) if i is not None
+                         else (None, f"column '{c}' not found"))
+            if unit is None:
+                out.problems.append(f"{tname}: {why}")
+                continue
+            o2cols.append((i, 100.0 if unit == "fraction" else 1.0))
+        pcol = None
+        if entry.get("pressure"):
+            pc = entry["pressure"]
+            i, factor = table.col_index(pc.get("column", "")), PRESSURE_TO_PSI.get(str(pc.get("unit", "")).lower())
+            if i is None or factor is None:
+                out.problems.append(f"{tname}: pressure column {pc} not found or unit not known")
+            else:
+                pcol = (i, factor, pc["unit"])
+        rows, bad = cited_rows(table, entry.get("rows", "all"))
+        if bad:
+            out.problems.append(f"{tname}: rows {bad} in cobertura-tablas.json do not exist")
+        for r in rows:
+            st["tests"] += 1
+            o2 = []
+            for i, scale in o2cols:
+                out.cells_total += 1
+                vals, kind = parse_o2_cell(table.cell(r, i))
+                if kind != "unreadable":
+                    out.cells_readable += 1
+                    out.cells_imprecise += kind == "imprecise"
+                    o2 += [v * scale for v in vals]
+                    out.used_percent_values += [(inv, r, v * scale) for v in vals]
+            if not o2:
+                st["o2_unknown"] += 1
+                continue
+            if max(o2) < o2_min:  # como el Calculador: el O2 más alto de la prueba
+                continue
+            st["o2_match"] += 1
+            matched.setdefault(tname, set()).add(r)
+            pvals = parse_pressure_cell(table.cell(r, pcol[0]), pcol[2])[0] if pcol else []
+            if not pvals:
+                st["pressure_unknown"] += 1
+            elif min(pvals) * pcol[1] <= p_max + 1e-9:  # la presión más baja de la prueba
+                st["o2_and_pressure_match"] += 1
+
+    for phase, st in stats.items():
+        for k in ("o2_match", "o2_and_pressure_match", "pressure_unknown"):
+            out.named[f"{phase}_{k}"] = float(st[k])
+        if st["o2_match"] and f"{phase}_o2_match" not in finding["values"]:
+            out.problems.append(f"{st['o2_match']} {phase} tests reach {_fmt(o2_min)}% O2 but the finding "
+                                f"does not report {phase}_o2_match")
+    # Fila por fila: lo citado debe ser exactamente lo que cumple el umbral.
+    cited: dict[str, set[int]] = {}
+    for ev in finding["evidence"]:
+        t, _ = sources.table(ev["table"])
+        if t is not None:
+            cited.setdefault(ev["table"], set()).update(cited_rows(t, ev["rows"])[0])
+    for tname in sorted(set(cited) | set(matched)):
+        c, m = cited.get(tname, set()), matched.get(tname, set())
+        if c != m:
+            out.problems.append(f"{tname}: {len(m)} rows meet the threshold, the evidence cites {len(c)}"
+                                + (f" (missing e.g. rows {sorted(m - c)[:5]})" if m - c else "")
+                                + (f" (extra e.g. rows {sorted(c - m)[:5]})" if c - m else ""))
+    # C6: un cero con pruebas sin dato de O2 no es un cero.
+    weak = [f"{ph}: 0 of {st['tests']} tests reached {_fmt(o2_min)}% O2, but {st['o2_unknown']} have no readable O2"
+            for ph, st in stats.items()
+            if st["o2_match"] == 0 and st["o2_unknown"] and f"{ph}_o2_match" in finding["values"]]
+    summary = "; ".join(f"{ph}: {st['o2_match']} of {st['tests']} tests at >= {_fmt(o2_min)}% O2"
+                        f" ({st['o2_unknown']} without O2 data)" for ph, st in sorted(stats.items()))
+    out.tested_range_ok = not weak
+    out.tested_range_detail = ("A zero is not a zero when tests lack O2 data: " + "; ".join(weak)) if weak else \
+        f"Scanned every PSI table in cobertura-tablas.json. {summary}."
+    return out
+
+
 RECALCULATORS = {
     "o2_range": recalc_o2_range,
+    "coverage_by_environment": recalc_coverage_by_environment,
 }
 
 
@@ -837,6 +1004,9 @@ def _known_numbers(finding: dict, recalc: Recalc | None, row_counts: dict[str, i
         known.append(Known(x, kind, path))
     for inv, n in row_counts.items():
         known.append(Known(float(n), "other", f"cited rows of {inv}"))
+    if recalc and recalc.named:
+        for name, v in recalc.named.items():
+            known.append(Known(v, "other", f"recalculated {name}"))
     if recalc:
         for q in recalc.quantities:
             if q.value is not None:
@@ -864,10 +1034,11 @@ def apply_review(text_review: list[dict], review: dict | None, finding_sha: str)
         if t["done_by"] != "model" or t["answer"] is None or t["answer"] == t["expected"]:
             continue
         r = decisions.get((t["question_id"], t["field"]))
-        if r and r["decision"] == "dismiss":
+        if r and r["decision"] in ("dismiss", "confirm"):
             if r["reviewer"].strip() and r["note"].strip():
-                t["dismissed"] = {"reviewer": r["reviewer"].strip(), "note": r["note"].strip()}
-            else:
+                key = "dismissed" if r["decision"] == "dismiss" else "confirmed"
+                t[key] = {"reviewer": r["reviewer"].strip(), "note": r["note"].strip()}
+            elif r["decision"] == "dismiss":
                 incomplete.append(f"{t['question_id']}/{t['field']}")
     if incomplete:
         return f"Dismissals without reviewer or note were ignored: {', '.join(incomplete)}"
@@ -990,7 +1161,19 @@ def audit_finding(finding: dict, file_bytes: bytes, file_stem: str, sources: Sou
         c3_problems = list(recalc.problems)
         c2_problems, c2_notes = [], []
         candidates = sorted({ev["investigation"] for ev in finding["evidence"]})
-        for key, obj in finding["values"].items():
+        if recalc.named is not None:  # el recalculador devuelve valores con el mismo nombre que 'values'
+            for key, obj in finding["values"].items():
+                got = recalc.named.get(key)
+                ok = got is not None and obj["value"] is not None and close(float(obj["value"]), got,
+                                                                            exact=obj["unit"] in COUNT_UNITS)
+                recalculation.append({"value_name": key, "finding_value": obj["value"], "recalculated_value": got,
+                                      "unit": obj["unit"], "match": ok,
+                                      "detail": "recomputed over every PSI table" if got is not None else
+                                      "no recalculated value with this name"})
+                if not ok:
+                    c3_problems.append(f"values.{key} = {obj['value']} {obj['unit']}, recalculated "
+                                       f"{'nothing' if got is None else _fmt(got)}")
+        for key, obj in ([] if recalc.named is not None else finding["values"].items()):
             stat = value_stat(key)
             if stat is None:
                 c3_problems.append(f"values.{key}: cannot tell which statistic it is (expected a _min, _max or count suffix)")
@@ -1250,9 +1433,11 @@ def write_summary(path: Path, audits: list[dict], unreadable: list[str], model_n
                 lines += [f"| {t['question_id']} | {t['done_by']} | {t['field']} | {t['expected']} | "
                           f"{t['answer'] or '—'} | {t['reason'].replace('|', '/')} | "
                           + (f"dismissed by {t['dismissed']['reviewer']}" if t.get("dismissed") else
+                             f"confirmed by {t['confirmed']['reviewer']}" if t.get("confirmed") else
                              "pending" if t["done_by"] == "model" and t["answer"] is not None else "—")
                           + " |" for t in wrong]
-                if any(t["done_by"] == "model" and t["answer"] is not None and not t.get("dismissed") for t in wrong):
+                if any(t["done_by"] == "model" and t["answer"] is not None
+                       and not t.get("dismissed") and not t.get("confirmed") for t in wrong):
                     lines += ["", f"Model flags marked *pending* can be confirmed or dismissed in "
                                   f"`output/reviews/{a['finding_id']}.json` (decision, reviewer, note); "
                                   f"then run `auditar.py` again. Code answers cannot be dismissed."]
@@ -1267,7 +1452,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--fiches", type=Path, default=PSI_DIR, help="PSI-XX.json fiches (default: %(default)s)")
     ap.add_argument("--manifest", type=Path, default=PSI_DIR / "manifest.csv")
     ap.add_argument("--out", type=Path, default=ROOT / "stages/05_auditar/output")
-    ap.add_argument("--units", type=Path, default=ROOT / "stages/05_auditar/references/unidades-columnas.json")
+    ap.add_argument("--units", type=Path, default=REFERENCES / "unidades-columnas.json")
+    ap.add_argument("--coverage", type=Path, default=COVERAGE_FILE)
+    ap.add_argument("--environments", type=Path, default=ENVIRONMENTS_MD)
     ap.add_argument("--only", help="audit only this finding id, e.g. F-001")
     ap.add_argument("--no-model", action="store_true", help="do not call the local model (C8 fails, manual review)")
     args = ap.parse_args(argv)
@@ -1286,7 +1473,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"No findings to audit in {args.findings}", file=sys.stderr)
         return 2
 
-    sources = Sources(args.tables, args.fiches, args.manifest, args.units)
+    sources = Sources(args.tables, args.fiches, args.manifest, args.units, args.coverage, args.environments)
     audit_schema = load_schema("audit.schema.json")
     audits_dir = args.out / "audits"
     reviews_dir = args.out / "reviews"

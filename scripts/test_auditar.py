@@ -132,6 +132,9 @@ class TestHelpers(unittest.TestCase):
         self.assertEqual(A.parse_o2_cell("~ 22.1"), ([22.1], "imprecise"))
         self.assertEqual(A.parse_o2_cell("22.1 to 22.0"), ([22.1, 22.0], "imprecise"))
         self.assertEqual(A.parse_o2_cell("21; 26.5; 40"), ([21.0, 26.5, 40.0], "imprecise"))
+        self.assertEqual(A.parse_o2_cell("21.5 - 21.7"), ([21.5, 21.7], "imprecise"))
+        self.assertEqual(A.parse_o2_cell("0.5; 1.0; 2.0; or 3.0 "), ([0.5, 1.0, 2.0, 3.0], "imprecise"))
+        self.assertEqual(A.parse_pressure_cell("1 atm ", "atm"), ([1.0], "exact"))
         for bad in ("3400%", "", "none", "see note", "21;", "~"):
             self.assertEqual(A.parse_o2_cell(bad)[1], "unreadable", bad)
 
@@ -445,6 +448,113 @@ class TestPaths(unittest.TestCase):
             self.assertEqual(A.Sources._load_manifest(m), {"PSI-25.json": "PSI-25.json", "A B.csv": "A B.csv"})
 
 
+class TestCoverageByEnvironment(Base):
+    """Dos tablas de gas (una no citada) y una de sólidos sin columna de O2, como F-002 y Flame Design."""
+    GAS1 = "PSI-159_Experimental table_CFI-G_Normal Flames.csv"
+    GAS2 = "PSI-10_Experimental table_Flame Design_Normal Flame.csv"
+    SOLID = "PSI-26_Experimental table_BASS.csv"
+    ENV_MD = ("# Crewed environments\n\n## Sourced atmospheres\n\n"
+              "| environment | o2_min_pct | o2_max_pct | pressure_min_psi | pressure_max_psi | source |\n"
+              "|---|---|---|---|---|---|\n| lunar_base | 30 | | | 10.2 | Challenge text |\n\n## Other\n")
+
+    def setUp(self):
+        super().setUp()
+        d = Path(self.tmp.name)
+        (d / "tablas" / TABLE).unlink()  # en esta prueba solo existen las tres tablas de abajo
+        (d / "tablas" / self.GAS1).write_text(
+            "Test,XO2 before test,approx p (bar)\nA,0.40,0.5\nB,0.35,1.0\nC,0.21,0.5\n", encoding="utf-8")
+        (d / "tablas" / self.GAS2).write_text("Test,XO2 (init),pinit (atm)\nX,0.45,1.0\nY,0.2,1.0\n", encoding="utf-8")
+        (d / "tablas" / self.SOLID).write_text("Test,Material\nS1,PMMA\nS2,PMMA\n", encoding="utf-8")
+        for inv, t in (("PSI-159", self.GAS1), ("PSI-10", self.GAS2), ("PSI-26", self.SOLID)):
+            (d / "fichas" / f"{inv}.json").write_text(json.dumps(
+                {"doi": f"10.0/{inv}", "investigationAcronym": inv, "experimentalTable": [{"file_name": t}]}),
+                encoding="utf-8")
+        (d / "environments.md").write_text(self.ENV_MD, encoding="utf-8")
+        units = {"tables": {self.GAS1: {"XO2 before test": {"unit": "fraction", "approved_by": "t"}},
+                            self.GAS2: {"XO2 (init)": {"unit": "fraction", "approved_by": "t"}}}}
+        (d / "units.json").write_text(json.dumps(units), encoding="utf-8")
+        self.cov = {"approved_by": "t",
+                    "investigations": {"PSI-159": {"phase": "gas"}, "PSI-10": {"phase": "gas"},
+                                       "PSI-26": {"phase": "solid"}},
+                    "tables": {self.GAS1: {"o2": ["XO2 before test"], "pressure": {"column": "approx p (bar)", "unit": "bar"}},
+                               self.GAS2: {"o2": ["XO2 (init)"], "pressure": {"column": "pinit (atm)", "unit": "atm"}},
+                               self.SOLID: {"o2": [], "pressure": None}}}
+        self.reload()
+
+    def reload(self):
+        d = Path(self.tmp.name)
+        (d / "cov.json").write_text(json.dumps(self.cov), encoding="utf-8")
+        self.sources = A.Sources(d / "tablas", d / "fichas", None, d / "units.json", d / "cov.json",
+                                 d / "environments.md")
+
+    def finding(self, gas_match=3, gas_both=1, rows2="all", with_gas2=True):
+        f = base_finding()
+        f["method"] = {"script": "scripts/functions.py", "function": "coverage_by_environment",
+                       "params": {"environment": "lunar_base", "o2_min_pct": 30.0, "pressure_max_psi": 10.2,
+                                  "source": "Challenge text"}, "formula": "Per phase."}
+        f["values"] = {"gas_o2_match": {"value": gas_match, "unit": "tests"},
+                       "gas_o2_and_pressure_match": {"value": gas_both, "unit": "tests"},
+                       "gas_pressure_unknown": {"value": 0, "unit": "tests"}}
+        f["evidence"] = [{"investigation": "PSI-159", "doi": "10.0/PSI-159", "table": self.GAS1,
+                          "columns": ["XO2 before test", "approx p (bar)"], "rows": [1, 2]}]
+        if with_gas2:
+            f["evidence"].append({"investigation": "PSI-10", "doi": "10.0/PSI-10", "table": self.GAS2,
+                                  "columns": ["XO2 (init)", "pinit (atm)"], "rows": [1] if rows2 == "all" else rows2})
+        f["n_tests"] = 3 if with_gas2 else 2
+        f["claim"] = "3 gas tests reached 30% oxygen; 1 also ran at or below 10.2 psi."
+        f["summary_student"] = "Some gas flames in these tests used as much oxygen as a Moon base."
+        f["summary_professional"] = "Gas tests at ≥30% O2: 3 (n = 3); at or below 10.2 psi: 1."
+        f["environments"] = ["lunar_base"]
+        return f
+
+    def test_counts_every_table(self):
+        a = self.audit(self.finding())
+        self.assertEqual(self.result(a, "C3"), "pass")  # 0.5 bar = 7.25 psi <= 10.2; 1 bar y 1 atm no
+        self.assertEqual(self.result(a, "C6"), "pass")
+
+    def test_uncited_table_is_caught(self):
+        a = self.audit(self.finding(gas_match=2, with_gas2=False))
+        self.assertEqual(self.result(a, "C3"), "fail")
+        c3 = next(c for c in a["checks"] if c["id"] == "C3")["detail"]
+        self.assertIn("Flame Design", c3)  # la tabla no citada sí tenía una prueba al 45%
+
+    def test_zero_with_unknown_o2_fails_c6(self):
+        f = self.finding()
+        f["values"]["solid_o2_match"] = {"value": 0, "unit": "tests"}
+        a = self.audit(f)
+        self.assertEqual(self.result(a, "C3"), "pass")
+        self.assertEqual(self.result(a, "C6"), "fail")
+        self.assertIn("2 have no readable O2", next(c for c in a["checks"] if c["id"] == "C6")["detail"])
+
+    def test_unapproved_or_incomplete_map_fails(self):
+        self.cov["approved_by"] = ""
+        self.reload()
+        self.assertIn("not approved", next(c for c in self.audit(self.finding())["checks"] if c["id"] == "C3")["detail"])
+        self.cov["approved_by"] = "t"
+        del self.cov["tables"][self.SOLID]
+        self.reload()
+        c3 = next(c for c in self.audit(self.finding())["checks"] if c["id"] == "C3")["detail"]
+        self.assertIn("not described in cobertura-tablas.json", c3)
+
+    def test_params_must_match_environments_md(self):
+        f = self.finding()
+        f["method"]["params"]["o2_min_pct"] = 25.0
+        c3 = next(c for c in self.audit(f)["checks"] if c["id"] == "C3")["detail"]
+        self.assertIn("_config/environments.md says 30.0", c3)
+
+    def test_read_environments(self):
+        env = A.read_environments(Path(self.tmp.name) / "environments.md")
+        self.assertEqual(env["lunar_base"]["o2_min_pct"], 30.0)
+        self.assertEqual(env["lunar_base"]["pressure_max_psi"], 10.2)
+        self.assertIsNone(env["lunar_base"]["o2_max_pct"])
+
+    def test_repo_coverage_file_lists_every_psi_table(self):
+        cov = json.loads((A.COVERAGE_FILE).read_text(encoding="utf-8"))
+        on_disk = set(A.Sources(A.PSI_DIR, A.PSI_DIR).table_names())
+        if on_disk:  # solo si la etapa 01 ya bajó los datos
+            self.assertEqual(set(cov["tables"]), on_disk)
+
+
 class TestHumanReview(Base):
     @staticmethod
     def sha(finding):
@@ -474,6 +584,8 @@ class TestHumanReview(Base):
         flags = [self.flag("Q4", "claim"), self.flag("Q4", "summary_student", "confirm")]
         a = self.audit(f, FakeModel(wrong={"Q4"}), self.review(f, flags))
         self.assertEqual(self.result(a, "C8"), "fail")
+        confirmed = [t for t in a["text_review"] if t.get("confirmed")]
+        self.assertEqual([(t["field"], t["confirmed"]["reviewer"]) for t in confirmed], [("summary_student", "Pingui")])
 
     def test_dismiss_needs_reviewer_and_note(self):
         f = base_finding()

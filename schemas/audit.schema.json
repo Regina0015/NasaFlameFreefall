@@ -72,6 +72,13 @@
             "required": ["reviewer", "note"],
             "additionalProperties": false,
             "properties": { "reviewer": { "type": "string" }, "note": { "type": "string" } }
+          },
+          "confirmed": {
+            "type": "object",
+            "description": "Present when a person confirmed this model flag as a real problem (output/reviews/F-XXX.json)",
+            "required": ["reviewer", "note"],
+            "additionalProperties": false,
+            "properties": { "reviewer": { "type": "string" }, "note": { "type": "string" } }
           }
         }
       }
