@@ -38,8 +38,8 @@ class BuildFindingTest(unittest.TestCase):
         self.assertIn('number "99" in visual_offer.footnote is not in the computed values', problems)
         self.assertIn('number "7" in visual_offer.graph.idea is not in the computed values', problems)
 
-    def test_numbers_from_question_and_params_are_allowed(self):
-        t = dict(TEXT, question="Did any test reach 40% oxygen?", claim="No BASS-II test reached 40% or 30% oxygen.")
+    def test_numbers_from_params_are_allowed(self):
+        t = dict(TEXT, question="Did any test reach 30% oxygen?", claim="No BASS-II test reached 30% oxygen.")
         self.assertEqual(build_finding(CALC, t, TIERS, "m", NOW, "F-001")[1], [])
 
     def test_lunar_warning_added(self):

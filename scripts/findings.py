@@ -36,7 +36,7 @@ def save(finding: dict, dir: Path = FINDINGS_DIR) -> Path:
     dir = Path(dir)
     dir.mkdir(parents=True, exist_ok=True)
     path = dir / f"{check_id(finding.get('id'))}.json"
-    path.write_text(json.dumps(finding, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+    path.write_text(json.dumps(finding, indent=2, ensure_ascii=False, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     return path
 
 

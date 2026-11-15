@@ -6,7 +6,8 @@ Prints "saved F-00N: <path>", or the problems (one per line) and exits 1.
 
 The values, method, evidence and n_tests are copied from the calc file, never from
 the text. Every number in the text must be one of the computed values, n_tests, a
-method parameter or a number in the question.
+method parameter or a number in the SQL. Numbers only in the question are not allowed,
+because the agent writes the question too. Text fields must be one plain line.
 """
 import argparse
 import copy
@@ -66,14 +67,15 @@ def _text_items(text: dict) -> list[tuple[str, str]]:
     return [(label, s) for label, s in items if isinstance(s, str)]
 
 
-def allowed_numbers(calc: dict, question) -> set[str]:
+HIDDEN = re.compile(r"[\x00-\x1f\x7f-\x9f​-‏  ‪-‮⁦-⁩﻿]")
+
+
+def allowed_numbers(calc: dict) -> set[str]:
     allowed = {canonical(v["value"]) for v in (calc.get("values") or {}).values()
                if isinstance(v, dict) and isinstance(v.get("value"), (int, float)) and not isinstance(v.get("value"), bool)}
     if isinstance(calc.get("n_tests"), int):
         allowed.add(canonical(calc["n_tests"]))
     allowed |= collect((calc.get("method") or {}).get("params") or {})
-    if isinstance(question, str):
-        allowed.update(numbers_in(question))
     return allowed
 
 
@@ -88,7 +90,10 @@ def build_finding(calc: dict, text: dict, tiers_by_investigation: dict[str, int 
         problems.append(f"unexpected field(s) in text: {', '.join(extra)}")
     if missing:
         problems.append(f"missing field(s) in text: {', '.join(missing)}")
-    allowed = allowed_numbers(calc, text.get("question"))
+    allowed = allowed_numbers(calc)
+    for label, sentence in _text_items(text) + [("question", text.get("question"))]:
+        if isinstance(sentence, str) and HIDDEN.search(sentence):
+            problems.append(f"{label} has a line break or hidden character; write it as one plain line")
     for label, sentence in _text_items(text):
         problems += [f'number "{n}" in {label} is not in the computed values' for n in numbers_in(sentence) if n not in allowed]
     evidence = copy.deepcopy(calc.get("evidence") or [])

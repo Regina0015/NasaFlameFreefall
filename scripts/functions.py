@@ -15,7 +15,8 @@ import duckdb
 
 from scripts.contract import SOURCE_SEPARATOR
 from scripts.mdtable import parse_table
-from scripts.query import check_select_only
+from scripts.numbers import numbers_in
+from scripts.query import execute_limited
 
 SCRIPT = "scripts/functions.py"
 PSI_PER_ATM = 14.6959
@@ -178,6 +179,10 @@ def _sql_value(value, row: int):
     return value
 
 
+VALUE_NAME = re.compile(r"[a-z][a-z0-9_]{0,63}")
+UNIT_TEXT = re.compile(r"[A-Za-z0-9%°/·^()., _-]*")
+
+
 def _text(value, column: str, row: int) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"row {row}: {column} must be non-empty text")
@@ -186,9 +191,7 @@ def _text(value, column: str, row: int) -> str:
 
 def sql_values(con: duckdb.DuckDBPyConnection, sql: str) -> dict:
     """Values from one SELECT, one row per value, each with the source rows it used."""
-    check_select_only(sql)
-    cursor = con.execute(sql)
-    columns = [d[0] for d in cursor.description]
+    columns, records = execute_limited(con, sql)
     missing = [c for c in SQL_COLUMNS if c not in columns]
     if missing:
         raise ValueError(f"sql_query result is missing column(s): {', '.join(missing)} "
@@ -197,14 +200,16 @@ def sql_values(con: duckdb.DuckDBPyConnection, sql: str) -> dict:
     values: dict = {}
     groups: dict = {}
     pairs: set = set()
-    for n, record in enumerate(cursor.fetchall(), start=1):
+    for n, record in enumerate(records, start=1):
         row = {c: record[i] for c, i in index.items()}
         name = _text(row["name"], "name", n)
         if name in values:
             raise ValueError(f"duplicate value name {name!r}")
+        if not VALUE_NAME.fullmatch(name):
+            raise ValueError(f"row {n}: name {name!r} must be lowercase letters, digits and '_' (at most 64)")
         unit = row["unit"]
-        if not isinstance(unit, str):
-            raise ValueError(f"row {n}: unit must be text")
+        if not isinstance(unit, str) or len(unit) > 24 or not UNIT_TEXT.fullmatch(unit) or numbers_in(unit):
+            raise ValueError(f"row {n}: unit {unit!r} must be a short unit name with no numbers, e.g. '% O2', 'tests', 'cm/s'")
         investigation = _text(row["investigation"], "investigation", n)
         table = _text(row["source_table"], "source_table", n)
         rows = row["source_rows"]
@@ -220,4 +225,9 @@ def sql_values(con: duckdb.DuckDBPyConnection, sql: str) -> dict:
         group["columns"].update(part for c in source_columns for part in c.split(SOURCE_SEPARATOR) if part)
         pairs.update((table, r) for r in rows)
     formula = "The values returned by the SQL query in params, one row per value, each with the source rows it used."
+    for (investigation, table), group in groups.items():
+        found = con.execute("SELECT count(DISTINCT source_row) FROM tests WHERE investigation = ? AND source_table = ? "
+                            "AND list_contains(?, source_row)", [investigation, table, sorted(group["rows"])]).fetchone()[0]
+        if found != len(group["rows"]):
+            raise ValueError(f"{investigation} {table}: {len(group['rows']) - found} cited row(s) are not in the snapshot")
     return _result("sql_query", {"sql": sql}, formula, values, len(pairs), _evidence(con, groups))

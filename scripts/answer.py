@@ -15,11 +15,12 @@ from scripts.cli import utf8_output
 from scripts.paths import FINDINGS_DIR
 
 CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")
+HIDDEN = re.compile(r"[​-‏  ‪-‮⁦-⁩﻿]")  # bidi and zero-width
 
 
 def _clean(text) -> str:
     """Text for the terminal: control characters (such as escape sequences) are removed."""
-    return CONTROL.sub("", str(text))
+    return CONTROL.sub("", HIDDEN.sub("", " ".join(str(text).split())))
 
 
 def format_answer(finding: dict, audit: dict) -> str:

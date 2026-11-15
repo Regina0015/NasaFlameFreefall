@@ -10,9 +10,11 @@ _IDENTIFIERS = [
     re.compile(r"\b10\.\d{4,9}/\S+"),                       # DOIs
     re.compile(r"\b[A-Za-z]+-\d+(?:-[A-Za-z]\d+)*\b"),      # PSI-25, F-001, FLEX-2, PSI-25-T0-R1
     re.compile(r"\b1\s?-?\s?g\b"),                          # 1 g, 1-g, 1g
-    re.compile(r"\b(?=\w*[A-Za-z])(?=\w*\d)\w+\b"),         # O2, CO2, C2H4, C12H26, B1
+    re.compile(r"\b[A-Za-z]\w*\d\w*\b"),                     # O2, CO2, C2H4, C12H26, B1 (start with a letter)
 ]
-_NUMBER = re.compile(r"(?<![\w.])(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?![\w])")
+# Sign (only after a space, a bracket or the start), digits or .5, optional exponent. A unit
+# glued after the number (45pct, 101kPa) does not hide it.
+_NUMBER = re.compile(r"(?<![\w.])([-−]?)((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?|\.\d+)([eE][+-]?\d+)?")
 
 
 def canonical(value: float | int | str) -> str:
@@ -27,7 +29,7 @@ def numbers_in(text: str) -> list[str]:
     cleaned = text or ""
     for pattern in _IDENTIFIERS:
         cleaned = pattern.sub(" ", cleaned)
-    return [canonical(m.group(0)) for m in _NUMBER.finditer(cleaned)]
+    return [canonical(("-" if m.group(1) else "") + m.group(2) + (m.group(3) or "")) for m in _NUMBER.finditer(cleaned)]
 
 
 def collect(obj) -> set[str]:
