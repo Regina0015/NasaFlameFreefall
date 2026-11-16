@@ -1,8 +1,21 @@
 # Dashboard
 
-Aplicación web en React (con Vite). Lee los resultados ya verificados desde Supabase y se publica en Vercel. No calcula ni llama a modelos.
+FlameTrace's web app, built with React and Vite. It reads verified results from Supabase and is published on Vercel at [flametrace.world](https://www.flametrace.world). On the public site, click **Explore demo** on the sign-in page: no account is needed.
 
-## Correrlo en tu computadora
+The public build never calculates and never calls a model. The research assistant (chat) runs only on a team computer: see "The local research assistant" below.
+
+## What it shows
+
+- **Opening animation**: Monterrey, Mexico, then Earth, then the station (`src/components/EarthScene.jsx`, timeline in `src/lib/intro.js`). It can be skipped, paused or replayed, and it is skipped when the system asks for reduced motion.
+- **Two views**: student and professional. The rules for each are in `_config/audiences.md`.
+- **Findings**: each one with its confidence grade, its checks and its evidence (rows and DOI). No claim is shown without a grade.
+- **Investigations browser** and investigation details.
+- **Coverage gaps**: what has no data, for example partial gravity.
+- **Interpretation lab**: compares readings of the data side by side. Labeled as exploration; it is ungraded.
+- **3D models**: the station and a conceptual habitat.
+- **Research assistant** (local only).
+
+## Run it on your computer
 
 ```
 cd dashboard
@@ -10,47 +23,54 @@ npm install
 npm run dev
 ```
 
-`npm install` baja las dependencias a `dashboard/node_modules/` y crea `package-lock.json`. No instala nada fuera de esta carpeta. Para deshacerlo, se borra `node_modules/`.
+Then open http://localhost:5173. `npm install` only writes to `dashboard/node_modules/`. With no settings, the dashboard uses the JSON copy in `public/data/`.
 
-Sin configurar nada más, el dashboard arranca con los datos de ejemplo de `public/data/`.
+Tests: `npm test` (Node's built-in test runner, no extra packages).
 
-## Conectarlo a Supabase
+## Settings (`.env.local`)
 
-1. Copiar `.env.example` a `.env.local`.
-2. Llenar `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` con los datos del proyecto (panel de Supabase, sección de API).
+Copy `.env.example` to `.env.local` and fill it in. That file is git-ignored.
 
-Esas dos claves son públicas. La clave `service_role` nunca va aquí.
-
-## Publicarlo en Vercel
-
-Al importar el repo en Vercel:
-- **Root Directory**: `dashboard`
-- **Variables de entorno**: las mismas dos de arriba.
-
-Vercel detecta Vite solo; no hace falta más configuración.
-
-## Organización
-
-| Ruta | Qué hay |
+| Variable | What it is |
 |---|---|
-| `src/App.jsx` | Página principal y el interruptor de vista (estudiante o científico) |
-| `src/secciones/` | Una sección por archivo: Investigaciones, Ranking, Hallazgos, Grafo |
-| `src/lib/supabase.js` | Conexión a Supabase |
-| `src/lib/datos.js` | `useTabla('nombre')`: lee una tabla de Supabase, o el ejemplo si no hay conexión |
-| `public/data/` | Datos de ejemplo, con la misma forma que las tablas |
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | The Supabase project and its public (publishable) key. The `service_role` key never goes here |
+| `OLLAMA_URL`, `CHAT_MODEL`, `OLLAMA_API_KEY` | The local chat's model (server side only, no `VITE_` prefix) |
+| `VITE_DEMO_*` | Optional local demo accounts. They are checked in the browser only, so they are not real security |
 
-## Qué debe mostrar
+## The local research assistant
 
-1. **Investigaciones**: lista filtrable y ficha de cada una.
-2. **Ranking por ambiente**: nave, estación, base lunar o marciana, rover; por nivel y con el desglose del puntaje.
-3. **Hallazgos**: cada uno con su grado de confianza y sus comprobaciones.
-4. **Grafo**, en dos capas: mapa de investigaciones y cadena de prueba de un hallazgo.
-5. **Comparación** lado a lado entre investigaciones.
-6. **Huecos**: lo que no tiene datos (por ejemplo, gravedad parcial).
+The chat is offline on the public site **by design, for security**. It runs an open model (Google's Gemma 4, `gemma4:e4b-it-qat`) with Ollama on the team's own GPU, and that machine is not exposed to the internet:
 
-Las reglas de cada vista están en `_config/audiencias.md`. Las tablas están en `supabase/schema.sql`.
+- no API keys in the browser;
+- questions are never sent to a third-party AI service;
+- the model chooses tools and writes the text, but every number comes from code (`scripts/chat_tools.py`) and is checked by `chat/checkNumbers.js` before it is shown.
 
-## Por decidir
+To run it:
 
-- Librería para dibujar el grafo.
-- Idioma de la interfaz. Conviene confirmar en las reglas de Space Apps si la entrega debe ir en inglés.
+1. Install [Ollama](https://ollama.com), then `ollama pull gemma4:e4b-it-qat`.
+2. From the repository root, run `uv sync`. The chat tools run with `uv` and read `data/snapshot/`.
+3. `npm run dev` in `dashboard/`. The chat server is mounted by `vite.config.js` at `/api/chat`, only in `npm run dev` and `npm run preview`.
+
+To use a model on another computer, point `OLLAMA_URL` at the Auditor gateway's `/llm` route and set `OLLAMA_API_KEY` (see `.env.example` and `api/routes/llm.py`).
+
+## Publish on Vercel
+
+- **Root Directory**: `dashboard`. Vercel detects Vite; no `vercel.json` is needed, because the app uses hash routes (`#/demo`).
+- **Environment variables**: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. Vite writes them into the build, so a change needs a new deployment.
+- Every push to `main` deploys again.
+
+## Layout
+
+| Path | What is there |
+|---|---|
+| `src/App.jsx` | Routing between sign-in and the demo |
+| `src/pages/` | `Login.jsx` (opening animation and sign-in) and `DemoShell.jsx` (the dashboard and its student/professional switch) |
+| `src/components/` | One component per panel: findings, evidence, investigations, coverage gaps, lab, 3D viewers, chat |
+| `src/lib/` | Data access and logic: `supabase.js`, `findings/` (where findings come from and how they are checked), `evidence.js`, `lab.js`, `geo.js`, `intro.js` |
+| `src/chat/` | The chat panel's state (`useChat.js`) and its status messages |
+| `chat/` | The local chat server: agent loop, tools, prompt and number check |
+| `public/data/` | JSON copy of the data, used when Supabase is not reachable |
+| `public/models/`, `public/textures/`, `public/data/geo/` | 3D models, Earth imagery and the Nuevo León outline, each with a `SOURCES.md` (origin and license) |
+| `src/secciones/` | Early scaffold, no longer used by the app |
+
+The database tables are in `supabase/schema.sql`.
